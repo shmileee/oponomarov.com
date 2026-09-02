@@ -1,0 +1,18 @@
+---
+import { getCollection, render } from "astro:content";
+import DocsLayout from "../../components/DocsLayout.astro";
+import { docsSlug } from "../../lib/docs";
+
+const entry = (await getCollection("docs")).find((item) => docsSlug(item) === "");
+if (!entry) throw new Error("Missing Dotfiles overview content");
+const { Content, headings } = await render(entry);
+const overviewHeadings = [
+  { depth: 2, slug: "what-it-builds", text: "What it builds" },
+  { depth: 3, slug: "before-you-run-it", text: "Before you run it" },
+  ...headings,
+];
+---
+
+<DocsLayout entry={entry} headings={overviewHeadings} home>
+  <Content />
+</DocsLayout>

@@ -1,0 +1,23 @@
+---
+import EditorialLayout from "../components/EditorialLayout.astro";
+---
+
+<EditorialLayout
+  site="portfolio"
+  canonicalOrigin="https://oponomarov.com"
+  title="Page not found"
+  description="This page does not exist. Browse the case-study index or head back to the homepage."
+  robots="noindex,follow"
+>
+  <main id="main-content" tabindex="-1">
+    <section class="hero section-shell experience-hero">
+      <p class="section-eyebrow">404 — not found</p>
+      <h1>This page doesn't exist<span class="hero-cursor" aria-hidden="true"></span></h1>
+      <div class="hero-copy"><p>The address may be mistyped, or the page may have moved. The work itself is still one link away.</p></div>
+      <div class="hero-actions">
+        <a class="primary-link" href="/#index">Browse case studies →</a>
+        <a class="secondary-link" href="/">Back to the homepage</a>
+      </div>
+    </section>
+  </main>
+</EditorialLayout>

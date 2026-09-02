@@ -1,0 +1,113 @@
+---
+import GlobalSearch from "./GlobalSearch.astro";
+
+interface Props {
+  activeApp: "portfolio" | "blog" | "dotfiles" | "contact";
+  showProgress?: boolean;
+}
+
+const { activeApp, showProgress = false } = Astro.props;
+
+const apps = [
+  { id: "portfolio", label: "Portfolio", href: "/" },
+  { id: "blog", label: "Notes", href: "/blog/" },
+  { id: "dotfiles", label: "Dotfiles", href: "/dotfiles/" },
+];
+---
+
+<header class="op-header" data-site-header>
+  {showProgress && <div class="op-reading-progress" aria-hidden="true"><span data-reading-progress></span></div>}
+  <div class="op-header__inner">
+    <a class="op-brand" href="/">
+      <span class="op-brand__full">~/oleksandr-ponomarov</span>
+      <span class="op-brand__short" aria-hidden="true">~/op</span>
+    </a>
+
+    <nav class="op-app-nav" aria-label="Site sections">
+      {apps.map((app) => (
+        <a
+          href={app.href}
+          data-app-link={app.id}
+          class:list={{ "is-active": app.id === activeApp }}
+          aria-current={app.id === activeApp ? "page" : undefined}
+        >
+          {app.label}
+        </a>
+      ))}
+    </nav>
+    <div class="op-header__tools">
+      <GlobalSearch />
+      <button class="op-theme-toggle" type="button" aria-label="Switch to light theme" data-op-theme-toggle>
+        <span aria-hidden="true" data-theme-label>light</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<script>
+  const getTheme = () => document.documentElement.dataset.theme === "light" ? "light" : "dark";
+
+  const persistTheme = (theme: "dark" | "light") => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem("om-theme", theme);
+    window.dispatchEvent(new CustomEvent("om-theme-change", { detail: theme }));
+  };
+
+  const updateControls = () => {
+    const theme = getTheme();
+    document.querySelectorAll<HTMLElement>("[data-theme-label]").forEach((label) => {
+      label.textContent = theme === "dark" ? "light" : "dark";
+    });
+    document.querySelectorAll<HTMLButtonElement>("[data-op-theme-toggle]").forEach((button) => {
+      button.setAttribute("aria-label", `Switch to ${theme === "dark" ? "light" : "dark"} theme`);
+    });
+  };
+
+  const initShell = () => {
+    updateControls();
+    document.querySelectorAll<HTMLButtonElement>("[data-op-theme-toggle]").forEach((button) => {
+      if (button.dataset.bound === "true") return;
+      button.dataset.bound = "true";
+      button.addEventListener("click", () => {
+        persistTheme(getTheme() === "dark" ? "light" : "dark");
+        updateControls();
+      });
+    });
+
+    const progress = document.querySelector<HTMLElement>("[data-reading-progress]");
+    if (progress && progress.dataset.bound !== "true") {
+      progress.dataset.bound = "true";
+      const update = () => {
+        const available = document.documentElement.scrollHeight - innerHeight;
+        const ratio = available > 0 ? Math.min(1, scrollY / available) : 0;
+        progress.style.transform = `scaleX(${ratio})`;
+      };
+      addEventListener("scroll", update, { passive: true });
+      update();
+    }
+
+    const toTop = document.querySelector<HTMLButtonElement>("[data-back-to-top]");
+    if (toTop && toTop.dataset.bound !== "true") {
+      toTop.dataset.bound = "true";
+      let scheduled = false;
+      const update = () => {
+        toTop.dataset.visible = String(scrollY > 640);
+        scheduled = false;
+      };
+      const schedule = () => {
+        if (scheduled) return;
+        scheduled = true;
+        requestAnimationFrame(update);
+      };
+      addEventListener("scroll", schedule, { passive: true });
+      addEventListener("resize", schedule);
+      toTop.addEventListener("click", () => {
+        scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+      });
+      update();
+    }
+  };
+
+  initShell();
+  document.addEventListener("astro:page-load", initShell);
+</script>

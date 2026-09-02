@@ -1,0 +1,33 @@
+---
+interface Props {
+  activeApp: "portfolio" | "blog" | "dotfiles" | "contact";
+}
+
+const { activeApp } = Astro.props;
+const descriptions = {
+  portfolio: "Case studies from building infrastructure platforms and reliable delivery systems.",
+  blog: "Field notes on infrastructure, reliability, delivery, and the tools around them.",
+  dotfiles: "A reproducible workstation and the reasoning behind it.",
+  contact: "One shared contact point for the portfolio, engineering notes, and Dotfiles.",
+};
+---
+
+<footer class="op-footer">
+  <div class="op-footer__inner">
+    <div>
+      <p class="op-footer__brand">~/oleksandr-ponomarov/{activeApp === "blog" ? "notes" : activeApp}</p>
+      <p class="op-footer__note">{descriptions[activeApp]}</p>
+    </div>
+    <nav class="op-footer__links" aria-label="Contact and social profiles">
+      <a href="/contact/" aria-label="Contact" title="Contact">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 4-8 5-8-5V6l8 5 8-5v2Z"></path></svg>
+      </a>
+      <a href="https://github.com/shmileee" rel="me" aria-label="GitHub profile" title="GitHub profile">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .7a11.5 11.5 0 0 0-3.6 22.4c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.4-4-1.4-.5-1.4-1.3-1.8-1.3-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.6.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.5.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.8 5.4-5.5 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A11.5 11.5 0 0 0 12 .7Z"></path></svg>
+      </a>
+      <a href="https://www.linkedin.com/in/aleksandr-ponomarov" rel="me" aria-label="LinkedIn profile" title="LinkedIn profile">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.34V8.98h3.42v1.57h.05c.48-.9 1.64-1.85 3.37-1.85 3.61 0 4.27 2.37 4.27 5.46v6.29ZM5.32 7.41a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12ZM7.1 20.45H3.54V8.98H7.1v11.47Z"></path></svg>
+      </a>
+    </nav>
+  </div>
+</footer>

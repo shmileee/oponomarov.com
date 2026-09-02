@@ -1,0 +1,32 @@
+---
+import { getCollection } from "astro:content";
+import SiteFavicons from "../../components/SiteFavicons.astro";
+import { documentTitle as formatDocumentTitle } from "../../lib/site-metadata";
+
+export async function getStaticPaths() {
+  const studies = await getCollection("caseStudies");
+  return studies.map((study) => ({
+    params: { slug: study.id.replace(/\/index$/, "") },
+    props: { study },
+  }));
+}
+
+const { study } = Astro.props;
+const slug = study.id.replace(/\/index$/, "");
+const target = `/case-studies/${slug}/`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,follow" />
+    <meta http-equiv="refresh" content={`0; url=${target}`} />
+    <link rel="canonical" href={`https://oponomarov.com${target}`} />
+    <SiteFavicons />
+    <title>{formatDocumentTitle("portfolio", "Case study moved")}</title>
+    <script is:inline define:vars={{ target }}>location.replace(target + location.search + location.hash);</script>
+  </head>
+  <body><p>Moved to <a href={target}>{study.data.title}</a>.</p></body>
+</html>

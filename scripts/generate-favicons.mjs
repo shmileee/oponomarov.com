@@ -1,0 +1,12 @@
+import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+import sharp from "sharp";
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const source = await readFile(path.join(root, "public/favicon.svg"));
+
+await Promise.all([
+  sharp(source).resize(32, 32).png().toFile(path.join(root, "public/favicon-32x32.png")),
+  sharp(source).resize(180, 180).png().toFile(path.join(root, "public/apple-touch-icon.png")),
+]);

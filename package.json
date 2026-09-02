@@ -1,0 +1,30 @@
+{
+  "name": "oponomarov-unified-site",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev --port 4321",
+    "build": "astro build && pagefind --site dist",
+    "check": "astro check",
+    "preview": "astro preview --port 4325",
+    "verify": "node scripts/verify-build.mjs",
+    "generate-favicons": "node scripts/generate-favicons.mjs",
+    "import-content": "node scripts/import-content.mjs"
+  },
+  "dependencies": {
+    "@astrojs/markdown-remark": "^7.2.4",
+    "@astrojs/rss": "4.0.19",
+    "astro": "7.2.9",
+    "astro-expressive-code": "0.44.1",
+    "sharp": "0.35.4"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.6",
+    "pagefind": "^1.5.2",
+    "typescript": "5.9.2"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

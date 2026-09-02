@@ -1,0 +1,42 @@
+---
+import { getCollection } from "astro:content";
+import EditorialLayout from "../../../components/EditorialLayout.astro";
+import { formatDate, slugForPost, sortPosts } from "../../../lib/posts";
+
+export function getStaticPaths() {
+  const categories = [
+    ["argocd", "ArgoCD"],
+    ["aws", "AWS"],
+    ["developer-tools", "Developer Tools"],
+    ["git", "Git"],
+    ["kubernetes", "Kubernetes"],
+    ["opencode", "OpenCode"],
+    ["pre-commit", "Pre-Commit"],
+    ["terraform", "Terraform"],
+    ["tmux", "tmux"],
+    ["vim", "Vim"],
+  ] as const;
+  return categories.map(([category, title]) => ({ params: { category }, props: { category, title } }));
+}
+
+const { category, title } = Astro.props;
+const posts = sortPosts((await getCollection("posts")).filter((post) => post.data.categories.includes(category)));
+---
+
+<EditorialLayout site="blog" canonicalOrigin="https://oponomarov.com" title={title} description={`Notes filed under ${title}.`} searchType="Topic">
+  <main id="main-content" class="page-shell" data-pagefind-body>
+    <section class="category-detail" aria-labelledby="category-title">
+      <header class="detail-header"><a class="back-link" href="/blog/">← all notes</a><h1 id="category-title">{title}</h1></header>
+      {posts.length > 0 ? (
+        <ol class="article-list category-list" data-pagefind-ignore>
+          {posts.map((post) => (
+            <li class="article-row">
+              <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date, { day: "2-digit", month: "short", year: "numeric" })}</time>
+              <a class="article-title" href={`/blog/posts/${slugForPost(post)}/`}>{post.data.title}</a>
+            </li>
+          ))}
+        </ol>
+      ) : <div class="empty-state"><p>No notes are filed here yet.</p><a href="/blog/">Back to Notes →</a></div>}
+    </section>
+  </main>
+</EditorialLayout>

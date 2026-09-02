@@ -1,0 +1,86 @@
+---
+import { getCollection, render } from "astro:content";
+import EditorialLayout from "../../components/EditorialLayout.astro";
+import SiteFavicons from "../../components/SiteFavicons.astro";
+import { caseStudyCatalog } from "../../lib/catalog";
+import { documentTitle as formatDocumentTitle } from "../../lib/site-metadata";
+
+export async function getStaticPaths() {
+  const studies = await getCollection("caseStudies");
+  const studyByFolder = new Map(studies.map((study) => [study.id.replace(/\/index$/, ""), study]));
+  return caseStudyCatalog.flatMap((entry, index) => {
+    const props = {
+      entry,
+      study: studyByFolder.get(entry.folder)!,
+      previous: caseStudyCatalog[(index - 1 + caseStudyCatalog.length) % caseStudyCatalog.length],
+      next: caseStudyCatalog[(index + 1) % caseStudyCatalog.length],
+      previousStudy: studyByFolder.get(caseStudyCatalog[(index - 1 + caseStudyCatalog.length) % caseStudyCatalog.length].folder)!,
+      nextStudy: studyByFolder.get(caseStudyCatalog[(index + 1) % caseStudyCatalog.length].folder)!,
+    };
+    return [
+      { params: { slug: entry.folder }, props: { ...props, redirect: false } },
+      { params: { slug: entry.legacyFolder }, props: { ...props, redirect: true } },
+    ];
+  });
+}
+
+const { entry, study, previous, next, previousStudy, nextStudy, redirect } = Astro.props;
+const { Content } = await render(study);
+---
+
+{redirect ? (
+  <html lang="en">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <meta name="robots" content="noindex,follow" />
+      <meta http-equiv="refresh" content={`0; url=/case-studies/${entry.folder}/`} />
+      <link rel="canonical" href={`https://oponomarov.com/case-studies/${entry.folder}/`} />
+      <SiteFavicons />
+      <title>{formatDocumentTitle("portfolio", "Case study moved")}</title>
+      <script is:inline define:vars={{ target: `/case-studies/${entry.folder}/` }}>location.replace(target + location.search + location.hash);</script>
+    </head>
+    <body><p>This case study moved to <a href={`/case-studies/${entry.folder}/`}>its canonical address</a>.</p></body>
+  </html>
+) : <EditorialLayout
+  site="portfolio"
+  canonicalOrigin="https://oponomarov.com"
+  title={study.data.title}
+  description={study.data.summary}
+  article
+  searchType="Case study"
+  tags={study.data.topics}
+>
+  <main class="case-detail" id="main-content" tabindex="-1" data-pagefind-body>
+    <header class="case-detail-header">
+      <a class="back-link" href="/#index">← all case studies</a>
+      <p class="section-eyebrow">Case study {String(entry.number).padStart(2, "0")}{study.data.featured && " · featured"}</p>
+      <h1>{study.data.title}</h1>
+      {study.data.role && study.data.evidence ? (
+        <dl class="case-proof case-detail-proof" data-case-proof>
+          <div><dt>Impact</dt><dd>{study.data.summary}</dd></div>
+          <div><dt>My role</dt><dd>{study.data.role}</dd></div>
+          <div><dt>Evidence</dt><dd>{study.data.evidence}</dd></div>
+        </dl>
+      ) : <p class="case-detail-summary">{study.data.summary}</p>}
+      <div class="topic-list" aria-label="Topics">{study.data.topics.map((topic: string) => <span>{topic}</span>)}</div>
+    </header>
+    <article class="prose case-detail-prose"><Content /></article>
+    <nav class="case-detail-adjacent" aria-label="Adjacent case studies" data-pagefind-ignore>
+      <a href={`/case-studies/${previous.folder}/`} data-study-direction="previous">
+        <span class="case-detail-adjacent-kicker">Previous</span>
+        <span class="case-detail-adjacent-number">Case {String(previous.number).padStart(2, "0")}</span>
+        <span class="case-detail-adjacent-title">{previousStudy.data.title}</span>
+      </a>
+      <a href={`/case-studies/${next.folder}/`} data-study-direction="next">
+        <span class="case-detail-adjacent-kicker">Next</span>
+        <span class="case-detail-adjacent-number">Case {String(next.number).padStart(2, "0")}</span>
+        <span class="case-detail-adjacent-title">{nextStudy.data.title}</span>
+      </a>
+    </nav>
+    <nav class="case-detail-footer" aria-label="Portfolio navigation" data-pagefind-ignore>
+      <a href="/#index">View all work →</a>
+      <a href="/contact/">Contact</a>
+    </nav>
+  </main>
+</EditorialLayout>}

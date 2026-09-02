@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Oleksandr Ponomarov">
+  <rect width="64" height="64" rx="14" fill="#0b1220"/>
+  <path d="m17 18 13 14-13 14" fill="none" stroke="#93c5fd" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M34 46h14" fill="none" stroke="#f8fafc" stroke-width="6" stroke-linecap="round"/>
+  <rect x="49" y="14" width="4" height="20" rx="2" fill="#f9423a"/>
+</svg>

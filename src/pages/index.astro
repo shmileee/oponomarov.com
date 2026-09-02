@@ -1,0 +1,164 @@
+---
+import { getCollection, render } from "astro:content";
+import EditorialLayout from "../components/EditorialLayout.astro";
+import { byId, caseStudyCatalog } from "../lib/catalog";
+
+const studies = await getCollection("caseStudies");
+const studyByFolder = new Map(studies.map((study) => [study.id.replace(/\/index$/, ""), study]));
+const orderedStudies = caseStudyCatalog.map((entry) => ({ entry, study: studyByFolder.get(entry.folder)! }));
+const spotlightItem = orderedStudies.find(({ study }) => study.data.spotlight)!;
+
+const homeEntries = await getCollection("home");
+const homeByKey = new Map(homeEntries.map((entry) => [entry.data.key, entry]));
+const hero = homeByKey.get("hero")!;
+const hiring = await render(homeByKey.get("hiring")!);
+const HiringContent = hiring.Content;
+const arcIntroEntry = homeByKey.get("arc")!;
+const arcIntro = await render(arcIntroEntry);
+const ArcIntroContent = arcIntro.Content;
+const arcEntries = (await getCollection("arc")).sort((a, b) => a.data.number - b.data.number);
+const renderedArc = await Promise.all(arcEntries.map(async (entry) => ({ entry, Content: (await render(entry)).Content })));
+const principleEntries = (await getCollection("principles")).sort((a, b) => a.data.number - b.data.number);
+const renderedPrinciples = await Promise.all(principleEntries.map(async (entry) => ({ entry, Content: (await render(entry)).Content })));
+
+const topicOrder = ["reliability", "networking", "developer experience", "security", "ai", "cost", "delivery"];
+const hrefFor = (folder: string) => `/case-studies/${folder}/`;
+const readerManifest = orderedStudies.map(({ entry, study }) => ({
+  id: entry.id,
+  legacyNumber: Number.parseInt(entry.legacyFolder, 10),
+  number: entry.number,
+  url: hrefFor(entry.folder),
+  title: study.data.title,
+  topics: study.data.topics,
+}));
+---
+
+<EditorialLayout
+  site="portfolio"
+  canonicalOrigin="https://oponomarov.com"
+  title="Portfolio"
+  description="Platform & Site Reliability Engineer — case studies from building the infrastructure backbone of an industrial IoT company."
+  searchType="Overview"
+>
+  <main id="main-content" tabindex="-1" data-pagefind-body>
+    <section class="hero section-shell experience-hero" id="top">
+      <h1>{hero.data.title}<span class="hero-cursor" aria-hidden="true"></span></h1>
+      <div class="hero-copy"><HiringContent /></div>
+      <div class="hero-actions">
+        <a class="primary-link" href={hero.data.primaryHref}>{hero.data.primaryCta}</a>
+        <a class="secondary-link" href={hero.data.secondaryHref}>{hero.data.secondaryCta}</a>
+      </div>
+    </section>
+
+    <section class="section-block" id="arc">
+      <div class="section-shell">
+        <p class="section-eyebrow">{arcIntroEntry.data.eyebrow}</p>
+        <h2>{arcIntroEntry.data.title}</h2>
+        <div class="section-intro"><ArcIntroContent /></div>
+        <div class="arc-list">
+          {renderedArc.map(({ entry, Content }, index) => (
+            <article class="arc-step">
+              <span class="arc-number">{String(entry.data.number).padStart(2, "0")}</span>
+              <div class="arc-content">
+                <div class="arc-copy"><Content /></div>
+                <div class="arc-links">
+                  {entry.data.links.map((link) => {
+                    const definition = byId.get(link.study)!;
+                    return <a href={hrefFor(definition.folder)} data-open-study={definition.id} data-arc-study={definition.id}>{String(definition.number).padStart(2, "0")} · {link.label}</a>;
+                  })}
+                </div>
+              </div>
+              {index < renderedArc.length - 1 && <span class="arc-arrow" aria-hidden="true">↓</span>}
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section class="section-block" id="featured">
+      <div class="section-shell">
+        <p class="section-eyebrow">02</p>
+        <h2>The biggest win</h2>
+        <article class="spotlight" data-pagefind-ignore>
+          <header class="spotlight-header">
+            <p class="reader-meta">Case study {String(spotlightItem.entry.number).padStart(2, "0")} · spotlight</p>
+            <h3>{spotlightItem.study.data.title}</h3>
+            {spotlightItem.study.data.role && spotlightItem.study.data.evidence && (
+              <dl class="case-proof spotlight-proof" data-case-proof>
+                <div><dt>Impact</dt><dd>{spotlightItem.study.data.summary}</dd></div>
+                <div><dt>My role</dt><dd>{spotlightItem.study.data.role}</dd></div>
+                <div><dt>Evidence</dt><dd>{spotlightItem.study.data.evidence}</dd></div>
+              </dl>
+            )}
+            <div class="section-intro"><p>{spotlightItem.study.data.spotlightProof}</p></div>
+            <div class="topic-list" aria-label="Topics">{spotlightItem.study.data.topics.map((topic) => <span>{topic}</span>)}</div>
+          </header>
+          <div class="hero-actions"><a class="primary-link" href={hrefFor(spotlightItem.entry.folder)} data-open-study={spotlightItem.entry.id}>Read case study →</a></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section-block" id="index">
+      <div class="section-shell">
+        <p class="section-eyebrow">03</p>
+        <h2>All case studies</h2>
+        <div class="topic-filters" role="group" aria-label="Filter case studies">
+          <button type="button" data-topic-filter="all" aria-pressed="true">all</button>
+          {topicOrder.map((topic) => <button type="button" data-topic-filter={topic} aria-pressed="false">{topic}</button>)}
+        </div>
+        <p class="sr-only" aria-live="polite" data-filter-status></p>
+        <div class="case-grid" data-case-grid data-pagefind-ignore>
+          {orderedStudies.map(({ entry, study }, index) => (
+            <a class:list={["case-card", { "case-card-featured": study.data.featured }]} href={hrefFor(entry.folder)} data-case-card data-open-study={entry.id} data-topics={study.data.topics.join("|")} data-initially-hidden={String(index >= 9)}>
+              <span class="case-card-number">{String(entry.number).padStart(2, "0")}{study.data.featured && " · featured"}{study.data.cardLabel && ` · ${study.data.cardLabel}`}</span>
+              <span class="case-card-title">{study.data.title}</span>
+              {study.data.role && study.data.evidence ? (
+                <dl class="case-proof case-card-proof" data-case-proof>
+                  <div><dt>Impact</dt><dd>{study.data.summary}</dd></div>
+                  <div><dt>My role</dt><dd>{study.data.role}</dd></div>
+                  <div><dt>Evidence</dt><dd>{study.data.evidence}</dd></div>
+                </dl>
+              ) : <span class="case-card-summary">{study.data.summary}</span>}
+              <span class="case-card-topics">{study.data.topics.join(" · ")}</span>
+              <span class="case-card-action">{study.data.spotlight ? "full story ↑" : "read →"}</span>
+            </a>
+          ))}
+        </div>
+        <div class="grid-toggle-row"><button class="grid-toggle" type="button" data-grid-toggle>see more →</button></div>
+      </div>
+    </section>
+
+    <section class="section-block" id="how-i-work">
+      <div class="section-shell" id="principles">
+        <p class="section-eyebrow">04</p>
+        <h2>How I work</h2>
+        <div class="principle-list">
+          {renderedPrinciples.map(({ entry, Content }) => (
+            <article class="principle"><span>{String(entry.data.number).padStart(2, "0")}</span><div><h3>{entry.data.title}</h3><Content /></div></article>
+          ))}
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <dialog class="reader" id="case-study-reader" aria-labelledby="reader-title" data-reader>
+    <div class="reader-shell">
+      <div class="reader-toolbar">
+        <button class="reader-close" type="button" aria-label="Close case study" title="Close case study" data-reader-close>
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 4 8 8m0-8-8 8"></path></svg>
+        </button>
+      </div>
+      <article class="reader-study" data-reader-study>
+        <p class="reader-meta"><span class="reader-meta-number" data-reader-meta-number></span><span class="reader-meta-topics" data-reader-meta-topics></span></p>
+        <h2 class="reader-title" id="reader-title" tabindex="-1" data-reader-title>Case study reader</h2>
+        <p class="sr-only" role="status" aria-live="polite" data-reader-status>Choose a case study to read.</p>
+        <div class="prose reader-prose" data-reader-prose></div>
+        <nav class="reader-navigation" aria-label="Case study navigation">
+          <button type="button" data-reader-direction="previous"><span data-reader-direction-kicker></span><span data-reader-case-number></span><span data-reader-case-title></span></button>
+          <button type="button" data-reader-direction="next"><span data-reader-direction-kicker></span><span data-reader-case-number></span><span data-reader-case-title></span></button>
+        </nav>
+      </article>
+    </div>
+    <script is:inline type="application/json" data-reader-manifest set:html={JSON.stringify(readerManifest)}></script>
+  </dialog>
+</EditorialLayout>

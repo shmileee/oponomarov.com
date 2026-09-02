@@ -1,0 +1,232 @@
+---
+import type { CollectionEntry } from "astro:content";
+import BackToTop from "./BackToTop.astro";
+import CodeFrames from "./CodeFrames.astro";
+import SiteFavicons from "./SiteFavicons.astro";
+import SiteFooter from "./SiteFooter.astro";
+import SiteHeader from "./SiteHeader.astro";
+import { docsHref, docsNavigation, docsSlug } from "../lib/docs";
+import { documentTitle as formatDocumentTitle } from "../lib/site-metadata";
+import "../styles/global.css";
+import "../styles/docs-content.css";
+import "../styles/docs-adapter.css";
+import "../styles/docs-unified.css";
+import "../styles/experience.css";
+
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  entry: CollectionEntry<"docs">;
+  headings?: Heading[];
+  home?: boolean;
+}
+
+const { entry, headings = [], home = false } = Astro.props;
+const canonical = new URL(Astro.url.pathname, "https://oponomarov.com");
+const currentSlug = docsSlug(entry);
+const currentIndex = docsNavigation.findIndex((item) => item.slug === currentSlug);
+const previous = currentIndex > 0 ? docsNavigation[currentIndex - 1] : undefined;
+const next = currentIndex >= 0 && currentIndex < docsNavigation.length - 1 ? docsNavigation[currentIndex + 1] : undefined;
+const tocHeadings = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+const rawUrl = entry.data.editUrl?.replace("/edit/", "/raw/");
+const documentTitle = formatDocumentTitle("dotfiles", home ? undefined : entry.data.title);
+---
+
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="color-scheme" content="dark light" />
+    <script is:inline>
+      (() => {
+        const saved = localStorage.getItem("om-theme");
+        const preferred = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        document.documentElement.dataset.theme = saved === "light" || saved === "dark" ? saved : preferred;
+      })();
+    </script>
+    <title>{documentTitle}</title>
+    <meta name="description" content={entry.data.description} data-pagefind-meta="description[content]" />
+    <meta content="Dotfiles" data-pagefind-meta="product[content]" data-pagefind-filter="product[content]" />
+    <meta content="Documentation" data-pagefind-meta="type[content]" />
+    <link rel="canonical" href={canonical} />
+    <SiteFavicons />
+    <meta property="og:title" content={documentTitle} />
+    <meta property="og:description" content={entry.data.description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+  </head>
+  <body class:list={{ "docs-home-page": home }} data-app="dotfiles">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <SiteHeader activeApp="dotfiles" showProgress={!home} />
+
+    <main id="main-content" class:list={["docs-shell", { "docs-shell--home": home }]} data-pagefind-body>
+      <article class="docs-article sl-markdown-content">
+        {!home && (
+          <header class="docs-page-header">
+            <h1>{entry.data.title}</h1>
+            <p>{entry.data.description}</p>
+            {entry.data.editUrl && (
+              <nav class="page-source-actions" aria-label="Page source">
+                {rawUrl && <a href={rawUrl} aria-label="View source of this page" title="View source"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"></path></svg></a>}
+                <a href={entry.data.editUrl} aria-label="Edit this page" title="Edit this page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"></path></svg></a>
+              </nav>
+            )}
+          </header>
+        )}
+
+        {!home && tocHeadings.length >= 3 && (
+          <details class="mobile-page-toc" data-pagefind-ignore>
+            <summary><span class="mobile-page-toc__label"><strong>On this page</strong><small>{tocHeadings.length} sections</small></span><span class="mobile-page-toc__marker" aria-hidden="true"></span></summary>
+            <nav class="mobile-page-toc__nav" aria-label="On this page">
+              <ul>{tocHeadings.map((heading) => <li class:list={{ "is-nested": heading.depth === 3 }}><a href={`#${heading.slug}`}>{heading.text}</a></li>)}</ul>
+            </nav>
+          </details>
+        )}
+
+        <div class="mobile-context-help-mount" data-context-help-mount data-pagefind-ignore></div>
+
+        {home ? (
+          <div class="docs-home-content">
+            <slot />
+          </div>
+        ) : <slot />}
+
+        {(previous || next) && (
+          <nav class="docs-adjacent" aria-label="Adjacent documentation">
+            {previous && <a href={docsHref(previous.slug)}><span>← Previous</span><strong>{previous.label}</strong></a>}
+            {next && <a class="docs-adjacent-next" href={docsHref(next.slug)}><span>Next →</span><strong>{next.label}</strong></a>}
+          </nav>
+        )}
+      </article>
+
+      {!home && tocHeadings.length > 0 && (
+        <aside class="docs-toc" data-pagefind-ignore>
+          <nav aria-label="On this page">
+            <p>On this page</p>
+            <ol>
+              {tocHeadings.map((heading) => <li class:list={{ "is-nested": heading.depth === 3 }}><a href={`#${heading.slug}`} data-docs-toc-link>{heading.text}</a></li>)}
+            </ol>
+          </nav>
+        </aside>
+      )}
+    </main>
+
+    <BackToTop />
+    <SiteFooter activeApp="dotfiles" />
+    <CodeFrames />
+
+    <script>
+      let docsController: AbortController | undefined;
+
+      const initDocsUi = () => {
+        docsController?.abort();
+        docsController = new AbortController();
+        const { signal } = docsController;
+
+        document.querySelectorAll<HTMLElement>(".sl-markdown-content table").forEach((table) => {
+          if (table.parentElement?.classList.contains("docs-table-scroll")) return;
+          const wrapper = document.createElement("div");
+          wrapper.className = "docs-table-scroll";
+          table.before(wrapper);
+          wrapper.append(table);
+        });
+
+        const contextSource = document.querySelector<HTMLElement>(".context-help-source");
+        const trigger = contextSource?.querySelector<HTMLButtonElement>("[data-context-open]");
+        const dialog = contextSource?.querySelector<HTMLDialogElement>("[data-context-dialog]");
+        if (contextSource && trigger && dialog) {
+          const mobileMount = document.querySelector<HTMLElement>("[data-context-help-mount]");
+          const mobileQuery = matchMedia("(max-width: 42rem)");
+          const placeTrigger = () => {
+            if (mobileQuery.matches && mobileMount && !document.body.classList.contains("docs-home-page")) mobileMount.append(trigger);
+            else document.body.append(trigger);
+          };
+          placeTrigger();
+          mobileQuery.addEventListener("change", placeTrigger, { signal });
+          document.body.append(dialog);
+          contextSource.remove();
+          const close = () => dialog.open && dialog.close();
+          const closeButton = dialog.querySelector<HTMLButtonElement>("[data-context-close]");
+          trigger.addEventListener("click", () => {
+            if (dialog.open) return;
+            dialog.showModal();
+            closeButton?.focus();
+          }, { signal });
+          closeButton?.addEventListener("click", close, { signal });
+          dialog.addEventListener("click", (event) => {
+            if (event.target !== dialog) return;
+            const box = dialog.getBoundingClientRect();
+            if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) close();
+          }, { signal });
+          dialog.addEventListener("close", () => trigger.focus(), { signal });
+        }
+
+        const filter = document.querySelector<HTMLElement>("[data-shortcut-filter]");
+        const input = filter?.querySelector<HTMLInputElement>("[data-shortcut-query]");
+        const clear = filter?.querySelector<HTMLButtonElement>("[data-shortcut-clear]");
+        const buttons = [...(filter?.querySelectorAll<HTMLButtonElement>("[data-shortcut-scope]") || [])];
+        const sections = [...document.querySelectorAll<HTMLElement>("[data-shortcut-section]")];
+        const empty = document.querySelector<HTMLElement>("[data-shortcut-empty]");
+        const status = filter?.querySelector<HTMLElement>("[data-shortcut-status]");
+        const total = sections.reduce((count, section) => count + section.querySelectorAll("tbody tr").length, 0);
+        let scope = "all";
+        const updateFilter = () => {
+          const terms = (input?.value || "").toLowerCase().trim().split(/[\s+]+/).filter(Boolean);
+          let count = 0;
+          sections.forEach((section) => {
+            const scopeMatches = scope === "all" || section.dataset.shortcutSection === scope;
+            const rows = [...section.querySelectorAll<HTMLTableRowElement>("tbody tr")];
+            rows.forEach((row) => {
+              const matches = scopeMatches && terms.every((term) => row.textContent?.toLowerCase().includes(term));
+              row.hidden = !matches;
+              if (matches) count += 1;
+            });
+            section.hidden = !rows.some((row) => !row.hidden);
+          });
+          if (clear) clear.hidden = !input?.value;
+          if (empty) empty.hidden = count > 0;
+          if (status) status.textContent = `Showing ${count} of ${total} shortcuts`;
+        };
+        input?.addEventListener("input", updateFilter, { signal });
+        input?.addEventListener("keydown", (event) => {
+          if (event.key === "Escape" && input.value) { input.value = ""; updateFilter(); }
+        }, { signal });
+        clear?.addEventListener("click", () => { if (input) input.value = ""; input?.focus(); updateFilter(); }, { signal });
+        buttons.forEach((button) => button.addEventListener("click", () => {
+          scope = button.dataset.shortcutScope || "all";
+          buttons.forEach((candidate) => candidate.setAttribute("aria-pressed", String(candidate === button)));
+          updateFilter();
+        }, { signal }));
+        if (filter) { filter.classList.add("is-ready"); updateFilter(); }
+
+        const tocLinks = [...document.querySelectorAll<HTMLAnchorElement>("[data-docs-toc-link]")];
+        const headings = tocLinks.map((link) => document.getElementById(link.hash.slice(1))).filter(Boolean) as HTMLElement[];
+        if (headings.length) {
+          const selectActive = () => {
+            const atPageEnd = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
+            const active = atPageEnd
+              ? headings.at(-1)!
+              : [...headings].reverse().find((heading) => heading.getBoundingClientRect().top <= 140) || headings[0];
+            tocLinks.forEach((link) => {
+              const isActive = link.hash === `#${active.id}`;
+              link.classList.toggle("is-active", isActive);
+              if (isActive) link.setAttribute("aria-current", "location");
+              else link.removeAttribute("aria-current");
+            });
+          };
+          addEventListener("scroll", selectActive, { passive: true, signal });
+          selectActive();
+        }
+      };
+
+      initDocsUi();
+      document.addEventListener("astro:page-load", initDocsUi);
+    </script>
+  </body>
+</html>

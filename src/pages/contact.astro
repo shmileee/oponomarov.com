@@ -1,0 +1,85 @@
+---
+import BackToTop from "../components/BackToTop.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+import SiteFavicons from "../components/SiteFavicons.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import { documentTitle as formatDocumentTitle } from "../lib/site-metadata";
+import "../styles/global.css";
+import "../styles/experience.css";
+import "../styles/contact.css";
+
+const canonical = new URL(Astro.url.pathname, "https://oponomarov.com");
+const documentTitle = formatDocumentTitle("contact");
+---
+
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="author" content="Oleksandr Ponomarov" />
+    <meta name="color-scheme" content="dark light" />
+    <script is:inline>
+      (() => {
+        const saved = localStorage.getItem("om-theme");
+        const preferred = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        document.documentElement.dataset.theme = saved === "light" || saved === "dark" ? saved : preferred;
+      })();
+    </script>
+    <title>{documentTitle}</title>
+    <meta name="description" content="Contact Oleksandr Ponomarov by email, LinkedIn, or GitHub." data-pagefind-meta="description[content]" />
+    <meta content="Site" data-pagefind-meta="product[content]" data-pagefind-filter="product[content]" />
+    <meta content="Contact" data-pagefind-meta="type[content]" />
+    <link rel="canonical" href={canonical} />
+    <SiteFavicons />
+    <meta property="og:title" content={documentTitle} />
+    <meta property="og:description" content="Contact Oleksandr Ponomarov by email, LinkedIn, or GitHub." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+  </head>
+  <body data-app="contact">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <SiteHeader activeApp="contact" />
+
+    <main id="main-content" class="contact-page" tabindex="-1" data-pagefind-body>
+      <section class="contact-hero section-shell experience-hero" aria-labelledby="contact-title">
+        <h1 id="contact-title">Let’s talk.<span class="hero-cursor" aria-hidden="true"></span></h1>
+        <p>For roles, collaborations, technical conversations, or questions about something I’ve published, choose the channel that fits.</p>
+      </section>
+
+      <section class="contact-methods section-shell" aria-label="Ways to get in touch">
+        <a class="contact-method" id="email" href="mailto:ponomarov.aleksandr@gmail.com">
+          <span class="contact-method__number">01 · direct</span>
+          <h2>Email me</h2>
+          <p>Best when your message needs context, an introduction, or a concrete next step.</p>
+          <span class="contact-method__action">ponomarov.aleksandr@gmail.com <span aria-hidden="true">→</span></span>
+        </a>
+
+        <a class="contact-method" id="linkedin" href="https://www.linkedin.com/in/aleksandr-ponomarov" rel="me">
+          <span class="contact-method__number">02 · professional</span>
+          <h2>Connect on LinkedIn</h2>
+          <p>Useful for professional introductions, roles, collaborations, and staying in touch.</p>
+          <span class="contact-method__action">Open LinkedIn <span aria-hidden="true">↗</span></span>
+        </a>
+
+        <a class="contact-method" id="github" href="https://github.com/shmileee" rel="me">
+          <span class="contact-method__number">03 · public work</span>
+          <h2>Find me on GitHub</h2>
+          <p>Use this for repositories, implementation details, and the public work behind these sites.</p>
+          <span class="contact-method__action">github.com/shmileee <span aria-hidden="true">↗</span></span>
+        </a>
+      </section>
+
+      <section class="contact-note section-block">
+        <div class="section-shell">
+          <p class="section-eyebrow">A useful first message</p>
+          <p>A short note about why you’re reaching out, any relevant link, and the next step you have in mind is plenty.</p>
+        </div>
+      </section>
+    </main>
+
+    <BackToTop />
+    <SiteFooter activeApp="contact" />
+  </body>
+</html>

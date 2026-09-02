@@ -1,0 +1,60 @@
+---
+import "../styles/global.css";
+import "../styles/experience.css";
+import SiteFavicons from "./SiteFavicons.astro";
+import SiteFooter from "./SiteFooter.astro";
+import SiteHeader from "./SiteHeader.astro";
+import { documentTitle as formatDocumentTitle } from "../lib/site-metadata";
+
+interface Props {
+  activeApp: "portfolio" | "blog" | "dotfiles";
+  canonicalOrigin: string;
+  description: string;
+  title: string;
+  article?: boolean;
+}
+
+const {
+  activeApp,
+  canonicalOrigin,
+  description,
+  title,
+  article = false,
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, canonicalOrigin);
+const roots = { portfolio: "/", blog: "/blog/", dotfiles: "/dotfiles/" } as const;
+const documentTitle = formatDocumentTitle(activeApp, Astro.url.pathname === roots[activeApp] ? undefined : title);
+---
+
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="color-scheme" content="dark light" />
+    <script is:inline>
+      (() => {
+        const saved = localStorage.getItem("om-theme");
+        const preferred = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        document.documentElement.dataset.theme = saved === "light" || saved === "dark" ? saved : preferred;
+      })();
+    </script>
+    <title>{documentTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <SiteFavicons />
+    <meta property="og:title" content={documentTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content={article ? "article" : "website"} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+    <slot name="head" />
+  </head>
+  <body data-app={activeApp}>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <SiteHeader activeApp={activeApp} showProgress={article} />
+    <slot />
+    <SiteFooter activeApp={activeApp} />
+  </body>
+</html>
