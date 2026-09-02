@@ -160,7 +160,6 @@ function extractDefinitionsSpan(filePath) {
     }
   }
   fail(`unbalanced definitions array in ${filePath}`);
-  return ""; // unreachable
 }
 
 /**
