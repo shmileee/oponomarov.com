@@ -1,9 +1,21 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { dirname, extname, join, normalize, relative, resolve } from "node:path";
+import { basename, dirname, extname, join, normalize, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { readPostCategories, uniqueCategories } from "../src/lib/categories.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const dist = join(root, "dist");
+
+const portfolioRoot = resolve(root, process.env.PORTFOLIO_DIR ?? "./content/portfolio");
+const blogRoot = resolve(root, process.env.BLOG_DIR ?? "./content/blog");
+const dotfilesRoot = resolve(root, process.env.DOTFILES_DIR ?? "./content/dotfiles");
+for (const [envName, directory] of [
+  ["PORTFOLIO_DIR", portfolioRoot],
+  ["BLOG_DIR", blogRoot],
+  ["DOTFILES_DIR", dotfilesRoot],
+]) {
+  if (!existsSync(directory)) throw new Error(`Missing content root ${directory} (sync content/ or set ${envName})`);
+}
 const required = [
   "dist/index.html",
   "dist/404.html",
@@ -24,9 +36,6 @@ const required = [
   "dist/blog-assets/css/syntax.css",
   "dist/blog-assets/js/site.js",
   "dist/dotfiles/index.html",
-  "dist/dotfiles/setup/index.html",
-  "dist/dotfiles/shortcuts/index.html",
-  "dist/dotfiles/opencode/index.html",
 ];
 
 const missing = required.filter((path) => !existsSync(join(root, path)));
@@ -84,11 +93,35 @@ const workRedirects = routeDirectories(join(dist, "work"));
 const postPages = routeDirectories(join(dist, "blog/posts"));
 const categoryPages = routeDirectories(join(dist, "blog/categories"));
 
-if (canonicalCaseStudies.length !== 22) throw new Error(`Expected 22 canonical case-study routes, found ${canonicalCaseStudies.length}`);
-if (numberedRedirects.length !== 22) throw new Error(`Expected 22 numbered case-study redirects, found ${numberedRedirects.length}`);
-if (workRedirects.length !== 22) throw new Error(`Expected 22 /work compatibility redirects, found ${workRedirects.length}`);
-if (postPages.length !== 9) throw new Error(`Expected 9 blog routes, found ${postPages.length}`);
-if (categoryPages.length !== 10) throw new Error(`Expected 10 blog category routes, found ${categoryPages.length}`);
+const formatSet = (values) => (values.length > 0 ? values.join(", ") : "(none)");
+const expectedCaseStudies = filesBelow(join(portfolioRoot, "content/case-studies")).filter((path) => basename(path) === "index.md").length;
+const catalogSource = readFileSync(join(root, "src/lib/catalog.ts"), "utf8");
+const catalogBlock = catalogSource.match(/const definitions = \[([\s\S]*?)\] as const;/)?.[1];
+if (!catalogBlock) throw new Error("Could not locate the case-study definitions block in src/lib/catalog.ts");
+const expectedRedirects = (catalogBlock.match(/^\s*\[/gm) ?? []).length;
+const postsSourceDir = join(blogRoot, "content/posts");
+const expectedPosts = readdirSync(postsSourceDir).filter((name) => name.endsWith(".md")).length;
+const expectedCategories = uniqueCategories(readPostCategories(postsSourceDir));
+
+if (canonicalCaseStudies.length !== expectedCaseStudies) throw new Error(`Expected ${expectedCaseStudies} canonical case-study routes (index.md files under ${relative(root, join(portfolioRoot, "content/case-studies"))}), found ${canonicalCaseStudies.length}`);
+if (numberedRedirects.length !== expectedRedirects) throw new Error(`Expected ${expectedRedirects} numbered case-study redirects (catalog entries in src/lib/catalog.ts), found ${numberedRedirects.length}`);
+if (workRedirects.length !== expectedRedirects) throw new Error(`Expected ${expectedRedirects} /work compatibility redirects (catalog entries in src/lib/catalog.ts), found ${workRedirects.length}`);
+if (postPages.length !== expectedPosts) throw new Error(`Expected ${expectedPosts} blog routes (*.md posts under ${relative(root, postsSourceDir)}), found ${postPages.length}`);
+const builtCategories = [...categoryPages].sort();
+if (builtCategories.join("\n") !== expectedCategories.join("\n")) throw new Error(`Built blog category pages diverge from post frontmatter categories.\nExpected: ${formatSet(expectedCategories)}\nActual:   ${formatSet(builtCategories)}`);
+
+const docsSourceDir = join(dotfilesRoot, "docs/content");
+const expectedDocSlugs = readdirSync(docsSourceDir)
+  .filter((name) => name.endsWith(".md"))
+  .map((name) => name.replace(/\.md$/, ""))
+  .sort();
+for (const slug of expectedDocSlugs) {
+  const target = slug === "index" ? join(dist, "dotfiles/index.html") : join(dist, "dotfiles", slug, "index.html");
+  if (!existsSync(target)) throw new Error(`Dotfiles manual ${slug}.md did not produce ${relative(root, target)}`);
+}
+const expectedDocRoutes = expectedDocSlugs.filter((slug) => slug !== "index");
+const builtDocRoutes = routeDirectories(join(dist, "dotfiles")).sort();
+if (builtDocRoutes.join("\n") !== expectedDocRoutes.join("\n")) throw new Error(`Built Dotfiles routes diverge from ${relative(root, docsSourceDir)}.\nExpected: ${formatSet(expectedDocRoutes)}\nActual:   ${formatSet(builtDocRoutes)}`);
 
 const readRoutes = (base, names) => names.map((name) => readFileSync(join(base, name, "index.html"), "utf8")).join("\n");
 const portfolioHtml = readRoutes(join(dist, "case-studies"), canonicalCaseStudies);
@@ -97,7 +130,7 @@ const blogHtml = readRoutes(join(dist, "blog/posts"), postPages);
 const blogHomeHtml = readFileSync(join(dist, "blog/index.html"), "utf8");
 const contactHtml = readFileSync(join(dist, "contact/index.html"), "utf8");
 const docsHomeHtml = readFileSync(join(dist, "dotfiles/index.html"), "utf8");
-const docsHtml = ["index", "setup", "shortcuts", "opencode"]
+const docsHtml = expectedDocSlugs
   .map((slug) => readFileSync(join(dist, "dotfiles", slug === "index" ? "index.html" : `${slug}/index.html`), "utf8"))
   .join("\n");
 
@@ -181,5 +214,9 @@ const sitemap = readFileSync(join(dist, "sitemap.xml"), "utf8");
 for (const path of ["/blog/", "/dotfiles/", "/dotfiles/setup/", "/case-studies/", "/contact/"]) {
   if (!sitemap.includes(path)) throw new Error(`Sitemap is missing ${path}`);
 }
+const sitemapCategories = [...sitemap.matchAll(/<loc>https:\/\/oponomarov\.com\/blog\/categories\/([^<]+)\/<\/loc>/g)]
+  .map((match) => match[1])
+  .sort();
+if (sitemapCategories.join("\n") !== expectedCategories.join("\n")) throw new Error(`Sitemap /blog/categories/ URLs diverge from post frontmatter categories.\nExpected: ${formatSet(expectedCategories)}\nActual:   ${formatSet(sitemapCategories)}`);
 
-console.log(`Verified one Astro build: ${canonicalCaseStudies.length} case studies, ${numberedRedirects.length + workRedirects.length} compatibility redirects, ${postPages.length} posts, ${categoryPages.length} categories, 4 Dotfiles manuals, one shared Contact page, RSS, global cross-product search, interactions, shared syntax themes, and all internal links/assets.`);
+console.log(`Verified one Astro build: ${canonicalCaseStudies.length} case studies, ${numberedRedirects.length + workRedirects.length} compatibility redirects, ${postPages.length} posts, ${categoryPages.length} categories, ${expectedDocSlugs.length} Dotfiles manuals, one shared Contact page, RSS, global cross-product search, interactions, shared syntax themes, and all internal links/assets.`);

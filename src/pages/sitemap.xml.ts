@@ -1,23 +1,12 @@
 import type { APIRoute } from "astro";
 import { getCollection } from "astro:content";
 import { caseStudyCatalog } from "../lib/catalog";
+import { uniqueCategories } from "../lib/categories.mjs";
 import { slugForPost } from "../lib/posts";
-
-const categorySlugs = [
-  "argocd",
-  "aws",
-  "developer-tools",
-  "git",
-  "kubernetes",
-  "opencode",
-  "pre-commit",
-  "terraform",
-  "tmux",
-  "vim",
-];
 
 export const GET: APIRoute = async () => {
   const posts = await getCollection("posts");
+  const categorySlugs = uniqueCategories(posts.map((post) => post.data.categories));
   const urls = [
     "/",
     ...caseStudyCatalog.map(({ folder }) => `/case-studies/${folder}/`),

@@ -1,22 +1,12 @@
 ---
 import { getCollection } from "astro:content";
 import EditorialLayout from "../../../components/EditorialLayout.astro";
+import { uniqueCategories } from "../../../lib/categories.mjs";
 import { formatDate, slugForPost, sortPosts } from "../../../lib/posts";
 
-export function getStaticPaths() {
-  const categories = [
-    ["argocd", "ArgoCD"],
-    ["aws", "AWS"],
-    ["developer-tools", "Developer Tools"],
-    ["git", "Git"],
-    ["kubernetes", "Kubernetes"],
-    ["opencode", "OpenCode"],
-    ["pre-commit", "Pre-Commit"],
-    ["terraform", "Terraform"],
-    ["tmux", "tmux"],
-    ["vim", "Vim"],
-  ] as const;
-  return categories.map(([category, title]) => ({ params: { category }, props: { category, title } }));
+export async function getStaticPaths() {
+  const categories = uniqueCategories((await getCollection("posts")).map((post) => post.data.categories));
+  return categories.map((category) => ({ params: { category }, props: { category, title: category } }));
 }
 
 const { category, title } = Astro.props;
