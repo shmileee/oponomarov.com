@@ -6,3 +6,5 @@ dist/
 content/
 public/case-studies/
 public/blog-static/
+
+.envrc.local

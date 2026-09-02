@@ -1,0 +1,21 @@
+# Toolchain and tasks for the oponomarov.com engine.
+#
+# Content-root env vars (PORTFOLIO_DIR / BLOG_DIR / DOTFILES_DIR) are
+# machine-specific and come from direnv: see .envrc / .envrc.local.example.
+# Without them, defaults resolve to ./content/{portfolio,blog,dotfiles}.
+
+[tools]
+node = "24"
+
+[tasks.sync]
+description = "Validate the three content roots and materialize case-study/blog assets into public/"
+run = "node scripts/sync-content.mjs"
+
+[tasks.dev]
+description = "Sync content, then serve with live reload on http://localhost:4321/"
+# npm's predev hook runs scripts/sync-content.mjs first.
+run = "npm run dev"
+
+[tasks.preview]
+description = "Production-like preview: sync + build + verify, then serve dist/ on http://localhost:4325/"
+run = ["npm run build", "npm run verify", "npm run preview"]

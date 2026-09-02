@@ -1,9 +1,10 @@
-# Deploy the unified site to GitHub Pages.
+# Deploy the site to GitHub Pages.
 #
-# INERT until the manual cutover in README.md is performed: this repository
-# intentionally has zero remotes during the migration, so nothing can trigger
-# this workflow. It builds the engine plus the three public content repos
-# (checked out tokenlessly at build time) and publishes dist/ to Pages.
+# Inert until the go-live checklist in README.md is performed (GitHub Actions
+# and Pages must be enabled for this repository, and the content repos must
+# carry the converted layout). It builds the engine plus the three public
+# content repos (checked out tokenlessly at build time) and publishes dist/
+# to Pages.
 name: Deploy
 
 on:

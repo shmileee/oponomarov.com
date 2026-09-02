@@ -1,0 +1,6 @@
+# Copy to .envrc.local (git-ignored) and point at your local checkouts of the
+# three content repos. Leave a variable unset to use the default
+# ./content/<name> location inside the engine repo.
+export PORTFOLIO_DIR="$HOME/src/portfolio"
+export BLOG_DIR="$HOME/src/blog"
+export DOTFILES_DIR="$HOME/src/dotfiles"
