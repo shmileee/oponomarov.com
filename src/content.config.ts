@@ -2,8 +2,12 @@ import { defineCollection } from "astro:content";
 import { glob } from "astro/loaders";
 import { z } from "astro/zod";
 
+const PF_ROOT = process.env.PORTFOLIO_DIR ?? "./content/portfolio";
+const BL_ROOT = process.env.BLOG_DIR ?? "./content/blog";
+const DF_ROOT = process.env.DOTFILES_DIR ?? "./content/dotfiles";
+
 const caseStudies = defineCollection({
-  loader: glob({ pattern: "**/index.md", base: "./src/content/case-studies" }),
+  loader: glob({ pattern: "**/index.md", base: `${PF_ROOT}/content/case-studies` }),
   schema: z.object({
     title: z.string(),
     summary: z.string(),
@@ -18,7 +22,7 @@ const caseStudies = defineCollection({
 });
 
 const home = defineCollection({
-  loader: glob({ pattern: "*.md", base: "./src/content/home" }),
+  loader: glob({ pattern: "*.md", base: `${PF_ROOT}/content/home` }),
   schema: z.object({
     key: z.string(),
     eyebrow: z.string().optional(),
@@ -31,7 +35,7 @@ const home = defineCollection({
 });
 
 const arc = defineCollection({
-  loader: glob({ pattern: "*.md", base: "./src/content/arc" }),
+  loader: glob({ pattern: "*.md", base: `${PF_ROOT}/content/arc` }),
   schema: z.object({
     number: z.number(),
     links: z.array(z.object({ study: z.string(), label: z.string() })),
@@ -39,12 +43,12 @@ const arc = defineCollection({
 });
 
 const principles = defineCollection({
-  loader: glob({ pattern: "*.md", base: "./src/content/principles" }),
+  loader: glob({ pattern: "*.md", base: `${PF_ROOT}/content/principles` }),
   schema: z.object({ number: z.number(), title: z.string() }),
 });
 
 const posts = defineCollection({
-  loader: glob({ pattern: "*.md", base: "./src/content/posts" }),
+  loader: glob({ pattern: "*.md", base: `${BL_ROOT}/content/posts` }),
   schema: z.object({
     title: z.string(),
     description: z.string(),
@@ -54,7 +58,7 @@ const posts = defineCollection({
 });
 
 const docs = defineCollection({
-  loader: glob({ pattern: "*.md", base: "./src/content/docs" }),
+  loader: glob({ pattern: "*.md", base: `${DF_ROOT}/docs/content` }),
   schema: z.object({
     title: z.string(),
     description: z.string(),
