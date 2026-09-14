@@ -1,10 +1,5 @@
-# Deploy the site to GitHub Pages.
-#
-# Inert until the go-live checklist in README.md is performed (GitHub Actions
-# and Pages must be enabled for this repository, and the content repos must
-# carry the converted layout). It builds the engine plus the three public
-# content repos (checked out tokenlessly at build time) and publishes dist/
-# to Pages.
+# Deploy the site to GitHub Pages: builds the engine plus the three public
+# content repos (checked out tokenlessly at build time) and publishes dist/.
 name: deploy
 
 on:

@@ -63,28 +63,3 @@ regenerated on every build).
 Verification: `npm run check` (astro check — only meaningful with valid
 content roots), `npm run build`, `npm run verify` (`scripts/verify-build.mjs`,
 content-derived counts + snapshot checks).
-
-## Go-live checklist (manual)
-
-Current state: the three content repos have open conversion PRs
-([portfolio#4](https://github.com/shmileee/portfolio/pull/4),
-[blog#7](https://github.com/shmileee/blog/pull/7),
-[dotfiles#104](https://github.com/shmileee/dotfiles/pull/104)); GitHub Actions
-is **disabled** on this repository so the deploy workflow cannot produce
-knowingly-failing runs before the content repos are converted. Remaining
-steps, in order:
-
-1. Review and merge the three conversion PRs — their default branches then
-   carry the new content layout the deploy workflow expects.
-2. Create a fine-grained PAT (Contents: write on `shmileee/oponomarov.com`)
-   and store it as the `ENGINE_DISPATCH_TOKEN` secret in each content repo.
-   Never commit real tokens anywhere.
-3. Copy `ci-templates/notify-engine.yaml` over each content repo's
-   `.github/workflows/notify-engine.yaml` if the template changed since the
-   conversion PRs were authored (the template here is the source of truth).
-4. Enable GitHub Actions for this repository (Settings → Actions), then
-   enable GitHub Pages (source: GitHub Actions) and set the custom domain
-   `oponomarov.com`.
-5. Trigger the deploy workflow (`workflow_dispatch` or push) and confirm the
-   site publishes.
-6. Configure DNS records for `oponomarov.com` and any subdomain redirects.
