@@ -630,6 +630,11 @@ button.header-icon {
   vertical-align: middle !important;
 }
 
+.sl-markdown-content .setup-reference--wrap table:not([class]) td code {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
 .sl-markdown-content__scrollwrap {
   overscroll-behavior-inline: contain;
   scrollbar-color: var(--border-default) transparent;
