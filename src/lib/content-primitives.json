@@ -1,0 +1,379 @@
+{
+  "$comment": "Two-way content contract: every class in raw Markdown HTML must be an authorable key in classes, and every classes key must have a matching CSS selector in src/styles/primitives.css. Adding a class requires adding its CSS and updating docs/design-system.md in the same commit. engineGenerated: true reserves a class for engine output; authors must never write it. Data attributes are exact names, not prefix wildcards. renames and removed record migration dispositions, NOT additional post-cutover permissions; deduplicate classes after renaming. element lists HTML tag names separated by |. usedBy records content-repo consumers after migration; wide, full-bleed, and table-scroll are shared contracts for all three repos. Native HTML, ARIA, and SVG attributes are not data attributes and are outside this name inventory. Fenced code examples are not authored HTML.",
+  "classes": {
+    "hero": {
+      "description": "Shared introductory section; replaces all docs/experience hero variants.",
+      "usedBy": ["dotfiles"],
+      "element": "section"
+    },
+    "hero-copy": {
+      "description": "Introductory copy inside the shared hero; uses the shared prose and lede tokens, not a page-specific type scale.",
+      "usedBy": ["dotfiles"],
+      "element": "p | div"
+    },
+    "hero-actions": {
+      "description": "Wrapping group of primary and secondary hero links.",
+      "usedBy": ["dotfiles"],
+      "element": "div"
+    },
+    "hero-signals": {
+      "description": "Definition list of short facts supporting the introduction.",
+      "usedBy": ["dotfiles"],
+      "element": "dl"
+    },
+    "hero-cursor": {
+      "description": "Decorative terminal-cursor mark in a heading; requires aria-hidden=true and is never focusable.",
+      "usedBy": ["dotfiles"],
+      "element": "span"
+    },
+    "primary-link": {
+      "description": "Primary action link with the shared tap target and focus treatment.",
+      "usedBy": ["dotfiles"],
+      "element": "a"
+    },
+    "secondary-link": {
+      "description": "Secondary action link with the same tap target and focus treatment.",
+      "usedBy": ["dotfiles"],
+      "element": "a"
+    },
+    "surface-grid": {
+      "description": "Responsive grid of semantic cards, links, or definition-list entries; replaces home, principle, documentation-card, and setup-path grids.",
+      "usedBy": ["dotfiles"],
+      "element": "div | dl | nav | section"
+    },
+    "steps": {
+      "description": "Ordered process with list items containing a step marker and explanatory copy.",
+      "usedBy": ["dotfiles"],
+      "element": "ol"
+    },
+    "tabs": {
+      "description": "Progressively enhanced group of tab sections; ContentInteractions generates the tab controls.",
+      "usedBy": ["dotfiles"],
+      "element": "div"
+    },
+    "tab": {
+      "description": "Tab content section inside tabs; requires a non-empty data-tab-label and remains readable without JavaScript.",
+      "usedBy": ["dotfiles"],
+      "element": "section"
+    },
+    "disclosure": {
+      "description": "Native details disclosure with a summary as its first child.",
+      "usedBy": ["dotfiles"],
+      "element": "details"
+    },
+    "setup-reference": {
+      "description": "Reference-table grouping, not a scroll wrapper or column-width override; the engine wraps every nested table.",
+      "usedBy": ["dotfiles"],
+      "element": "div"
+    },
+    "keys": {
+      "description": "Keyboard chord made of native kbd elements and readable separators; wraps without clipping.",
+      "usedBy": ["dotfiles"],
+      "element": "span"
+    },
+    "path-token": {
+      "description": "Inline path or path link with the shared inline-code treatment; optional wbr marks meaningful break points. Do not nest two path-token treatments.",
+      "usedBy": ["dotfiles"],
+      "element": "code | a"
+    },
+    "context-help-source": {
+      "description": "Hidden source section containing the quick-context trigger and dialog for ContentInteractions to mount; excluded from search.",
+      "usedBy": ["dotfiles"],
+      "element": "section"
+    },
+    "context-help-trigger": {
+      "description": "Named button opening the quick-context dialog via data-context-open and aria-controls.",
+      "usedBy": ["dotfiles"],
+      "element": "button"
+    },
+    "context-help": {
+      "description": "Native quick-context dialog with an accessible heading, close button, Escape handling, and focus restoration.",
+      "usedBy": ["dotfiles"],
+      "element": "dialog"
+    },
+    "context-help__panel": {
+      "description": "Dialog panel containing its heading and term definitions; owns internal overflow when needed.",
+      "usedBy": ["dotfiles"],
+      "element": "div"
+    },
+    "context-help__header": {
+      "description": "Dialog heading and close-control row.",
+      "usedBy": ["dotfiles"],
+      "element": "header"
+    },
+    "context-help__terms": {
+      "description": "Definition list of the terms used by the current article.",
+      "usedBy": ["dotfiles"],
+      "element": "dl"
+    },
+    "shortcut-filter": {
+      "description": "Labelled shortcut search and scope controls; carries data-shortcut-filter.",
+      "usedBy": ["dotfiles"],
+      "element": "div"
+    },
+    "shortcut-filter__search": {
+      "description": "Search input and clear-button group.",
+      "usedBy": ["dotfiles"],
+      "element": "div"
+    },
+    "shortcut-filter__scopes": {
+      "description": "Named group of scope buttons; selection is represented by aria-pressed, not an authored state class.",
+      "usedBy": ["dotfiles"],
+      "element": "div"
+    },
+    "shortcut-filter__status": {
+      "description": "Polite live region for the engine-generated result count.",
+      "usedBy": ["dotfiles"],
+      "element": "p"
+    },
+    "shortcut-filter-empty": {
+      "description": "No-results message, initially hidden and shown by the shortcut filter.",
+      "usedBy": ["dotfiles"],
+      "element": "p"
+    },
+    "shortcut-filter-section": {
+      "description": "Filterable group identified by data-shortcut-section; composes with shortcut-reference.",
+      "usedBy": ["dotfiles"],
+      "element": "section"
+    },
+    "shortcut-reference": {
+      "description": "Shortcut reference section with headings and ordinary tables; never fixes table column widths.",
+      "usedBy": ["dotfiles"],
+      "element": "section"
+    },
+    "shortcut-prefix-summary": {
+      "description": "Readable summary of a prefix chord followed by a release instruction.",
+      "usedBy": ["dotfiles"],
+      "element": "div"
+    },
+    "shortcut-prefix-summary__label": {
+      "description": "Label introducing the prefix chord.",
+      "usedBy": ["dotfiles"],
+      "element": "span"
+    },
+    "shortcut-prefix-summary__release": {
+      "description": "Instruction to release the prefix before entering the next key.",
+      "usedBy": ["dotfiles"],
+      "element": "span"
+    },
+    "shortcut-then": {
+      "description": "Visible sequencing word between a prefix and the following command key.",
+      "usedBy": ["dotfiles"],
+      "element": "span"
+    },
+    "shortcut-mode": {
+      "description": "Editor-mode label in a shortcut reference table.",
+      "usedBy": ["dotfiles"],
+      "element": "span"
+    },
+    "shortcut-mode--start": {
+      "description": "Modifier of shortcut-mode marking the beginning of a mode group; not a standalone class.",
+      "usedBy": ["dotfiles"],
+      "element": "span"
+    },
+    "media-exhibit": {
+      "description": "Captioned image or video exhibit; compose with wide for extra measure instead of inline sizing.",
+      "usedBy": ["portfolio"],
+      "element": "figure"
+    },
+    "media-exhibit-frame": {
+      "description": "Shared frame around an exhibit toolbar and media stage.",
+      "usedBy": ["portfolio"],
+      "element": "div"
+    },
+    "media-exhibit-stage": {
+      "description": "Responsive image or video stage; intrinsic media dimensions remain on the media element.",
+      "usedBy": ["portfolio"],
+      "element": "div"
+    },
+    "diagram-exhibit": {
+      "description": "Responsive inline-SVG diagram or semantic process diagram; centrally owns sizing, including the former teardown exhibit.",
+      "usedBy": ["portfolio"],
+      "element": "div"
+    },
+    "diagram-exhibit-label": {
+      "description": "Readable diagram label above a diagram or diagram segment.",
+      "usedBy": ["portfolio"],
+      "element": "div"
+    },
+    "diagram-exhibit-label-secondary": {
+      "description": "Modifier of diagram-exhibit-label for a subsequent diagram segment.",
+      "usedBy": ["portfolio"],
+      "element": "div"
+    },
+    "concept-diagram": {
+      "description": "Semantic figure grouping a diagram-exhibit with its exhibit-caption; carries data-concept-diagram.",
+      "usedBy": ["portfolio"],
+      "element": "figure"
+    },
+    "exhibit-toolbar": {
+      "description": "Exhibit metadata row containing decorative dots, filename, and format badge.",
+      "usedBy": ["portfolio"],
+      "element": "div"
+    },
+    "exhibit-dots": {
+      "description": "Decorative window dots; requires aria-hidden=true and provides no fake controls.",
+      "usedBy": ["portfolio"],
+      "element": "span"
+    },
+    "exhibit-filename": {
+      "description": "Wrappable media filename; title may repeat it but cannot replace visible, reachable text.",
+      "usedBy": ["portfolio"],
+      "element": "span"
+    },
+    "exhibit-badge": {
+      "description": "Short media-format label, such as PNG or MP4.",
+      "usedBy": ["portfolio"],
+      "element": "span"
+    },
+    "exhibit-caption": {
+      "description": "Visible figure caption describing the evidence in an image, video, or diagram.",
+      "usedBy": ["portfolio"],
+      "element": "figcaption"
+    },
+    "media-figure": {
+      "description": "Captioned article image using the shared prose rhythm.",
+      "usedBy": ["blog"],
+      "element": "figure"
+    },
+    "media-figure-wide": {
+      "description": "Retained modifier of media-figure for large screenshots; compose with wide for named-grid placement, not a separate fixed width.",
+      "usedBy": ["blog"],
+      "element": "figure"
+    },
+    "media-figure-compact": {
+      "description": "Retained modifier of media-figure for compact media; keep intrinsic size within the content track rather than inventing another measure.",
+      "usedBy": ["blog"],
+      "element": "figure"
+    },
+    "media-frame": {
+      "description": "Responsive image frame inside media-figure.",
+      "usedBy": ["blog"],
+      "element": "div"
+    },
+    "media-frame-dark": {
+      "description": "Modifier of media-frame selecting the fixed frame-dark token to match the asset, not to select a page theme.",
+      "usedBy": ["blog"],
+      "element": "div"
+    },
+    "media-frame-light": {
+      "description": "Modifier of media-frame selecting the fixed frame-light token to match the asset, not to select a page theme.",
+      "usedBy": ["blog"],
+      "element": "div"
+    },
+    "media-frame-scroll": {
+      "description": "Modifier of media-frame for a deliberately scrollable screenshot; requires tabindex=0, role=region, and an accessible name.",
+      "usedBy": ["blog"],
+      "element": "div"
+    },
+    "wide": {
+      "description": "Opt-in to the named wide grid track on a direct content-grid child; collapses to the content track below 40rem. Also generated on table wrappers.",
+      "usedBy": ["portfolio", "blog", "dotfiles"],
+      "element": "figure | div | section | pre"
+    },
+    "full-bleed": {
+      "description": "Opt-in to the named full grid track on a direct content-grid child; bounded by the page and collapses below 40rem, never uses 100vw breakout hacks.",
+      "usedBy": ["portfolio", "blog", "dotfiles"],
+      "element": "figure | div | section"
+    },
+    "table-scroll": {
+      "description": "ENGINE-GENERATED accessible table scroll region. Authors must never write this wrapper; rehypeTableScroll supplies wide, tabindex=0, role=region, and an accessible name for every table.",
+      "usedBy": ["portfolio", "blog", "dotfiles"],
+      "element": "div",
+      "engineGenerated": true
+    }
+  },
+  "dataAttributes": {
+    "data-context-open": {
+      "description": "Presence marker on the quick-context open button; aria-controls identifies the dialog.",
+      "usedBy": ["dotfiles"]
+    },
+    "data-context-dialog": {
+      "description": "Presence marker on the native quick-context dialog.",
+      "usedBy": ["dotfiles"]
+    },
+    "data-context-close": {
+      "description": "Presence marker on the dialog close button.",
+      "usedBy": ["dotfiles"]
+    },
+    "data-context-ui": {
+      "description": "Presence marker identifying the quick-context trigger and dialog as ancillary UI, not article content.",
+      "usedBy": ["dotfiles"]
+    },
+    "data-search-exclude": {
+      "description": "Presence marker excluding ancillary context headings and prefix summaries from engine-derived content navigation/search text; not a substitute for data-pagefind-ignore.",
+      "usedBy": ["dotfiles"]
+    },
+    "data-pagefind-ignore": {
+      "description": "Pagefind exclusion marker for ancillary context UI; never apply to the article body.",
+      "usedBy": ["dotfiles"]
+    },
+    "data-tab-label": {
+      "description": "Non-empty visible label on a tab section, such as macOS or Ubuntu; used to generate its accessible tab control.",
+      "usedBy": ["dotfiles"]
+    },
+    "data-shortcut-filter": {
+      "description": "Presence marker on the shortcut-filter root.",
+      "usedBy": ["dotfiles"]
+    },
+    "data-shortcut-query": {
+      "description": "Presence marker on the labelled shortcut search input.",
+      "usedBy": ["dotfiles"]
+    },
+    "data-shortcut-clear": {
+      "description": "Presence marker on the button that clears the shortcut query.",
+      "usedBy": ["dotfiles"]
+    },
+    "data-shortcut-scope": {
+      "description": "Scope key on a filter button: all, macos, alacritty, fish, tmux, neovim, or opencode. Non-all values must match a data-shortcut-section.",
+      "usedBy": ["dotfiles"]
+    },
+    "data-shortcut-status": {
+      "description": "Presence marker on the polite live result-count region.",
+      "usedBy": ["dotfiles"]
+    },
+    "data-shortcut-empty": {
+      "description": "Presence marker on the initially hidden no-results message.",
+      "usedBy": ["dotfiles"]
+    },
+    "data-shortcut-section": {
+      "description": "Section scope key: macos, alacritty, fish, tmux, neovim, or opencode; matches the corresponding filter button.",
+      "usedBy": ["dotfiles"]
+    },
+    "data-exhibit": {
+      "description": "Presence marker identifying a media-exhibit or diagram-exhibit for shared engine/reader handling; never carries presentation values.",
+      "usedBy": ["portfolio"]
+    },
+    "data-concept-diagram": {
+      "description": "Presence marker identifying the complete conceptual figure, including its diagram and caption, for shared engine/reader handling.",
+      "usedBy": ["portfolio"]
+    }
+  },
+  "renames": {
+    "experience-hero": "hero",
+    "docs-hero": "hero",
+    "docs-hero--home": "hero",
+    "principle-grid": "surface-grid",
+    "home-overview": "surface-grid",
+    "doc-card-grid": "surface-grid",
+    "setup-paths": "surface-grid",
+    "install-flow": "steps",
+    "docs-tabs": "tabs",
+    "docs-tab": "tab",
+    "download-disclosure": "disclosure",
+    "repo-path": "path-token",
+    "teardown-exhibit": "diagram-exhibit"
+  },
+  "removed": {
+    "setup-reference--wrap": "The engine now wraps all tables centrally; remove only the modifier, retaining setup-reference.",
+    "setup-reference--three": "Remove the fixed three-column width/min-width workaround; native table layout and the central scroll wrapper handle all column counts.",
+    "headerlink": "Remove the MkDocs permalink anchor and use Markdown headings; the engine owns heading IDs, anchors, and the TOC.",
+    "data-mobile-toc-anchor": "Dead attribute: nothing in the engine reads it.",
+    "inline-code-unit": "Remove the one-off span wrapper; retain the code text and punctuation as ordinary inline Markdown.",
+    "boundary-list": "Replace the bespoke div list with a plain Markdown list, preserving every item and its explanation.",
+    "page-lead": "Remove the legacy typography class and use an ordinary introductory paragraph; the engine owns prose/lede placement, never a page-specific prose class.",
+    "home-overview__summary": "Remove the home-specific child class; retain the semantic content inside surface-grid.",
+    "home-caution": "Remove the home-specific class, retaining the aside, warning heading, and caution text inside surface-grid.",
+    "home-validation": "Remove the home-specific class, retaining the supported-platforms aside and its text in shared prose."
+  }
+}
