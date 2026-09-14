@@ -173,15 +173,24 @@
   /* the bar and its origin only and never fights the inline transform.    */
   /* ------------------------------------------------------------------ */
 
+  /* Track: the full-width rail. It must not paint the accent itself, or the
+     bar reads as 100% complete on every page before a scroll ever happens. */
   .op-reading-progress {
     position: absolute;
     inset-block-end: 0;
     inset-inline: 0;
     z-index: var(--z-progress);
     block-size: 2px;
+  }
+
+  /* Indicator: SiteHeader writes transform: scaleX(ratio) on this span each
+     scroll frame. It starts collapsed so the first paint shows no progress. */
+  .op-reading-progress > span {
+    display: block;
+    block-size: 100%;
     background: var(--color-progress);
+    transform: scaleX(0);
     transform-origin: 0 50%;
-    scale: 1;
   }
 
   /* ------------------------------------------------------------------ */

@@ -33,6 +33,24 @@ function normalizeProse(prose, responseUrl) {
   return prose.innerHTML;
 }
 
+/* Expressive Code ships a hashed stylesheet that is only linked on pages that
+   actually contain a fenced code block. The homepage has none, so a study
+   pulled into the reader would render its code unstyled. Adopt the sheet from
+   the fetched document the first time one is seen. */
+function adoptCodeStylesheet(source) {
+  for (const link of source.querySelectorAll('link[rel="stylesheet"]')) {
+    const href = link.getAttribute("href");
+    if (!href || !/\/ec\.[^/]+\.css$/.test(href)) continue;
+    const absolute = new URL(href, window.location.origin).href;
+    if (document.querySelector(`link[rel="stylesheet"][href="${CSS.escape(href)}"]`)) return;
+    const adopted = document.createElement("link");
+    adopted.rel = "stylesheet";
+    adopted.href = absolute;
+    document.head.append(adopted);
+    return;
+  }
+}
+
 export function createContentLoader() {
   const cache = new Map();
   return (entry) => {
@@ -42,8 +60,11 @@ export function createContentLoader() {
     const pending = fetch(entry.url).then(async (response) => {
       if (!response.ok) throw new Error(`Study request failed with ${response.status}`);
       const source = new DOMParser().parseFromString(await response.text(), "text/html");
-      const prose = source.querySelector(".case-detail-prose");
+      /* ArticleShell marks the rendered Markdown body; the class is a fallback
+         for any page not yet on the shared shell. */
+      const prose = source.querySelector("[data-article-body]") ?? source.querySelector(".prose");
       if (!prose) throw new Error("Study response has no canonical prose");
+      adoptCodeStylesheet(source);
       return normalizeProse(prose, response.url);
     });
     cache.set(entry.id, pending);

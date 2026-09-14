@@ -1064,6 +1064,11 @@
 
   a.path-token,
   a:has(> .path-token) {
+    /* Reachable by thumb as well as readable: inline-flex keeps the token on
+       the text baseline while the minimum carries it to the 44px floor. */
+    display: inline-flex;
+    align-items: center;
+    min-block-size: var(--tap-size);
     text-decoration: none;
   }
 

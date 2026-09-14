@@ -39,7 +39,12 @@
     grid-template-columns:
       [full-start]    minmax(var(--space-gutter), 1fr)
       [wide-start]    minmax(0, calc((var(--measure-wide) - var(--measure-prose)) / 2))
-      [content-start] minmax(0, var(--measure-prose))
+      /* Sized, not flexible: the two `wide` tracks are bounded by their own
+         max, so a purely flexible content track loses the race for space on a
+         narrow viewport and collapses to a few pixels. Giving content an
+         explicit min() makes it win first and the side tracks take what is
+         left, which is zero on a phone and 10rem on a desktop. */
+      [content-start] min(100% - 2 * var(--space-gutter), var(--measure-prose))
       [content-end]   minmax(0, calc((var(--measure-wide) - var(--measure-prose)) / 2))
       [wide-end]      minmax(var(--space-gutter), 1fr)
       [full-end];

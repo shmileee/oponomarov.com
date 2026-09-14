@@ -9,6 +9,20 @@
    A new content type never gets a new prose class. */
 
 @layer prose {
+  /* Expressive Code's `wrap` uses pre-wrap, which only breaks at whitespace, so
+     a long unbreakable token - a hash, a URL, a generated identifier - still
+     forces the block to scroll sideways on a phone. Allow those to break; the
+     indent guides and line numbers are unaffected because they are separate
+     boxes. */
+  .expressive-code pre.wrap .ec-line .code {
+    overflow-wrap: anywhere;
+    /* Expressive Code floors each line at 20ch, which is wider than the
+       readable column on a 320px phone and makes the block scroll sideways
+       even with wrapping on. The content grid already guarantees a sane
+       measure, so the floor is redundant here and only causes overflow. */
+    min-inline-size: 0;
+  }
+
   /* ------------------------------------------------------------------ */
   /* Root and modifiers                                                   */
   /* ------------------------------------------------------------------ */

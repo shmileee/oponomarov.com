@@ -1,6 +1,6 @@
 ---
 import { getCollection } from "astro:content";
-import EditorialLayout from "../../components/EditorialLayout.astro";
+import SiteLayout from "../../components/SiteLayout.astro";
 import { formatDate, slugForPost, sortPosts } from "../../lib/posts";
 
 const posts = sortPosts(await getCollection("posts"));
@@ -10,27 +10,28 @@ posts.forEach((post) => post.data.categories.forEach((category) => categoryCount
 const categories = [...categoryCounts].sort(([a], [b]) => a.localeCompare(b));
 ---
 
-<EditorialLayout
-  site="blog"
+<SiteLayout
+  activeApp="blog"
   canonicalOrigin="https://oponomarov.com"
   title="Engineering notes"
   description="A home for poorly researched ideas that I find myself repeating a lot anyway."
   searchType="Overview"
+  rssHref="/blog/feed.xml"
 >
-  <main id="main-content" data-pagefind-body>
-    <section class="hero section-shell experience-hero" aria-labelledby="page-title">
+  <main id="main-content" class="content-grid" tabindex="-1">
+    <section class="hero section-shell" aria-labelledby="page-title">
       <h1 id="page-title">Engineering notes<span class="hero-cursor" aria-hidden="true"></span></h1>
-      <p class="hero-lead">A home for poorly researched ideas that I find myself repeating a lot anyway.</p>
+      <div class="prose"><p class="">A home for poorly researched ideas that I find myself repeating a lot anyway.</p></div>
       <div class="hero-actions">
         <a class="secondary-link" href="/blog/feed.xml">RSS feed →</a>
       </div>
     </section>
 
-    <section class="archive section-block" id="notes" aria-labelledby="notes-title" data-pagefind-ignore>
+    <section class="archive section wide" id="notes" aria-labelledby="notes-title" data-pagefind-ignore>
       <div class="section-shell archive-shell">
         <header class="section-heading archive-heading">
           <h2 id="notes-title">All notes</h2>
-          <p class="archive-intro">Browse chronologically, or jump straight to the systems and tools you care about.</p>
+          <div class="prose"><p class="archive-intro">Browse chronologically, or jump straight to the systems and tools you care about.</p></div>
           <nav class="topic-directory" aria-labelledby="topic-directory-title">
             <p class="topic-directory-label" id="topic-directory-title">Browse by topic</p>
             <ul>
@@ -58,4 +59,4 @@ const categories = [...categoryCounts].sort(([a], [b]) => a.localeCompare(b));
       </div>
     </section>
   </main>
-</EditorialLayout>
+</SiteLayout>

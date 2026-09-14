@@ -1,6 +1,6 @@
 ---
 import { getCollection, render } from "astro:content";
-import EditorialLayout from "../components/EditorialLayout.astro";
+import SiteLayout from "../components/SiteLayout.astro";
 import { byId, caseStudyCatalog } from "../lib/catalog";
 
 const studies = await getCollection("caseStudies");
@@ -33,34 +33,35 @@ const readerManifest = orderedStudies.map(({ entry, study }) => ({
 }));
 ---
 
-<EditorialLayout
-  site="portfolio"
+<SiteLayout
+  activeApp="portfolio"
   canonicalOrigin="https://oponomarov.com"
   title="Portfolio"
   description="Platform & Site Reliability Engineer — case studies from building the infrastructure backbone of an industrial IoT company."
   searchType="Overview"
+  ogImage="https://oponomarov.com/assets/og-image.png"
 >
-  <main id="main-content" tabindex="-1" data-pagefind-body>
-    <section class="hero section-shell experience-hero" id="top">
+  <main id="main-content" class="content-grid" tabindex="-1">
+    <section class="hero section-shell" id="top">
       <h1>{hero.data.title}<span class="hero-cursor" aria-hidden="true"></span></h1>
-      <div class="hero-copy"><HiringContent /></div>
+      <div class="hero-copy prose prose--lede"><HiringContent /></div>
       <div class="hero-actions">
         <a class="primary-link" href={hero.data.primaryHref}>{hero.data.primaryCta}</a>
         <a class="secondary-link" href={hero.data.secondaryHref}>{hero.data.secondaryCta}</a>
       </div>
     </section>
 
-    <section class="section-block" id="arc">
-      <div class="section-shell">
+    <section class="section full-bleed" id="arc">
+      <div class="section-shell content-grid">
         <p class="section-eyebrow">{arcIntroEntry.data.eyebrow}</p>
         <h2>{arcIntroEntry.data.title}</h2>
-        <div class="section-intro"><ArcIntroContent /></div>
-        <div class="arc-list">
+        <div class="prose"><ArcIntroContent /></div>
+        <div class="arc-list wide">
           {renderedArc.map(({ entry, Content }, index) => (
             <article class="arc-step">
               <span class="arc-number">{String(entry.data.number).padStart(2, "0")}</span>
               <div class="arc-content">
-                <div class="arc-copy"><Content /></div>
+                <div class="arc-copy prose"><Content /></div>
                 <div class="arc-links">
                   {entry.data.links.map((link) => {
                     const definition = byId.get(link.study)!;
@@ -75,7 +76,7 @@ const readerManifest = orderedStudies.map(({ entry, study }) => ({
       </div>
     </section>
 
-    <section class="section-block" id="featured">
+    <section class="section" id="featured">
       <div class="section-shell">
         <p class="section-eyebrow">02</p>
         <h2>The biggest win</h2>
@@ -90,7 +91,7 @@ const readerManifest = orderedStudies.map(({ entry, study }) => ({
                 <div><dt>Evidence</dt><dd>{spotlightItem.study.data.evidence}</dd></div>
               </dl>
             )}
-            <div class="section-intro"><p>{spotlightItem.study.data.spotlightProof}</p></div>
+            <div class=""><p>{spotlightItem.study.data.spotlightProof}</p></div>
             <div class="topic-list" aria-label="Topics">{spotlightItem.study.data.topics.map((topic) => <span>{topic}</span>)}</div>
           </header>
           <div class="hero-actions"><a class="primary-link" href={hrefFor(spotlightItem.entry.folder)} data-open-study={spotlightItem.entry.id}>Read case study →</a></div>
@@ -98,8 +99,8 @@ const readerManifest = orderedStudies.map(({ entry, study }) => ({
       </div>
     </section>
 
-    <section class="section-block" id="index">
-      <div class="section-shell">
+    <section class="section full-bleed" id="index">
+      <div class="section-shell content-grid">
         <p class="section-eyebrow">03</p>
         <h2>All case studies</h2>
         <div class="topic-filters" role="group" aria-label="Filter case studies">
@@ -107,7 +108,7 @@ const readerManifest = orderedStudies.map(({ entry, study }) => ({
           {topicOrder.map((topic) => <button type="button" data-topic-filter={topic} aria-pressed="false">{topic}</button>)}
         </div>
         <p class="sr-only" aria-live="polite" data-filter-status></p>
-        <div class="case-grid" data-case-grid data-pagefind-ignore>
+        <div class="case-grid wide" data-case-grid data-pagefind-ignore>
           {orderedStudies.map(({ entry, study }, index) => (
             <a class:list={["case-card", { "case-card-featured": study.data.featured }]} href={hrefFor(entry.folder)} data-case-card data-open-study={entry.id} data-topics={study.data.topics.join("|")} data-initially-hidden={String(index >= 9)}>
               <span class="case-card-number">{String(entry.number).padStart(2, "0")}{study.data.featured && " · featured"}{study.data.cardLabel && ` · ${study.data.cardLabel}`}</span>
@@ -128,13 +129,13 @@ const readerManifest = orderedStudies.map(({ entry, study }) => ({
       </div>
     </section>
 
-    <section class="section-block" id="how-i-work">
+    <section class="section" id="how-i-work">
       <div class="section-shell" id="principles">
         <p class="section-eyebrow">04</p>
         <h2>How I work</h2>
         <div class="principle-list">
           {renderedPrinciples.map(({ entry, Content }) => (
-            <article class="principle"><span>{String(entry.data.number).padStart(2, "0")}</span><div><h3>{entry.data.title}</h3><Content /></div></article>
+            <article class="principle"><span>{String(entry.data.number).padStart(2, "0")}</span><div class="prose"><h3>{entry.data.title}</h3><Content /></div></article>
           ))}
         </div>
       </div>
@@ -161,4 +162,8 @@ const readerManifest = orderedStudies.map(({ entry, study }) => ({
     </div>
     <script is:inline type="application/json" data-reader-manifest set:html={JSON.stringify(readerManifest)}></script>
   </dialog>
-</EditorialLayout>
+
+  <!-- Homepage-only: topic filtering, the see-more toggle, and the reader.
+       Site-wide behaviour lives in SiteHeader. -->
+  <script is:inline type="module" src="/assets/js/study-index.js"></script>
+</SiteLayout>

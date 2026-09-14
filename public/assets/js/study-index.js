@@ -1,55 +1,12 @@
+/* Homepage case-study index: topic filtering, the see-more toggle, and the
+   reader bootstrap.
+   Formerly public/assets/js/site.js, which also carried a theme toggle and a
+   scroll-progress handler. SiteHeader owns both of those now, so this module
+   is homepage-only and is loaded only by src/pages/index.astro. */
+
 const readerUrl = new URL("./reader.js", import.meta.url);
 const assetVersion = new URL(import.meta.url).searchParams.get("v");
 if (assetVersion) readerUrl.searchParams.set("v", assetVersion);
-
-const root = document.documentElement;
-
-function setupTheme() {
-  const button = document.querySelector("[data-theme-toggle]");
-  if (!button) return;
-
-  const render = () => {
-    const theme = root.dataset.theme === "light" ? "light" : "dark";
-    button.textContent = theme === "dark" ? "light" : "dark";
-    button.setAttribute("aria-label", `Switch to ${button.textContent} color scheme`);
-  };
-
-  button.addEventListener("click", () => {
-    const theme = root.dataset.theme === "dark" ? "light" : "dark";
-    root.dataset.theme = theme;
-    localStorage.setItem("om-theme", theme);
-    render();
-  });
-  render();
-}
-
-function setupScrollUI() {
-  const progress = document.querySelector("[data-reading-progress]");
-  const toTop = document.querySelector("[data-back-to-top]");
-  if (!progress || !toTop) return;
-
-  let scheduled = false;
-  const render = () => {
-    const available = document.documentElement.scrollHeight - window.innerHeight;
-    const ratio = available > 0 ? Math.min(window.scrollY / available, 1) : 0;
-    progress.style.transform = `scaleX(${ratio})`;
-    toTop.dataset.visible = String(window.scrollY > 640);
-    scheduled = false;
-  };
-  const schedule = () => {
-    if (scheduled) return;
-    scheduled = true;
-    requestAnimationFrame(render);
-  };
-
-  window.addEventListener("scroll", schedule, { passive: true });
-  window.addEventListener("resize", schedule);
-  if (toTop.dataset.bound !== "true") {
-    toTop.dataset.bound = "true";
-    toTop.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
-  }
-  render();
-}
 
 function setupStudyIndex() {
   const grid = document.querySelector("[data-case-grid]");
@@ -95,8 +52,6 @@ function setupStudyIndex() {
   render();
 }
 
-setupTheme();
-setupScrollUI();
 setupStudyIndex();
 const { setupReader } = await import(readerUrl);
 setupReader();

@@ -1,9 +1,8 @@
 ---
 import { getCollection, render } from "astro:content";
-import EditorialLayout from "../../components/EditorialLayout.astro";
-import SiteFavicons from "../../components/SiteFavicons.astro";
+import ArticleShell from "../../components/ArticleShell.astro";
+import SiteLayout from "../../components/SiteLayout.astro";
 import { caseStudyCatalog } from "../../lib/catalog";
-import { documentTitle as formatDocumentTitle } from "../../lib/site-metadata";
 
 export async function getStaticPaths() {
   const studies = await getCollection("caseStudies");
@@ -26,61 +25,69 @@ export async function getStaticPaths() {
 
 const { entry, study, previous, next, previousStudy, nextStudy, redirect } = Astro.props;
 const { Content } = await render(study);
+const target = `/case-studies/${entry.folder}/`;
 ---
 
 {redirect ? (
-  <html lang="en">
-    <head>
-      <meta charset="utf-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1" />
-      <meta name="robots" content="noindex,follow" />
-      <meta http-equiv="refresh" content={`0; url=/case-studies/${entry.folder}/`} />
-      <link rel="canonical" href={`https://oponomarov.com/case-studies/${entry.folder}/`} />
-      <SiteFavicons />
-      <title>{formatDocumentTitle("portfolio", "Case study moved")}</title>
-      <script is:inline define:vars={{ target: `/case-studies/${entry.folder}/` }}>location.replace(target + location.search + location.hash);</script>
-    </head>
-    <body><p>This case study moved to <a href={`/case-studies/${entry.folder}/`}>its canonical address</a>.</p></body>
-  </html>
-) : <EditorialLayout
-  site="portfolio"
+  <SiteLayout
+    activeApp="portfolio"
+    canonicalOrigin="https://oponomarov.com"
+    canonicalPath={target}
+    title="Case study moved"
+    description={study.data.summary}
+    robots="noindex,follow"
+    indexable={false}
+    ogImage="https://oponomarov.com/assets/og-image.png"
+  >
+    <Fragment slot="head">
+      <meta http-equiv="refresh" content={`0; url=${target}`} />
+      <script is:inline define:vars={{ target }}>location.replace(target + location.search + location.hash);</script>
+    </Fragment>
+    <main id="main-content" class="content-grid" tabindex="-1">
+      <div class="prose"><p>Moved to <a href={target}>{study.data.title}</a>.</p></div>
+    </main>
+  </SiteLayout>
+) : <SiteLayout
+  activeApp="portfolio"
   canonicalOrigin="https://oponomarov.com"
   title={study.data.title}
   description={study.data.summary}
   article
   searchType="Case study"
   tags={study.data.topics}
+  ogImage="https://oponomarov.com/assets/og-image.png"
 >
-  <main class="case-detail" id="main-content" tabindex="-1" data-pagefind-body>
-    <header class="case-detail-header">
-      <a class="back-link" href="/#index">← all case studies</a>
-      <p class="section-eyebrow">Case study {String(entry.number).padStart(2, "0")}{study.data.featured && " · featured"}</p>
-      <h1>{study.data.title}</h1>
-      {study.data.role && study.data.evidence ? (
-        <dl class="case-proof case-detail-proof" data-case-proof>
+  <ArticleShell
+    title={study.data.title}
+    description={study.data.summary}
+    eyebrow={`Case study ${String(entry.number).padStart(2, "0")}${study.data.featured ? " · featured" : ""}`}
+    backLink={{ href: "/#index", title: "← all case studies" }}
+    previous={{
+      href: `/case-studies/${previous.folder}/`,
+      title: previousStudy.data.title,
+      label: `Previous Case ${String(previous.number).padStart(2, "0")}`,
+    }}
+    next={{
+      href: `/case-studies/${next.folder}/`,
+      title: nextStudy.data.title,
+      label: `Next Case ${String(next.number).padStart(2, "0")}`,
+    }}
+    adjacentLabel="Adjacent case studies"
+  >
+    <Fragment slot="proof">
+      {study.data.role && study.data.evidence && (
+        <dl class="case-proof" data-case-proof>
           <div><dt>Impact</dt><dd>{study.data.summary}</dd></div>
           <div><dt>My role</dt><dd>{study.data.role}</dd></div>
           <div><dt>Evidence</dt><dd>{study.data.evidence}</dd></div>
         </dl>
-      ) : <p class="case-detail-summary">{study.data.summary}</p>}
-      <div class="topic-list" aria-label="Topics">{study.data.topics.map((topic: string) => <span>{topic}</span>)}</div>
-    </header>
-    <article class="prose case-detail-prose"><Content /></article>
-    <nav class="case-detail-adjacent" aria-label="Adjacent case studies" data-pagefind-ignore>
-      <a href={`/case-studies/${previous.folder}/`} data-study-direction="previous">
-        <span class="case-detail-adjacent-kicker">Previous</span>
-        <span class="case-detail-adjacent-number">Case {String(previous.number).padStart(2, "0")}</span>
-        <span class="case-detail-adjacent-title">{previousStudy.data.title}</span>
-      </a>
-      <a href={`/case-studies/${next.folder}/`} data-study-direction="next">
-        <span class="case-detail-adjacent-kicker">Next</span>
-        <span class="case-detail-adjacent-number">Case {String(next.number).padStart(2, "0")}</span>
-        <span class="case-detail-adjacent-title">{nextStudy.data.title}</span>
-      </a>
-    </nav>
-    <nav class="case-detail-footer" aria-label="Portfolio navigation" data-pagefind-ignore>
+      )}
+    </Fragment>
+    <div slot="topics" class="topic-list" aria-label="Topics">{study.data.topics.map((topic: string) => <span>{topic}</span>)}</div>
+    <Content />
+    <nav slot="footer" class="link-row" aria-label="Portfolio navigation" data-pagefind-ignore>
       <a href="/#index">View all work →</a>
       <a href="/contact/">Contact</a>
     </nav>
-  </main>
-</EditorialLayout>}
+  </ArticleShell>
+</SiteLayout>}

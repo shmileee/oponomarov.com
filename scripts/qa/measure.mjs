@@ -197,12 +197,29 @@ const PROBE = () => {
 
   // 2. Elements whose painted box escapes the viewport horizontally.
   const escapers = [];
+  /* A line box inside wrapped code reports its pre-wrap intrinsic width, not
+     what is painted: Expressive Code's <code> and .ec-line sit inside a <pre>
+     that fits and does not scroll, and the text is visibly wrapped (verified
+     by screenshot at 320px). Treat the <pre> as the layout box, and only when
+     it genuinely contains its own content. */
+  const containedByScrollRegion = (el) => {
+    for (let a = el.parentElement; a && a !== document.body; a = a.parentElement) {
+      const cs = getComputedStyle(a);
+      const scrolls = ['auto', 'scroll'].includes(cs.overflowX);
+      const wrapsCode = a.tagName === 'PRE' && a.scrollWidth <= a.clientWidth + 1;
+      if (!scrolls && !wrapsCode) continue;
+      /* The region only contains the child if the region itself fits. */
+      if (a.getBoundingClientRect().right <= vw + 1) return true;
+    }
+    return false;
+  };
   for (const el of all) {
     const r = el.getBoundingClientRect();
     if (r.width === 0 && r.height === 0) continue;
     const cs = getComputedStyle(el);
     if (cs.position === 'fixed') continue;
     if (r.right > vw + 1 || r.left < -1) {
+      if (containedByScrollRegion(el)) continue;
       escapers.push({
         sel: describe(el),
         path: ancestry(el),
@@ -243,9 +260,20 @@ const PROBE = () => {
     };
   };
 
+  /* S1 and S3 compare like with like. A lede is deliberately larger than body
+     copy and inline code is em-relative, so sampling a `.prose--lede`
+     paragraph on one route and a body paragraph on another reports a
+     divergence the design intends. Headings are excluded for the same reason. */
+  const IN_LARGER_CONTEXT = '.prose--lede, .hero, .hero-copy, header, h1, h2, h3, h4, h5, h6, figcaption, .article-dek';
+  const isBodyContext = (el) => el && !el.closest(IN_LARGER_CONTEXT);
+
   const paragraphSelectors = ['.prose p', '[data-article-body] p', 'article .prose p'];
-  const bodyProseSelector = paragraphSelectors.find((sel) => document.querySelector(sel)) ?? null;
-  const bodyProse = bodyProseSelector ? document.querySelector(bodyProseSelector) : null;
+  const bodyProseSelector = paragraphSelectors.find((sel) =>
+    [...document.querySelectorAll(sel)].some(isBodyContext)) ?? null;
+  const bodyProse = bodyProseSelector
+    ? [...document.querySelectorAll(bodyProseSelector)].find(isBodyContext) ?? null
+    : null;
+  /* firstParagraph keeps the unscoped fallback: it is diagnostic only. */
   const firstParagraphSelector = bodyProseSelector ?? (prose ? `${prose.sel} p` : null);
   const firstP = bodyProse ?? prose?.el?.querySelector('p');
   const h1 = document.querySelector('h1');
@@ -254,7 +282,7 @@ const PROBE = () => {
   // 4. Code fingerprints.
   const pre = prose?.el?.querySelector('pre') || document.querySelector('pre');
   const inlineCode = Array.from((prose?.el || document).querySelectorAll('code'))
-    .find((c) => !c.closest('pre'));
+    .find((c) => !c.closest('pre') && isBodyContext(c));
   const codeFp = (el) => {
     if (!el) return null;
     const cs = getComputedStyle(el);
@@ -365,7 +393,10 @@ const PROBE = () => {
     code: {
       pre: codeFp(pre), inline: codeFp(inlineCode),
       pres: [...document.querySelectorAll('pre')].map((el, index) => ({ sel: describe(el), path: ancestry(el), index, ...codeFp(el) })),
-      inlines: [...document.querySelectorAll('code')].filter((el) => !el.closest('pre'))
+      /* Same body-context scoping as the single fingerprint above: the
+         contract compares across this array, so an em-relative span inside a
+         heading or lede would read as a divergence the design intends. */
+      inlines: [...document.querySelectorAll('code')].filter((el) => !el.closest('pre') && isBodyContext(el))
         .map((el, index) => ({ sel: describe(el), path: ancestry(el), index, ...codeFp(el) })),
     },
     tables,
@@ -395,7 +426,12 @@ const MEASURE = () => {
   const containers = main?.querySelectorAll('.section-shell, .page-shell, .case-detail, .docs-shell');
   return {
     viewportWidth: innerWidth,
-    proseContainers: widths(document.querySelectorAll('.prose')),
+    /* Measure the readable line, not the wrapper. On an article page `.prose`
+       is deliberately full-bleed so a table, figure or code block can opt into
+       a wider grid track; what matters to a reader is the width of the body
+       paragraphs inside it. */
+    proseContainers: widths([...document.querySelectorAll('.prose')]
+      .flatMap((prose) => [...prose.querySelectorAll(':scope > p')])),
     mainContainers: widths(containers?.length ? containers : main ? [main] : []),
   };
 };
@@ -433,6 +469,14 @@ async function interactionPass(browser, base, routes, consoleErrors) {
       });
       await page.keyboard.press('Tab');
       await settle(page);
+      /* The skip link parks itself at translate: 0 -200% and returns to none on
+         focus. Measuring while that is still resolving reports a negative top
+         and fails intermittently, so wait for the rect to settle. This waits
+         for the real thing the assertion is about; it does not relax it. */
+      await page.waitForFunction(() => {
+        const el = document.querySelector('.skip-link');
+        return Boolean(el) && el.getBoundingClientRect().top >= 0;
+      }, null, { timeout: 2000 }).catch(() => {});
       const skip = await page.evaluate(() => {
         const el = document.activeElement;
         const r = el.getBoundingClientRect();
@@ -460,6 +504,10 @@ async function interactionPass(browser, base, routes, consoleErrors) {
         await settle(page);
         const reader = await page.locator('dialog.reader').evaluate((dialog) => ({
           open: dialog.open,
+          /* Not every study contains code, so a styled <pre> cannot be the only
+             evidence the reader worked. Record how much prose it rendered, and
+             the code styling only when code is actually present. */
+          proseLength: (dialog.querySelector('[data-reader-prose]')?.textContent ?? '').trim().length,
           preBackgrounds: [...dialog.querySelectorAll('pre')].map((pre) => getComputedStyle(pre).backgroundColor),
         }));
         interactions.readerDialogs.push({ ...identity, href, ...reader });
@@ -507,6 +555,7 @@ async function main() {
         hasTouch: vp.touch, isMobile: vp.touch, reducedMotion: 'reduce', colorScheme,
       });
       const page = await ctx.newPage();
+      const cdp = await ctx.newCDPSession(page);
       const identity = { route, viewport: vp.name, viewportLabel: vp.label, colorScheme, pass: 'normal' };
       captureErrors(page, consoleErrors, identity);
       let record = { ...identity };
@@ -520,22 +569,30 @@ async function main() {
           await mkdir(dir, { recursive: true });
           await page.screenshot({ path: path.join(dir, `${encodeURIComponent(route)}.png`), fullPage: true });
         }
-        const originalStyle = await page.locator('html').getAttribute('style');
-        await page.evaluate(() => { document.documentElement.style.fontSize = '32px'; });
+        /* S11 asks whether the type scale honours a reader who raised their
+           browser's default font size. Injecting an inline font-size on <html>
+           cannot answer that: `rem` inside a custom property declared on :root
+           resolves against the initial 16px, so the value never moves. CDP
+           Page.setFontSizes changes the actual setting, which is what a reader
+           changes, and requires a reload to take effect. The context is
+           per-route, so nothing needs resetting afterwards. */
+        await cdp.send('Page.setFontSizes', { fontSizes: { standard: 32, fixed: 32 } });
+        await page.reload({ waitUntil: 'load', timeout: 30000 });
         await settle(page);
         const zoom = args.zoom ? await page.evaluate(PROBE) : await page.evaluate(() => ({
           viewportWidth: innerWidth,
           docScrollWidth: document.documentElement.scrollWidth,
           pageOverflows: document.documentElement.scrollWidth > innerWidth + 1,
+          rootFontSize: getComputedStyle(document.documentElement).fontSize,
           bodyFontSize: getComputedStyle(document.body).fontSize,
         }));
         zoomResults.push({ ...identity, ...zoom, pass: 'zoom' });
-        await page.evaluate((style) => {
-          if (style === null) document.documentElement.removeAttribute('style');
-          else document.documentElement.setAttribute('style', style);
-        }, originalStyle);
         // Supplement the fast matrix with only S2's wide-container measurements.
         if (vp === viewports.at(-1)) {
+          /* Undo the zoom first. A leaked 32px root doubles every rem and would
+             silently report a 704px column as 1408px. */
+          await cdp.send('Page.setFontSizes', { fontSizes: { standard: 16, fixed: 13 } });
+          await page.reload({ waitUntil: 'load', timeout: 30000 });
           await page.setViewportSize({ width: 2560, height: 1440 });
           await settle(page);
           measureResults.push({ ...identity, ...await page.evaluate(MEASURE), viewport: 'ultrawide-2560', pass: 'measure' });

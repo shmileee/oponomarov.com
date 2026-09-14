@@ -42,8 +42,10 @@ const TOKEN_FILE = join(styles, "tokens.css");
 // V1 - the layer order is declared before any stylesheet, identically everywhere.
 {
   const indexCss = readFileSync(join(styles, "index.css"), "utf8");
-  const firstStatement = indexCss.split("\n").map((l) => l.trim())
-    .find((l) => l && !l.startsWith("/*") && !l.startsWith("*"));
+  const firstStatement = indexCss
+    .replace(/\/\*[\s\S]*?\*\//g, "")   // block comments span lines; strip before reading the first statement
+    .split("\n").map((line) => line.trim())
+    .find(Boolean);
   if (firstStatement !== LAYER_ORDER) {
     throw new Error(`src/styles/index.css must open with the layer order.\nExpected: ${LAYER_ORDER}\nActual:   ${firstStatement}`);
   }
@@ -231,7 +233,11 @@ for (const page of pages) {
   for (const dir of componentDirs) {
     for (const path of filesBelow(dir).filter((p) => p.endsWith(".astro"))) {
       const source = readFileSync(path, "utf8");
-      if (/<style[\s>]/.test(source)) {
+      for (const block of source.matchAll(/<style([^>]*)>([\s\S]*?)<\/style>/g)) {
+        /* SiteLayout declares the cascade layer order inline, before any
+           stylesheet link, because first appearance fixes the order. That is
+           the one permitted <style> block. */
+        if (block[1].includes("is:inline") && block[2].trim().startsWith("@layer ")) continue;
         throw new Error(`${relative(root, path)} contains a <style> block. All CSS lives in src/styles/ so the cascade stays predictable.`);
       }
     }

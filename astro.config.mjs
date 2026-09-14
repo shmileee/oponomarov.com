@@ -1,7 +1,6 @@
 import { defineConfig } from "astro/config";
 import { unified } from "@astrojs/markdown-remark";
 import expressiveCode from "astro-expressive-code";
-import rehypeRaw from "rehype-raw";
 import remarkAdmonitions from "./src/lib/remark-admonitions.mjs";
 import rehypeTableScroll from "./src/lib/rehype-table-scroll.mjs";
 
@@ -10,12 +9,12 @@ export default defineConfig({
   output: "static",
   devToolbar: { enabled: false },
   markdown: {
-    syntaxHighlight: false,
     // Astro 7 moved remark/rehype configuration into the unified processor.
+    // Astro already parses authored HTML, so no rehype-raw pass is needed;
+    // adding one re-parses Expressive Code's output and drops code titles.
     processor: unified({
       remarkPlugins: [remarkAdmonitions],
-      // Parse authored HTML first so captions and existing ancestors are visible.
-      rehypePlugins: [rehypeRaw, rehypeTableScroll],
+      rehypePlugins: [rehypeTableScroll],
     }),
   },
   integrations: [expressiveCode({

@@ -58,6 +58,24 @@ jobs:
       - name: Build site
         run: npm run build
 
+      # Gates run after the build because verify and qa inspect dist/ rather
+      # than source, and a design regression should stop the deploy before the
+      # artifact is uploaded rather than after it is live.
+      - name: Type check
+        run: npm run check
+
+      - name: Lint stylesheets
+        run: npm run lint:css
+
+      - name: Verify build and design system
+        run: npm run verify
+
+      - name: Install Chromium for browser QA
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser QA
+        run: npm run qa
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:

@@ -1,6 +1,8 @@
 ---
 import { getCollection, render } from "astro:content";
-import EditorialLayout from "../../../components/EditorialLayout.astro";
+import ArticleShell from "../../../components/ArticleShell.astro";
+import PageToc from "../../../components/PageToc.astro";
+import SiteLayout from "../../../components/SiteLayout.astro";
 import { slugForPost, sortPosts } from "../../../lib/posts";
 
 export async function getStaticPaths() {
@@ -12,13 +14,12 @@ export async function getStaticPaths() {
 }
 
 const { post, older, newer } = Astro.props;
-const { Content } = await render(post);
+const { Content, headings } = await render(post);
 const readingMinutes = Math.floor((post.body || "").split(/\s+/).length / 220) + 1;
-const longDate = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "long", year: "numeric" }).format(post.data.date);
 ---
 
-<EditorialLayout
-  site="blog"
+<SiteLayout
+  activeApp="blog"
   canonicalOrigin="https://oponomarov.com"
   title={post.data.title}
   description={post.data.description}
@@ -26,41 +27,25 @@ const longDate = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "long
   searchType="Note"
   publishedTime={post.data.date}
   tags={post.data.categories}
+  rssHref="/blog/feed.xml"
 >
-  <main id="main-content" class="page-shell post-page-shell" data-pagefind-body>
-    <article class="post-detail">
-      <header class="detail-header post-header">
-        <a class="back-link" href="/blog/">← all notes</a>
-        <h1>{post.data.title}</h1>
-        <p class="post-dek">{post.data.description}</p>
-        <p class="post-meta"><time datetime={post.data.date.toISOString()}>{longDate}</time><span aria-hidden="true">·</span><span>{readingMinutes} min read</span></p>
-        <ul class="topic-list post-topics" aria-label="Topics">
-          {post.data.categories.map((category: string) => <li><a href={`/blog/categories/${category}/`}>{category}</a></li>)}
-        </ul>
-      </header>
-
-      <div class="post-content-layout">
-        <nav class="article-toc" aria-label="Article contents" data-article-toc data-pagefind-ignore hidden>
-          <div class="article-toc-rail"><p class="article-toc-title">Contents</p><ol data-article-toc-list></ol></div>
-          <label class="article-toc-picker"><span>Jump to</span><span class="article-toc-select-wrap"><select aria-label="Jump to a section" data-article-toc-select><option value="">Choose a section</option></select></span></label>
-        </nav>
-
-        <div class="post-reading-column">
-          <div class="prose"><Content /></div>
-          {(older || newer) && (
-            <nav class="post-navigation" aria-label="Adjacent notes" data-pagefind-ignore>
-              <p class="section-eyebrow">Next in the archive</p>
-              <div class="post-navigation-grid">
-                {older && <a href={`/blog/posts/${slugForPost(older)}/`}><span class="post-navigation-kicker">← Older</span><strong>{older.data.title}</strong></a>}
-                {newer && <a class="post-navigation-next" href={`/blog/posts/${slugForPost(newer)}/`}><span class="post-navigation-kicker">Newer →</span><strong>{newer.data.title}</strong></a>}
-              </div>
-            </nav>
-          )}
-          <section class="comments-region" aria-labelledby="comments-title" data-pagefind-ignore><h2 id="comments-title">Comments</h2><div id="comments"></div></section>
-        </div>
-      </div>
-    </article>
-  </main>
+  <ArticleShell
+    title={post.data.title}
+    description={post.data.description}
+    backLink={{ href: "/blog/", title: "all notes" }}
+    publishedTime={post.data.date}
+    readingMinutes={readingMinutes}
+    previous={older && { href: `/blog/posts/${slugForPost(older)}/`, title: older.data.title, label: "← Older" }}
+    next={newer && { href: `/blog/posts/${slugForPost(newer)}/`, title: newer.data.title, label: "Newer →" }}
+    adjacentLabel="Adjacent notes"
+  >
+    <ul slot="topics" class="topic-list" aria-label="Topics">
+      {post.data.categories.map((category: string) => <li><a href={`/blog/categories/${category}/`}>{category}</a></li>)}
+    </ul>
+    <PageToc slot="toc" headings={headings} />
+    <Content />
+    <section slot="comments" class="comments-region" aria-labelledby="comments-title" data-pagefind-ignore><h2 id="comments-title">Comments</h2><div id="comments"></div></section>
+  </ArticleShell>
 
   <script is:inline>
     function loadGiscusComments() {
@@ -99,4 +84,4 @@ const longDate = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "long
       frame.contentWindow?.postMessage({ giscus: { setConfig: { theme: event.detail === "light" ? "light" : "transparent_dark" } } }, "https://giscus.app");
     });
   </script>
-</EditorialLayout>
+</SiteLayout>

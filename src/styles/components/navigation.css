@@ -263,12 +263,21 @@
     outline-offset: var(--focus-offset);
   }
 
+  /* ------------------------------------------------------------------ */
+  /* Link row — a horizontal run of small secondary links.                */
+  /* One rule serves the docs source/edit actions and the case-study      */
+  /* footer, which previously carried a bespoke unstyled class and        */
+  /* rendered 20px-tall tap targets.                                      */
+  /* ------------------------------------------------------------------ */
+
+  .link-row,
   .page-source-actions {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-3);
   }
 
+  .link-row a,
   .page-source-actions a {
     display: inline-flex;
     align-items: center;
@@ -280,12 +289,16 @@
     text-decoration: none;
   }
 
-  .page-source-actions a:hover {
-    color: var(--color-text);
-  }
-
+  .link-row a:focus-visible,
   .page-source-actions a:focus-visible {
     outline: var(--focus-width) solid var(--color-focus);
     outline-offset: var(--focus-offset);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .link-row a:hover,
+    .page-source-actions a:hover {
+      color: var(--color-text);
+    }
   }
 }

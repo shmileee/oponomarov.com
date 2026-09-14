@@ -21,8 +21,7 @@ const required = [
   "dist/404.html",
   "dist/robots.txt",
   "dist/sitemap.xml",
-  "dist/assets/css/site.css",
-  "dist/assets/js/site.js",
+  "dist/assets/js/study-index.js",
   "dist/assets/fonts/bricolage-grotesque-latin.woff2",
   "dist/favicon.svg",
   "dist/favicon-32x32.png",
@@ -32,9 +31,6 @@ const required = [
   "dist/contact/index.html",
   "dist/blog/index.html",
   "dist/blog/feed.xml",
-  "dist/blog-assets/css/main.css",
-  "dist/blog-assets/css/syntax.css",
-  "dist/blog-assets/js/site.js",
   "dist/dotfiles/index.html",
 ];
 
@@ -155,14 +151,13 @@ for (const filename of namedPortfolioCodeFrames) {
 if (portfolioHtml.includes('class="code-exhibit"')) throw new Error("A legacy portfolio code wrapper would create a nested code frame");
 if (!portfolioHtml.includes("diagram-exhibit") || !portfolioHtml.includes("media-exhibit")) throw new Error("Portfolio media exhibits were not fully migrated");
 if (/>THE (?:SITUATION|INTERESTING PART)<|>WHAT (?:I DID|IT CHANGED)</.test(portfolioHtml)) throw new Error("Case-study section headings were not normalized to sentence case");
-if (!portfolioHomeHtml.includes("oponomarov:content-updated") || !portfolioHomeHtml.includes("unifiedCopyBound")) throw new Error("The portfolio reader cannot enhance dynamically loaded code frames");
+if (!portfolioHomeHtml.includes("/assets/js/study-index.js")) throw new Error("The portfolio home page does not load the case-study index and reader");
 const readerScript = readFileSync(join(dist, "assets/js/reader.js"), "utf8");
 if (!readerScript.includes('new CustomEvent("oponomarov:content-updated"') || !readerScript.includes("closeButton.focus()")) throw new Error("The portfolio reader is missing dynamic enhancement or initial focus management");
-const siteCss = readFileSync(join(dist, "assets/css/site.css"), "utf8");
-const inlineCodeRule = siteCss.match(/\.prose :not\(pre\) > code \{([^}]*)\}/)?.[1] ?? "";
-if (!inlineCodeRule.includes("display: inline-block;") || !inlineCodeRule.includes("width: max-content;") || !inlineCodeRule.includes("max-width: 100%;") || !inlineCodeRule.includes("overflow-wrap: anywhere;") || !inlineCodeRule.includes("vertical-align: baseline;") || inlineCodeRule.includes("overflow-x: auto;")) throw new Error("Inline code can fragment, misalign with body text, reserve a scrollbar gutter, or overflow its reading column");
+/* Inline code, the layer architecture and the single stylesheet set are design
+   invariants; scripts/verify-design.mjs owns them against the real output. */
 if (/\{%|\{\{\s*['"]\//.test(blogHtml)) throw new Error("Unconverted Jekyll syntax remains in blog output");
-if (!blogHtml.includes("comments-region") || !blogHtml.includes("data-article-toc")) throw new Error("Blog article interactions are missing");
+if (!blogHtml.includes("comments-region") || !blogHtml.includes("toc__list")) throw new Error("Blog article interactions are missing");
 if (!docsHtml.includes("data-shortcut-status") || !docsHtml.includes("context-help")) throw new Error("Dotfiles interactions are missing");
 if (!docsHtml.includes("Bootstrap before using tasks") || !docsHtml.includes("OpenCode + OmO")) throw new Error("Full Dotfiles manuals were not migrated");
 const admonitionHtml = blogHtml + docsHtml;

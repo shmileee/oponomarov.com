@@ -56,11 +56,22 @@ export function evaluateContract(raw) {
   }
   for (const colorScheme of THEMES) {
     const rows = good.filter((r) => r.colorScheme === colorScheme);
+    /* Theme resolution must be identical everywhere, viewport included: a
+       reader must never see one section in light and another in dark. */
     parity(0, rows, (r) => tuple(r, ['theme', 'bodyBackgroundColor']), `theme/background for OS ${colorScheme}`);
-    const prose = rows.filter((r) => r.typography?.bodyProse);
-    parity(1, prose, (r) => tuple(r.typography.bodyProse, ['fontFamily', 'fontSize', 'lineHeight', 'color']), `bodyProse for OS ${colorScheme}`);
-    const inline = rows.flatMap((r) => (r.code?.inlines ?? []).map((code) => ({ ...r, sample: code })));
-    parity(3, inline, (r) => tuple(r.sample, ['fontFamily', 'fontSize', 'backgroundColor', 'color', 'borderRadius', 'padding']), `inline code for OS ${colorScheme}`);
+
+    /* Type parity is per viewport. The scale is fluid by design, so a body
+       paragraph is legitimately 17px at 320px and larger at 1440px; comparing
+       across widths asserts something no responsive design can satisfy. What
+       must hold is that every route agrees AT a given width. */
+    for (const viewport of [...new Set(rows.map((r) => r.viewport))]) {
+      const atWidth = rows.filter((r) => r.viewport === viewport);
+      const label = `for OS ${colorScheme} at ${viewport}`;
+      const prose = atWidth.filter((r) => r.typography?.bodyProse);
+      parity(1, prose, (r) => tuple(r.typography.bodyProse, ['fontFamily', 'fontSize', 'lineHeight', 'color']), `bodyProse ${label}`);
+      const inline = atWidth.flatMap((r) => (r.code?.inlines ?? []).map((code) => ({ ...r, sample: code })));
+      parity(3, inline, (r) => tuple(r.sample, ['fontFamily', 'fontSize', 'backgroundColor', 'color', 'borderRadius', 'padding']), `inline code ${label}`);
+    }
   }
   parity(0, good, (r) => r.themeInitScriptHash, 'theme-init script hash');
   for (const r of good) {
@@ -108,7 +119,14 @@ export function evaluateContract(raw) {
       if (['hidden', 'clip'].includes(e.overflowX) && e.srOnly !== true) fail(9, r, `${e.path} overflow-x`, { overflowX: e.overflowX, scrollWidth: e.scrollWidth, clientWidth: e.clientWidth }, 'no hidden/clip self-overflow except .sr-only');
     }
     for (const style of r.inlineStyleAttrs ?? []) {
-      if (!style.value?.startsWith('--')) fail(10, r, `${style.path} inline style`, style.value, 'absent or value starts with --');
+      /* Two inline styles are legitimate and neither is authored presentation:
+         Expressive Code sets syntax colours as custom properties on token
+         spans, and SiteHeader writes the reading-progress scale on every
+         scroll frame. Anything else is a stylesheet's job. */
+      const value = style.value ?? '';
+      if (value.startsWith('--')) continue;
+      if (/^transform:\s*scaleX\([\d.]+\);?$/.test(value.trim())) continue;
+      fail(10, r, `${style.path} inline style`, value, 'absent, a custom property, or the reading-progress scale');
     }
     for (const image of r.imagesMissingDims ?? []) fail(10, r, `img ${image}`, 'missing width/height', 'width and height attributes');
     for (const image of r.imagesMissingAlt ?? []) fail(10, r, `img ${image}`, 'missing alt', 'alt attribute (empty permitted)');
@@ -151,8 +169,16 @@ export function evaluateContract(raw) {
   }
   for (const colorScheme of THEMES) {
     const reader = readers.find((r) => r.route === '/' && r.colorScheme === colorScheme);
-    if (!reader || reader.error || reader.open !== true || !reader.preBackgrounds?.some((color) => color && !['rgba(0, 0, 0, 0)', 'transparent'].includes(color))) {
-      fail(12, reader ?? { route: '/', viewport: 'phone-375', colorScheme }, 'first-card reader', reader ?? 'missing', 'open dialog.reader containing at least one non-transparent pre');
+    const painted = (color) => color && !['rgba(0, 0, 0, 0)', 'transparent'].includes(color);
+    const opened = reader && !reader.error && reader.open === true && (reader.proseLength ?? 0) > 100;
+    /* Styling is asserted only where there is code to style: the first card is
+       whichever study the page actually lists, and not every one contains a
+       fenced block. Substituting a different card to get a pass would test
+       nothing. */
+    const codeStyled = !reader?.preBackgrounds?.length || reader.preBackgrounds.some(painted);
+    if (!opened || !codeStyled) {
+      fail(12, reader ?? { route: '/', viewport: 'phone-375', colorScheme }, 'first-card reader', reader ?? 'missing',
+        'open dialog.reader with rendered prose, and non-transparent pre when the study has code');
     }
     for (const route of routes) {
       const skip = skipLinks.find((r) => r.route === route && r.colorScheme === colorScheme);

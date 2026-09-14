@@ -1,7 +1,6 @@
 ---
 import { getCollection } from "astro:content";
-import SiteFavicons from "../../components/SiteFavicons.astro";
-import { documentTitle as formatDocumentTitle } from "../../lib/site-metadata";
+import SiteLayout from "../../components/SiteLayout.astro";
 
 export async function getStaticPaths() {
   const studies = await getCollection("caseStudies");
@@ -16,17 +15,21 @@ const slug = study.id.replace(/\/index$/, "");
 const target = `/case-studies/${slug}/`;
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="robots" content="noindex,follow" />
+<SiteLayout
+  activeApp="portfolio"
+  canonicalOrigin="https://oponomarov.com"
+  canonicalPath={target}
+  title="Case study moved"
+  description={study.data.summary}
+  robots="noindex,follow"
+  indexable={false}
+  ogImage="https://oponomarov.com/assets/og-image.png"
+>
+  <Fragment slot="head">
     <meta http-equiv="refresh" content={`0; url=${target}`} />
-    <link rel="canonical" href={`https://oponomarov.com${target}`} />
-    <SiteFavicons />
-    <title>{formatDocumentTitle("portfolio", "Case study moved")}</title>
     <script is:inline define:vars={{ target }}>location.replace(target + location.search + location.hash);</script>
-  </head>
-  <body><p>Moved to <a href={target}>{study.data.title}</a>.</p></body>
-</html>
+  </Fragment>
+  <main id="main-content" class="content-grid" tabindex="-1">
+    <div class="prose"><p>Moved to <a href={target}>{study.data.title}</a>.</p></div>
+  </main>
+</SiteLayout>
