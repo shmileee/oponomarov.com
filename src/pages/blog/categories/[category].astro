@@ -21,7 +21,7 @@ const posts = sortPosts((await getCollection("posts")).filter((post) => post.dat
         <ol class="article-list category-list" data-pagefind-ignore>
           {posts.map((post) => (
             <li class="article-row">
-              <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
+              <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date, { day: "2-digit", month: "short", year: "numeric" })}</time>
               <a class="article-title" href={`/blog/posts/${slugForPost(post)}/`}>{post.data.title}</a>
             </li>
           ))}

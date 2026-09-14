@@ -19,6 +19,14 @@
   /* navigation.css) mirrors that padding as its margin to line up with it.  */
   /* ------------------------------------------------------------------ */
 
+  .detail-header {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: var(--space-3);
+    padding-block: var(--space-12) var(--space-8);
+  }
+
   .article-header {
     display: flex;
     flex-direction: column;
