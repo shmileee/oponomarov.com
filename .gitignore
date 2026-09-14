@@ -8,3 +8,6 @@ public/case-studies/
 public/blog-static/
 
 .envrc.local
+
+# agent workspace: audit notes, plans, QA measurements and screenshots
+.omo/
