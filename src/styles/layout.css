@@ -1,7 +1,8 @@
 /* Layout — layer `layout`.
    The content grid, its two opt-ins, and the page / section / article shells.
    Spec: docs/design-system.md §6 (breakpoints) and §7 (the content grid).
-   Fixes: D2 (unbounded prose measure), D5 (grid blowout from long tokens). */
+   Fixes: D2 (unbounded prose measure), D5 (grid blowout from long tokens),
+   and the lost two-column article composition (reading column + TOC rail). */
 
 @layer layout {
   /* ------------------------------------------------------------------ */
@@ -59,9 +60,13 @@
     grid-column: full;
   }
 
+  /* Below 40rem the opt-ins return to the readable track. A nested content
+     grid is exempt: it is structure, not content, and must keep spanning
+     `full` at every width so its own gutter tracks land exactly on the
+     parent's. Pulling it into the content track stacked two gutters on a
+     phone and indented the body 20px past the header. */
   @media (width < 40rem) {
-    .content-grid > .wide,
-    .content-grid > .full-bleed {
+    .content-grid > :is(.wide, .full-bleed):not(.content-grid) {
       grid-column: content;
     }
   }
@@ -82,21 +87,80 @@
   /* ------------------------------------------------------------------ */
   /* Article — the article page composition.                              */
   /* ArticleShell renders `main.article.content-grid` holding the header,  */
-  /* the TOC disclosure, the `prose content-grid full-bleed` body (a       */
-  /* nested grid whose tracks align with this one), and adjacent          */
-  /* navigation. `.article` adds row rhythm on top of the grid; it never   */
-  /* redefines the template. A persistent side rail cannot coexist with   */
-  /* `wide` content inside --measure-page (64rem + --toc-width + gaps >    */
-  /* 80rem), so the TOC is an in-flow disclosure, not a column.           */
+  /* the TOC, the `prose content-grid full-bleed` body and the adjacent /  */
+  /* footer navigation. The content track is the reading measure, centred */
+  /* in the page at every width — the published docs, case-study and      */
+  /* landing columns all sit there — so on a phone it is simply the width  */
+  /* between the gutters. Below 80rem everything stacks in that track, the */
+  /* TOC is a disclosure, and the body grid spans `full` so its gutters    */
+  /* align with the page grid. From 80rem the article becomes the          */
+  /* published two-column composition: the reading column with a sticky   */
+  /* TOC rail beside it. The rail fits inside --measure-page because the   */
+  /* column is the prose measure, not the `wide` track; inside the column  */
+  /* `wide` and `full-bleed` resolve to the column edges, which is what    */
+  /* the original docs shell did too.                                      */
   /* ------------------------------------------------------------------ */
 
   .article {
+    grid-template-columns:
+      [full-start] minmax(var(--space-gutter), 1fr)
+      [wide-start content-start] minmax(0, var(--measure-prose))
+      [content-end wide-end] minmax(var(--space-gutter), 1fr)
+      [full-end];
     row-gap: var(--space-10);
+    /* The published shell breathes before the footer; the header carries
+       the air above the title (components/article.css). */
+    padding-block-end: var(--space-section);
   }
 
   /* Empty mount points (e.g. the context-help slot before it is used)     */
   /* must not spend a row gap.                                            */
   .article > :empty {
     display: none;
+  }
+
+  /* Inside the reading column the body grid owns no gutters of its own: the
+     column is the measure, so its single track is every named track and the
+     body text starts exactly where the header does. (Three class terms
+     outrank the `full-bleed` opt-in the markup carries.) */
+  .article.content-grid > .content-grid {
+    grid-column: content;
+    grid-template-columns:
+      [full-start wide-start content-start] minmax(0, 1fr)
+      [content-end wide-end full-end];
+  }
+
+  @media (width >= 80rem) {
+    /* Reading column plus rail: any content grid that carries a TOC (the
+       article shell, and the docs landing page which renders its own). */
+    .content-grid:has(> .toc) {
+      grid-template-columns:
+        [full-start] minmax(var(--space-gutter), 1fr)
+        [wide-start content-start] minmax(0, var(--measure-prose))
+        [content-end wide-end] var(--space-10)
+        [toc-start] var(--toc-width)
+        [toc-end] minmax(var(--space-gutter), 1fr)
+        [full-end];
+    }
+
+    /* The rail runs beside the first two rows — header and body in the
+       article shell, body and adjacent navigation on the landing page — and
+       sticks below the site header while they scroll past. */
+    .content-grid:has(> .toc) > .toc {
+      position: sticky;
+      inset-block-start: calc(var(--header-height) + var(--space-6));
+      grid-column: toc;
+      grid-row: 1 / span 2;
+      align-self: start;
+    }
+
+    /* The landing page's body joins the column the same way once the rail
+       takes the space beside it. */
+    .content-grid:has(> .toc) > .content-grid {
+      grid-column: content;
+      grid-template-columns:
+        [full-start wide-start content-start] minmax(0, 1fr)
+        [content-end wide-end full-end];
+    }
   }
 }

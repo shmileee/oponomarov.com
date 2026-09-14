@@ -1,7 +1,11 @@
 /* Article — layer `components`.
-   The header block above every article body, and the comments region below it.
+   The header block above every article body, the article-scoped composition
+   of the shared navigation primitives (topic chips, adjacent navigation, the
+   footer link row), and the comments region below it.
    One implementation replaces three: the blog `.detail-header.post-header`,
    the case-study `.case-detail-header`, and the docs `.docs-page-header`.
+   The published values come from public/blog-assets/css/main.css and
+   public/assets/css/site.css on `main`, restated through tokens.
    Fixes: divergent metadata typography between the three content categories. */
 
 @layer components {
@@ -10,35 +14,53 @@
   /* ArticleShell renders back link, eyebrow, h1, dek, meta, then the      */
   /* proof / topics / actions slots. Row rhythm lives here so every        */
   /* category gets identical spacing regardless of which slots it fills.   */
+  /* The header shares the reading measure and opens with a full section of  */
+  /* air, as the published article shells did; the TOC rail (components/    */
+  /* navigation.css) mirrors that padding as its margin to line up with it.  */
   /* ------------------------------------------------------------------ */
 
   .article-header {
     display: flex;
     flex-direction: column;
     align-items: start;
-    gap: var(--space-3);
-    padding-block-start: var(--space-10);
+    max-inline-size: var(--measure-prose);
+    padding-block: var(--space-section) var(--space-6);
+  }
+
+  .article-header > .back-link {
+    margin-block-end: var(--space-10);
+    color: var(--color-accent-soft);
+    letter-spacing: normal;
+  }
+
+  .article-header > .back-link:hover {
+    color: var(--color-text);
   }
 
   .article-header > h1 {
     margin: 0;
+    /* Between the section heading and the hero display: the published
+       article title (2.5rem–4.5rem) is the midpoint of the two steps. */
+    font-size: calc((var(--text-3xl) + var(--text-4xl)) / 2);
+    line-height: var(--leading-display);
+    letter-spacing: -0.025em;
     /* Titles carry long unhyphenated product names; wrapping beats
        widening the grid track. */
     overflow-wrap: anywhere;
     text-wrap: balance;
   }
 
-  /* The dek also carries `.prose .prose--lede`, so its type comes from the
-     prose primitive. Only the measure and colour are header concerns. */
+  /* The dek also carries `.prose .prose--lede`, so its type and colour come
+     from the prose primitive (a later layer). Only the rhythm is a header
+     concern. */
   .article-dek {
-    max-inline-size: var(--measure-prose);
-    color: var(--color-text-muted);
+    margin-block-start: var(--space-6);
   }
 
   /* ------------------------------------------------------------------ */
   /* Metadata line.                                                       */
   /* Date and reading time rendered identically for posts, case studies    */
-  /* and manuals. Previously each page formatted and styled its own.       */
+  /* and manuals: a tracked, uppercase mono label.                         */
   /* ------------------------------------------------------------------ */
 
   .article-meta {
@@ -46,11 +68,126 @@
     flex-wrap: wrap;
     align-items: center;
     gap: var(--space-2);
-    margin: 0;
+    margin: var(--space-6) 0 0;
     font-family: var(--font-mono);
     font-size: var(--text-xs);
-    letter-spacing: var(--tracking-label);
+    line-height: var(--leading-body);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     color: var(--color-text-subtle);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Header slots: proof list and topic chips.                            */
+  /* ------------------------------------------------------------------ */
+
+  .article-header > .case-proof {
+    align-self: stretch;
+  }
+
+  .article-header > .topic-list {
+    margin-block-start: var(--space-5);
+  }
+
+  /* Chips in the header are the quiet outlined pills of the published
+     pages: a hairline, no fill, no tracking, a 24px box. */
+  .article-header .topic-list > * {
+    min-block-size: var(--space-6);
+    padding-block: 0;
+    padding-inline: var(--space-3);
+    border-color: var(--color-border);
+    background: none;
+    line-height: var(--leading-snug);
+    letter-spacing: normal;
+  }
+
+  /* Where the chip wraps a link, the item draws the pill and the link keeps
+     its 44px hit area, pulled back into the pill with negative margins so
+     the row stays 24px tall. */
+  .article-header .topic-list > :has(> a) {
+    padding-inline: var(--space-3);
+    border: var(--border-width) solid var(--color-border);
+  }
+
+  .article-header .topic-list a {
+    margin-block: calc((var(--space-6) - var(--tap-size)) / 2);
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-muted);
+  }
+
+  .article-header .topic-list > :has(> a:hover) {
+    border-color: var(--color-accent);
+  }
+
+  .article-header .topic-list a:hover {
+    color: var(--color-text);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Adjacent navigation cards.                                           */
+  /* Two cards on the reading measure: a tracked uppercase kicker over a    */
+  /* display-face title, on the raised surface with a real hairline.       */
+  /* ------------------------------------------------------------------ */
+
+  .article .adjacent-nav {
+    max-inline-size: var(--measure-prose);
+  }
+
+  .article .adjacent-nav a {
+    padding: var(--space-5);
+    border-color: var(--color-border);
+    color: var(--color-text);
+  }
+
+  .article .adjacent-nav a:hover {
+    border-color: var(--color-accent-border);
+  }
+
+  .article .adjacent-nav .adjacent-nav__label {
+    font-weight: var(--weight-medium);
+    line-height: var(--leading-snug);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .article .adjacent-nav .adjacent-nav__title {
+    font-family: var(--font-display);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.01em;
+  }
+
+  .article .adjacent-nav a:hover .adjacent-nav__title {
+    color: var(--color-accent-soft);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Footer link row (case-study "View all work → / Contact").             */
+  /* A ruled row on the reading measure with outlined mono buttons.        */
+  /* ------------------------------------------------------------------ */
+
+  .article .link-row {
+    justify-content: space-between;
+    gap: var(--space-4);
+    max-inline-size: var(--measure-prose);
+    padding-block-start: var(--space-5);
+    border-block-start: var(--border-width) solid var(--color-border-subtle);
+  }
+
+  .article .link-row a {
+    justify-content: center;
+    padding: var(--space-2) var(--space-4);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-muted);
+    transition:
+      color var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+  }
+
+  .article .link-row a:hover {
+    border-color: var(--color-accent-border);
   }
 
   /* ------------------------------------------------------------------ */
@@ -59,8 +196,22 @@
   /* ------------------------------------------------------------------ */
 
   .comments-region {
+    max-inline-size: var(--measure-prose);
     padding-block-start: var(--space-8);
-    border-block-start: 1px solid var(--color-border-subtle);
+    border-block-start: var(--border-width) solid var(--color-border-subtle);
+  }
+
+  .comments-region h2 {
+    margin-block-end: var(--space-8);
+    /* The same derived section size as a prose h2. */
+    font-size: calc((var(--text-xl) + var(--text-2xl)) / 2);
+    letter-spacing: -0.02em;
+  }
+
+  /* Reserve the room the widget will take, so the footer does not jump
+     when it loads. */
+  .comments-region > div {
+    min-block-size: calc(var(--space-16) * 2.5);
   }
 
   .comments-region iframe {

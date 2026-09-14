@@ -214,37 +214,73 @@
   /* Layout primitives                                                   */
   /* ------------------------------------------------------------------ */
 
-  /* Intrinsically responsive grid of cards, links or dl entries. Replaces
-     principle-grid, home-overview, doc-card-grid and setup-paths. Two
-     columns as soon as the track fits two half-measure cards; an odd last
-     card spans the full row instead of orphaning. */
+  /* Grid of bordered cards, links or dl entries, as the published docs render
+     it. Replaces principle-grid, home-overview, doc-card-grid and setup-paths.
+     One column on a phone, two from 40rem; a set of exactly three cards sits
+     in one row from 48rem (the published documentation cards), otherwise an
+     odd last card spans the full row instead of orphaning. */
   .surface-grid {
     display: grid;
-    grid-template-columns: repeat(
-      auto-fit,
-      minmax(min(100%, calc((var(--measure-prose) - var(--space-4)) / 2)), 1fr)
-    );
-    gap: var(--space-4);
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
     min-inline-size: 0;
-    margin-block: var(--prose-flow);
+    margin-block: var(--space-6) var(--space-8);
     padding: 0;
   }
 
+  @media (width >= 40rem) {
+    .surface-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .surface-grid:not(:has(> :nth-child(3):last-child)) > :last-child:nth-child(odd) {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (width >= 48rem) {
+    .surface-grid:has(> :nth-child(3):last-child) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  /* The card surface: a shallow diagonal wash from the raised surface to
+     the page, with a one-pixel highlight along the top edge. */
   .surface-grid > * {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: var(--space-2);
+    gap: var(--space-3);
     min-inline-size: 0;
     margin: 0;
     padding: var(--space-5);
     border: var(--border-width) solid var(--color-border);
     border-radius: var(--radius-lg);
-    background: var(--color-surface);
+    background: linear-gradient(145deg, var(--color-surface), var(--color-bg));
+    box-shadow: inset 0 var(--border-width) 0 var(--color-border-subtle);
   }
 
-  .surface-grid > :last-child:nth-child(odd) {
-    grid-column: 1 / -1;
+  /* An aside among the cards is a caution: the accent-tinted callout the
+     published landing page drew beside its summary. */
+  .surface-grid > aside {
+    border-color: var(--color-accent-border);
+    background: var(--color-accent-surface);
+  }
+
+  /* A div that opens with its own heading is a column of section copy set
+     beside the cards (the landing page's "What it builds" summary), not a
+     card: it keeps the grid cell and the card's rhythm but draws no box, and
+     its paragraphs stay body prose rather than card copy. */
+  .surface-grid > div:has(> :is(h2, h3, h4):first-child) {
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  .surface-grid > div:has(> :is(h2, h3, h4):first-child) > p {
+    color: inherit;
+    font-size: inherit;
   }
 
   .surface-grid > a {
@@ -293,10 +329,13 @@
     text-wrap: balance;
   }
 
-  /* Body copy keeps the shared prose tuple; only rhythm changes. */
+  /* Card copy is the small muted supporting size, not body prose. */
   .surface-grid > * > p,
   .surface-grid > * > dd {
     margin: 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+    line-height: var(--leading-body);
   }
 
   /* Link cards push their description to the bottom edge so a row of cards
@@ -608,7 +647,14 @@
 
   /* On narrow screens ContentInteractions parks the trigger in the article
      shell's mount slot instead of the viewport corner. There it is an inline
-     pill with a visible label; the mount decides its alignment. */
+     pill with a visible label, set to the end of the line as the published
+     phone layout did. The empty mount stays hidden (layout.css) so it never
+     spends a row gap; this later layer must not undo that. */
+  [data-context-help-mount]:not(:empty) {
+    display: flex;
+    justify-content: flex-end;
+  }
+
   [data-context-help-mount] > .context-help-trigger {
     position: static;
     display: inline-flex;

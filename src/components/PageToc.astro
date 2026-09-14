@@ -8,12 +8,19 @@ interface Props {
 
 const { headings, label = "On this page" } = Astro.props;
 const entries = headings.filter(({ depth, slug, text }) => (depth === 2 || depth === 3) && slug && text.trim());
+const count = `${entries.length} ${entries.length === 1 ? "section" : "sections"}`;
 ---
 
+{/* One markup serves both renderings (components/navigation.css): a bordered
+    disclosure card below 80rem, a sticky rail beside the article above it,
+    where layout.css places it and the count and marker are hidden. */}
 {entries.length > 0 && (
   <aside class="toc" data-pagefind-ignore>
     <details class="toc__details" data-page-toc open>
-      <summary class="toc__summary">{label}</summary>
+      <summary class="toc__summary">
+        <span class="toc__label"><strong>{label}</strong><small class="toc__count">{count}</small></span>
+        <span class="toc__marker" aria-hidden="true"></span>
+      </summary>
       <nav class="toc__nav" aria-label={label}>
         <ol class="toc__list">
           {entries.map((heading) => (

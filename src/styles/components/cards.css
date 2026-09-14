@@ -354,10 +354,12 @@
     margin-block-end: var(--space-1);
   }
 
-  /* Spotlight proof: three columns once the page grid is tablet-wide.
-     Declared after the `.case-proof` base so the modifier wins on order. */
+  /* Spotlight and case-study-header proof: three columns once the page grid
+     is tablet-wide. Declared after the `.case-proof` base so the modifier
+     wins on order. */
   @container (width >= 48rem) {
-    .spotlight-proof {
+    .spotlight-proof,
+    .article-header > .case-proof {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
   }

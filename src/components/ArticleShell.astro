@@ -44,6 +44,8 @@ const dateLabel = publishedTime && new Intl.DateTimeFormat("en-GB", {
     <slot name="topics" />
     <slot name="actions" />
   </header>
+  {/* The TOC follows the header in DOM order: a disclosure between title and
+      body below 80rem, a sticky rail beside both from 80rem (layout.css). */}
   <slot name="toc" />
   <div data-context-help-mount data-pagefind-ignore></div>
   <article class="prose content-grid full-bleed" data-article-body>
