@@ -1,0 +1,53 @@
+# Design-system QA
+
+Run commands from the repo root with **direnv**, which supplies the content roots:
+
+```sh
+direnv exec . npm run build
+direnv exec . npm run qa
+direnv exec . npm run qa:report
+direnv exec . npm run qa:full
+direnv exec . node --test scripts/qa/contract.test.mjs
+```
+
+`qa` uses 320, 375, 768 and 1440px; `qa:full` uses all 11 viewports
+(320–3440px) and captures screenshots. Both test light and dark OS preferences
+with a new browser context for **each** route/viewport/theme, so localStorage
+is empty before the site's scripts run. Chromium is always headless. The harness
+starts and closes its own loopback static server; no preview server is needed.
+
+Routes come from `dist/sitemap.xml` plus `/404.html`. If the sitemap is absent,
+the harness walks HTML files, skipping meta-refresh redirects. An invalid or
+empty sitemap is an error, not an excuse to silently omit routes.
+
+Artifacts default to `.omo/qa/current/raw.json`; `--out=.omo/qa/<name>` selects
+another gitignored output directory. The harness refuses to overwrite
+`.omo/qa/baseline/`. Screenshots are separated by OS theme and viewport.
+
+Every ordinary measurement has a paired 200% root-font-size measurement for S11.
+`--zoom` additionally records the **full** probe at 200% in `zoomResults`:
+
+```sh
+direnv exec . node scripts/qa/measure.mjs --zoom --out=.omo/qa/zoom
+direnv exec . node scripts/qa/contract.mjs .omo/qa/zoom/raw.json
+```
+
+Normal results are captured before any injected root style or interaction.
+The injected style is restored before a supplementary, width-only 2560px probe
+for S2. Thus the fast matrix still supplies real evidence for S2 and S11.
+Keyboard and first-card reader interactions run separately, at 375px in both
+themes. S12 tests the actual first card, never a substitute selected for passing.
+
+`--routes=/,/blog/` and `--viewports=phone-320,laptop-1440` are diagnostic filters.
+The contract rejects incomplete route/default-viewport coverage. Do not use
+filtered runs as a release gate. Missing probes also fail hygiene rather than
+producing vacuous passes. Prose and inline-code parity compare all normal
+samples within each OS preference; routes without prose or code have no sample
+for that invariant. `firstParagraph` retains a generic fallback for diagnostics;
+`bodyProse` only uses the explicit prose selectors and is the S1 input.
+
+The checker prints all 14 PASS/FAIL lines with actual/expected evidence for each
+failure and exits 1 if any scenario fails. The report is informational, supports
+the old baseline schema, and exits normally even when contracts are red. The
+current design is intentionally red; these assertions must not be relaxed to
+match it. No baseline values are used as expected design values.

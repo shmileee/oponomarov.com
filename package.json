@@ -11,6 +11,9 @@
     "check": "astro check",
     "preview": "astro preview --port 4325",
     "verify": "node scripts/verify-build.mjs",
+    "qa": "node scripts/qa/measure.mjs --out=.omo/qa/current && node scripts/qa/contract.mjs .omo/qa/current/raw.json",
+    "qa:full": "node scripts/qa/measure.mjs --all-viewports --shots --out=.omo/qa/current && node scripts/qa/contract.mjs .omo/qa/current/raw.json",
+    "qa:report": "node scripts/qa/report.mjs .omo/qa/current/raw.json",
     "generate-favicons": "node scripts/generate-favicons.mjs"
   },
   "dependencies": {
@@ -25,6 +28,7 @@
     "@types/node": "24.13.3",
     "js-yaml": "4.1.0",
     "pagefind": "1.5.2",
+    "playwright": "^1.63.0",
     "typescript": "5.9.2"
   },
   "engines": {
