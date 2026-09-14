@@ -1,0 +1,106 @@
+/* Reset — browser mechanics only. No tokens, no colours, no design decisions.
+   Lowest layer: anything a later layer declares wins without !important. */
+@layer reset {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  /* Zero default margins so layout, prose, and components own all spacing.
+     Native dialogs and popovers keep their UA margin: auto — that is what
+     centres them in the top layer. */
+  :where(:not(dialog, [popover])) {
+    margin: 0;
+  }
+
+  /* Grid and flex items default to min-inline-size: auto (= min-content).
+     That is how a long path, token, table, or SVG widens its track and then
+     the page. Zeroing the minimum everywhere makes that structurally
+     impossible; content wraps, scales, or scrolls inside its labelled region
+     instead (§7). It also drops the UA min-content floor on fieldset. */
+  * {
+    min-inline-size: 0;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    /* Safety net against stray paint, not permission to hide a failed layout:
+       S5 measures element rects regardless. `clip`, never `hidden`, so the
+       root does not become a scroll container and sticky/scroll-padding keep
+       working. */
+    overflow-x: clip;
+  }
+
+  body {
+    /* Long unbreakable strings break rather than overflow at 320px. Inherited,
+       so prose, cells, and headings all pick it up; inline code tightens this
+       to `anywhere` in prose.css. */
+    overflow-wrap: break-word;
+  }
+
+  /* Media is bounded by its container and keeps its intrinsic ratio. */
+  img,
+  picture,
+  video,
+  canvas,
+  svg,
+  iframe {
+    max-inline-size: 100%;
+  }
+
+  img,
+  video,
+  svg {
+    block-size: auto;
+  }
+
+  /* Form controls inherit typography instead of the UA system font. */
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+    letter-spacing: inherit;
+  }
+
+  /* Sensible wrapping: balanced headings, no lone last words in copy. */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    text-wrap: balance;
+  }
+
+  p,
+  li,
+  dd,
+  dt,
+  figcaption,
+  blockquote {
+    text-wrap: pretty;
+  }
+
+  /* Reduced motion: non-essential movement stops; state changes still land.
+     Layer precedence means this only reaches declarations no later layer
+     restates, so the real guarantee is tokens.css collapsing --dur-* to 0.01ms
+     under the same query. Smooth scrolling is gated in base.css by
+     prefers-reduced-motion: no-preference. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms;
+      animation-iteration-count: 1;
+      transition-duration: 0.01ms;
+    }
+  }
+}

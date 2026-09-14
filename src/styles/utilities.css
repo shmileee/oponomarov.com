@@ -1,0 +1,18 @@
+/* Utilities — sr-only only (docs/design-system.md §2). Highest layer, so it
+   wins over every other layered declaration without !important. */
+@layer utilities {
+  /* Visually hidden, still announced. Ported from the pre-cutover global.css;
+     S9 allowlists this class for its intentional overflow: hidden. */
+  .sr-only {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    border: 0;
+    padding: 0;
+    white-space: nowrap;
+  }
+}

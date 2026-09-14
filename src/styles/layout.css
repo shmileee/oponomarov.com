@@ -1,0 +1,101 @@
+/* Layout — layer `layout`.
+   The content grid, its two opt-ins, and the page / section / article shells.
+   Spec: docs/design-system.md §6 (breakpoints) and §7 (the content grid).
+   Fixes: D2 (unbounded prose measure), D5 (grid blowout from long tokens). */
+
+@layer layout {
+  /* ------------------------------------------------------------------ */
+  /* Page shell — the routed main-content column.                         */
+  /* SiteLayout renders header and footer as body siblings and wraps the  */
+  /* route in `.page`. It is centered and bounded by --measure-page, so   */
+  /* `full-bleed` means the page grid, never an unbounded viewport        */
+  /* breakout. Inline safe-area insets keep content off notched edges;    */
+  /* the header and footer own their own block insets.                    */
+  /* ------------------------------------------------------------------ */
+
+  .page {
+    flex: 1 0 auto;
+    min-inline-size: 0;
+    max-inline-size: var(--measure-page);
+    margin-inline: auto;
+    padding-inline: env(safe-area-inset-left, 0) env(safe-area-inset-right, 0);
+  }
+
+  .page > * {
+    min-inline-size: 0;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Content grid — the only width escape hatch.                          */
+  /* Children default to the readable `content` track; `.wide` and        */
+  /* `.full-bleed` opt a DIRECT child into the wider tracks. Every         */
+  /* interior track is minmax(0, …) and every child is shrinkable, so a   */
+  /* long path, SVG, table, or code line can never widen the page.        */
+  /* ------------------------------------------------------------------ */
+
+  .content-grid {
+    display: grid;
+    container-type: inline-size;
+    grid-template-columns:
+      [full-start]    minmax(var(--space-gutter), 1fr)
+      [wide-start]    minmax(0, calc((var(--measure-wide) - var(--measure-prose)) / 2))
+      [content-start] minmax(0, var(--measure-prose))
+      [content-end]   minmax(0, calc((var(--measure-wide) - var(--measure-prose)) / 2))
+      [wide-end]      minmax(var(--space-gutter), 1fr)
+      [full-end];
+  }
+
+  .content-grid > * {
+    grid-column: content;
+    min-inline-size: 0;
+  }
+
+  .content-grid > .wide {
+    grid-column: wide;
+  }
+
+  .content-grid > .full-bleed {
+    grid-column: full;
+  }
+
+  @media (width < 40rem) {
+    .content-grid > .wide,
+    .content-grid > .full-bleed {
+      grid-column: content;
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Section — vertical rhythm between major page regions.                */
+  /* Adjacent sections share one --space-section, not two.                */
+  /* ------------------------------------------------------------------ */
+
+  .section {
+    padding-block: var(--space-section);
+  }
+
+  .section + .section {
+    padding-block-start: 0;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Article — the article page composition.                              */
+  /* ArticleShell renders `main.article.content-grid` holding the header,  */
+  /* the TOC disclosure, the `prose content-grid full-bleed` body (a       */
+  /* nested grid whose tracks align with this one), and adjacent          */
+  /* navigation. `.article` adds row rhythm on top of the grid; it never   */
+  /* redefines the template. A persistent side rail cannot coexist with   */
+  /* `wide` content inside --measure-page (64rem + --toc-width + gaps >    */
+  /* 80rem), so the TOC is an in-flow disclosure, not a column.           */
+  /* ------------------------------------------------------------------ */
+
+  .article {
+    row-gap: var(--space-10);
+  }
+
+  /* Empty mount points (e.g. the context-help slot before it is used)     */
+  /* must not spend a row gap.                                            */
+  .article > :empty {
+    display: none;
+  }
+}

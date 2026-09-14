@@ -1,0 +1,150 @@
+<script>
+  let controller: AbortController | undefined;
+
+  const initContentInteractions = () => {
+    controller?.abort();
+    controller = new AbortController();
+    const { signal } = controller;
+
+    document.querySelectorAll<HTMLButtonElement>("[data-context-open]").forEach((trigger) => {
+      const dialog = document.getElementById(trigger.getAttribute("aria-controls") || "");
+      if (!(dialog instanceof HTMLDialogElement) || !dialog.matches("[data-context-dialog]")) return;
+      const mobileMount = document.querySelector<HTMLElement>("[data-context-help-mount]");
+      const mobile = matchMedia("(width < 40rem)");
+      const placeTrigger = () => {
+        (mobile.matches && mobileMount ? mobileMount : document.body).append(trigger);
+      };
+      trigger.setAttribute("data-pagefind-ignore", "");
+      dialog.setAttribute("data-pagefind-ignore", "");
+      placeTrigger();
+      mobile.addEventListener("change", placeTrigger, { signal });
+      document.body.append(dialog);
+      const close = () => { if (dialog.open) dialog.close(); };
+      const closeButton = dialog.querySelector<HTMLButtonElement>("[data-context-close]");
+      trigger.addEventListener("click", () => {
+        if (dialog.open) return;
+        dialog.showModal();
+        closeButton?.focus();
+      }, { signal });
+      closeButton?.addEventListener("click", close, { signal });
+      dialog.addEventListener("click", (event) => {
+        if (event.target !== dialog) return;
+        const box = dialog.getBoundingClientRect();
+        if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) close();
+      }, { signal });
+      dialog.addEventListener("close", () => trigger.focus(), { signal });
+    });
+
+    document.querySelectorAll<HTMLElement>(".tabs").forEach((group) => {
+      const panels = [...group.querySelectorAll<HTMLElement>(":scope > .tab[data-tab-label]")];
+      if (panels.length < 2) return;
+      let tablist = group.querySelector<HTMLElement>(":scope > [role='tablist']");
+      if (!tablist) {
+        tablist = document.createElement("div");
+        tablist.setAttribute("role", "tablist");
+        tablist.setAttribute("aria-label", group.getAttribute("aria-label") || "Options");
+        tablist.setAttribute("data-pagefind-ignore", "");
+        const prefix = `content-tabs-${crypto.randomUUID()}`;
+        panels.forEach((panel, index) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.id = `${prefix}-tab-${index}`;
+          button.setAttribute("role", "tab");
+          button.textContent = panel.dataset.tabLabel?.trim() || `Option ${index + 1}`;
+          panel.id ||= `${prefix}-panel-${index}`;
+          button.setAttribute("aria-controls", panel.id);
+          panel.setAttribute("role", "tabpanel");
+          panel.setAttribute("aria-labelledby", button.id);
+          panel.tabIndex = 0;
+          tablist?.append(button);
+        });
+        group.prepend(tablist);
+      }
+      const buttons = [...tablist.querySelectorAll<HTMLButtonElement>("[role='tab']")];
+      const activate = (index: number) => {
+        buttons.forEach((button, candidate) => {
+          button.setAttribute("aria-selected", String(candidate === index));
+          button.tabIndex = candidate === index ? 0 : -1;
+        });
+        panels.forEach((panel, candidate) => { panel.hidden = candidate !== index; });
+      };
+      const selected = buttons.findIndex((button) => button.getAttribute("aria-selected") === "true");
+      activate(selected >= 0 ? selected : 0);
+      buttons.forEach((button, index) => {
+        button.addEventListener("click", () => activate(index), { signal });
+        button.addEventListener("keydown", (event) => {
+          let target: number;
+          switch (event.key) {
+            case "ArrowRight": target = (index + 1) % buttons.length; break;
+            case "ArrowLeft": target = (index - 1 + buttons.length) % buttons.length; break;
+            case "Home": target = 0; break;
+            case "End": target = buttons.length - 1; break;
+            default: return;
+          }
+          event.preventDefault();
+          activate(target);
+          buttons[target]?.focus();
+        }, { signal });
+      });
+    });
+
+    const filter = document.querySelector<HTMLElement>("[data-shortcut-filter]");
+    const input = filter?.querySelector<HTMLInputElement>("[data-shortcut-query]");
+    const sections = [...document.querySelectorAll<HTMLElement>("[data-shortcut-section]")];
+    if (!filter || !input || sections.length === 0) return;
+    const clear = filter.querySelector<HTMLButtonElement>("[data-shortcut-clear]");
+    const buttons = [...filter.querySelectorAll<HTMLButtonElement>("[data-shortcut-scope]")];
+    const empty = document.querySelector<HTMLElement>("[data-shortcut-empty]");
+    const status = filter.querySelector<HTMLElement>("[data-shortcut-status]");
+    const references = sections.map((section) => ({
+      section,
+      rows: [...section.querySelectorAll<HTMLTableRowElement>("tbody tr")].map((row) => ({
+        row, text: row.textContent?.toLowerCase() || "",
+      })),
+    }));
+    const total = references.reduce((count, reference) => count + reference.rows.length, 0);
+    let scope = buttons.find((button) => button.getAttribute("aria-pressed") === "true")?.dataset.shortcutScope || "all";
+    const updateFilter = () => {
+      const terms = input.value.toLowerCase().trim().split(/[\s+]+/).filter(Boolean);
+      let count = 0;
+      references.forEach(({ section, rows }) => {
+        const scopeMatches = scope === "all" || section.dataset.shortcutSection === scope;
+        let sectionCount = 0;
+        rows.forEach(({ row, text }) => {
+          const matches = scopeMatches && terms.every((term) => text.includes(term));
+          row.hidden = !matches;
+          if (matches) sectionCount += 1;
+        });
+        section.hidden = sectionCount === 0;
+        count += sectionCount;
+      });
+      buttons.forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.shortcutScope === scope)));
+      if (clear) clear.hidden = !input.value;
+      if (empty) empty.hidden = count > 0;
+      if (status) status.textContent = `Showing ${count} of ${total} shortcuts`;
+    };
+    input.addEventListener("input", updateFilter, { signal });
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && input.value) {
+        event.preventDefault();
+        input.value = "";
+        updateFilter();
+      }
+    }, { signal });
+    clear?.addEventListener("click", () => {
+      input.value = "";
+      input.focus();
+      updateFilter();
+    }, { signal });
+    buttons.forEach((button) => button.addEventListener("click", () => {
+      scope = button.dataset.shortcutScope || "all";
+      updateFilter();
+    }, { signal }));
+    updateFilter();
+  };
+
+  initContentInteractions();
+  document.addEventListener("astro:page-load", initContentInteractions);
+  document.addEventListener("astro:before-swap", () => controller?.abort());
+  document.addEventListener("oponomarov:content-updated", initContentInteractions);
+</script>

@@ -1,0 +1,241 @@
+/* Tokens — the single source of every design value (docs/design-system.md §3–6, §12).
+   Tier 1 primitives, literal colours, colour functions, and light-dark() live here
+   and nowhere else. Components consume Tier 2 semantics and Tier 3 aliases. */
+@layer tokens {
+  :root {
+    /* Scheme plumbing. light-dark() resolves against the element's used colour scheme,
+       so the root advertises both and the theme attribute narrows it below. */
+    color-scheme: light dark;
+
+    /* ------------------------------------------------------------------ */
+    /* Tier 1 — preserved palette                                          */
+    /* Exact OKLCH conversions of the pre-cutover sRGB values (§3 method).  */
+    /* This is a consolidation of the existing navy/white/blue/red palette, */
+    /* not a redesign. Alpha is carried unchanged, never flattened.         */
+    /* ------------------------------------------------------------------ */
+
+    /* Inks (navy surfaces and light-mode text) */
+    --p-ink-975: oklch(0.173604 0.026858 263.5115); /* #0a101c */
+    --p-ink-950: oklch(0.183113 0.030892 263.3831); /* #0b1220 */
+    --p-ink-950-a94: oklch(0.183113 0.030892 263.3831 / 0.94); /* rgba(11, 18, 32, 0.94) */
+    --p-ink-900: oklch(0.210084 0.031763 264.6645); /* #111827 */
+    --p-ink-900-a84: oklch(0.210084 0.031763 264.6645 / 0.84); /* rgba(17, 24, 39, 0.84) */
+    --p-ink-900-a66: oklch(0.210084 0.031763 264.6645 / 0.66); /* rgba(17, 24, 39, 0.66) */
+    --p-ink-900-a16: oklch(0.210084 0.031763 264.6645 / 0.16); /* rgba(17, 24, 39, 0.16) */
+    --p-ink-900-a12: oklch(0.210084 0.031763 264.6645 / 0.12); /* rgba(17, 24, 39, 0.12) */
+    --p-ink-900-a09: oklch(0.210084 0.031763 264.6645 / 0.09); /* rgba(17, 24, 39, 0.09) */
+
+    /* Whites (dark-mode text, light-mode surfaces) */
+    --p-white: oklch(1.000000 0.000000 0.0000); /* #ffffff */
+    --p-white-a78: oklch(1.000000 0.000000 0.0000 / 0.78); /* rgba(255, 255, 255, 0.78) */
+    --p-white-a60: oklch(1.000000 0.000000 0.0000 / 0.6); /* rgba(255, 255, 255, 0.6) */
+    --p-white-a16: oklch(1.000000 0.000000 0.0000 / 0.16); /* rgba(255, 255, 255, 0.16) */
+    --p-white-a08: oklch(1.000000 0.000000 0.0000 / 0.08); /* rgba(255, 255, 255, 0.08) */
+
+    /* Black (dark-mode raised shadow) */
+    --p-black-a22: oklch(0.000000 0.000000 0.0000 / 0.22); /* rgba(0, 0, 0, 0.22) */
+
+    /* Neutrals */
+    --p-neutral-50: oklch(0.984152 0.003413 247.8575); /* #f8fafc */
+    --p-neutral-75: oklch(0.969953 0.002872 264.5420); /* #f4f5f7 */
+    --p-neutral-75-a94: oklch(0.969953 0.002872 264.5420 / 0.94); /* rgba(244, 245, 247, 0.94) */
+    --p-neutral-100: oklch(0.959546 0.007959 253.8534); /* #eef2f7 */
+    --p-neutral-200: oklch(0.927582 0.005814 264.5313); /* #e5e7eb */
+    --p-neutral-350: oklch(0.766810 0.024188 258.3665); /* #aab4c3 */
+    --p-neutral-400: oklch(0.710672 0.035114 256.7878); /* #94a3b8 */
+    --p-neutral-600: oklch(0.483663 0.032460 253.4324); /* #526071 */
+    --p-neutral-650: oklch(0.446112 0.026312 256.8018); /* #4b5563 */
+
+    /* Blues (accent) */
+    --p-blue-300: oklch(0.809069 0.095598 251.8128); /* #93c5fd */
+    --p-blue-400: oklch(0.713740 0.143381 254.6240); /* #60a5fa */
+    --p-blue-400-a35: oklch(0.713740 0.143381 254.6240 / 0.35); /* rgba(96, 165, 250, 0.35) */
+    --p-blue-600: oklch(0.546150 0.215208 262.8809); /* #2563eb */
+    --p-blue-600-a14: oklch(0.546150 0.215208 262.8809 / 0.14); /* rgba(37, 99, 235, 0.14) */
+    --p-blue-600-a10: oklch(0.546150 0.215208 262.8809 / 0.1); /* rgba(37, 99, 235, 0.1) */
+    --p-blue-600-a40: oklch(0.546150 0.215208 262.8809 / 0.4); /* rgba(37, 99, 235, 0.4) */
+    --p-blue-700: oklch(0.488198 0.217165 264.3763); /* #1d4ed8 */
+
+    /* Red (reading progress, both themes) */
+    --p-red-500: oklch(0.650610 0.220291 27.7092); /* #f9423a */
+
+    /* ------------------------------------------------------------------ */
+    /* Tier 2 — semantic colours and elevation                             */
+    /* light-dark(light, dark). Light is always the first argument.         */
+    /* ------------------------------------------------------------------ */
+    --color-bg: light-dark(var(--p-neutral-75), var(--p-ink-950));
+    --color-surface: light-dark(var(--p-white), var(--p-ink-900));
+    --color-surface-raised: light-dark(var(--p-white), var(--p-ink-900));
+    --color-header: light-dark(var(--p-neutral-75-a94), var(--p-ink-950-a94));
+    --color-text: light-dark(var(--p-ink-900), var(--p-white));
+    --color-text-body: light-dark(var(--p-ink-900-a84), var(--p-white-a78));
+    --color-text-muted: light-dark(var(--p-ink-900-a66), var(--p-white-a60));
+    --color-text-subtle: light-dark(var(--p-neutral-650), var(--p-neutral-350));
+    --color-border: light-dark(var(--p-ink-900-a16), var(--p-white-a16));
+    --color-border-subtle: light-dark(var(--p-ink-900-a09), var(--p-white-a08));
+    --color-accent: light-dark(var(--p-blue-700), var(--p-blue-400));
+    --color-accent-soft: light-dark(var(--p-blue-600), var(--p-blue-300));
+    --color-accent-surface: light-dark(var(--p-blue-600-a10), var(--p-blue-600-a14));
+    --color-accent-border: light-dark(var(--p-blue-600-a40), var(--p-blue-400-a35));
+    --color-focus: light-dark(var(--p-blue-700), var(--p-blue-300));
+    --color-progress: light-dark(var(--p-red-500), var(--p-red-500));
+
+    /* light-dark() accepts colours, not shadow lists: only the colour term branches. */
+    --shadow-raised: 0 20px 50px light-dark(var(--p-ink-900-a12), var(--p-black-a22));
+
+    /* ------------------------------------------------------------------ */
+    /* Tier 2 — type                                                       */
+    /* ------------------------------------------------------------------ */
+    --font-display: "Bricolage Grotesque", "Public Sans", sans-serif;
+    --font-body: "Public Sans", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+    --weight-normal: 400;
+    --weight-medium: 500;
+    --weight-semibold: 600;
+    --weight-bold: 700;
+
+    --tracking-heading: -0.035em;
+    --tracking-label: 0.16em;
+
+    --leading-body: 1.65;
+    --leading-tight: 1.15;
+    --leading-snug: 1.3;
+    --leading-code: 1.6;
+
+    /* Fluid ramp (§4). Every preferred value carries a rem term so the ramp
+       responds to root size and browser zoom, not only to viewport width. */
+    --text-xs: clamp(0.75rem, 0.725rem + 0.125vw, 0.875rem);
+    --text-sm: clamp(0.875rem, 0.85rem + 0.125vw, 1rem);
+    --text-base: clamp(1.0625rem, 1rem + 0.3vw, 1.1875rem);
+    --text-lg: clamp(1.1875rem, 1.15rem + 0.1875vw, 1.375rem);
+    --text-xl: clamp(1.375rem, 1.3rem + 0.375vw, 1.75rem);
+    --text-2xl: clamp(1.75rem, 1.625rem + 0.625vw, 2.375rem);
+    --text-3xl: clamp(2.125rem, 1.925rem + 1vw, 3.125rem);
+    --text-4xl: clamp(2.625rem, 2.3rem + 1.625vw, 4.25rem);
+
+    /* ------------------------------------------------------------------ */
+    /* Tier 2 — space                                                      */
+    /* Quarter-rem scale; step numbers are literal multiples (§5).          */
+    /* ------------------------------------------------------------------ */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.25rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --space-10: 2.5rem;
+    --space-12: 3rem;
+    --space-16: 4rem;
+
+    /* Layout spacing. §5 fixes these two as viewport-preferred layout tokens
+       (not text sizes); their rem bounds still follow the root size. */
+    --space-gutter: clamp(1rem, 4vw, 2.5rem);
+    --space-section: clamp(3rem, 8vw, 6rem);
+    --prose-flow: 1.25em;
+
+    /* ------------------------------------------------------------------ */
+    /* Tier 2 — shape, measure, behaviour                                  */
+    /* ------------------------------------------------------------------ */
+    --radius-sm: 0.25rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-pill: 999rem;
+
+    --measure-prose: 44rem;
+    --measure-wide: 64rem;
+    --measure-page: 80rem;
+    --toc-width: 14rem;
+
+    --tap-size: 2.75rem;
+    --header-height: 3.5rem;
+    --border-width: 1px;
+    --focus-width: 0.1875rem;
+    --focus-offset: 0.1875rem;
+
+    --z-progress: 1;
+    --z-header: 50;
+    --z-back-to-top: 60;
+    /* Not in the §3 table: the focused skip link sits above the sticky header
+       (--z-header) and the floating return control, so it needs its own step. */
+    --z-skip-link: 70;
+
+    --dur-fast: 130ms;
+    --dur-base: 160ms;
+    --ease-out: ease-out;
+
+    /* ------------------------------------------------------------------ */
+    /* Tier 3 — component aliases                                          */
+    /* Consumed by components; never redeclared by route or theme.          */
+    /* ------------------------------------------------------------------ */
+    --code-bg: light-dark(var(--p-neutral-50), var(--p-ink-975));
+    --code-toolbar-bg: light-dark(var(--p-neutral-100), var(--p-ink-900));
+    --code-text: light-dark(var(--p-ink-900), var(--p-neutral-200));
+    --code-muted: light-dark(var(--p-neutral-600), var(--p-neutral-400));
+    --code-border: var(--color-border);
+    --code-font-size: var(--text-sm);
+    --code-inline-size: 0.875em;
+    --code-inline-bg: var(--color-accent-surface);
+    --code-inline-text: light-dark(var(--p-blue-700), var(--p-blue-300));
+
+    --table-border: var(--color-border);
+    --table-head-bg: var(--color-surface);
+    --table-stripe: var(--color-border-subtle);
+
+    --kbd-bg: var(--color-surface-raised);
+    --kbd-border: var(--color-border);
+
+    /* Fixed backings that describe a captured screenshot, not the site theme.
+       They do not set color-scheme or change surrounding prose. */
+    --frame-dark: var(--p-ink-975);
+    --frame-light: var(--p-white);
+
+    /* ------------------------------------------------------------------ */
+    /* Legacy diagram palette — DO NOT DELETE (.omo/port-critical.md P1)    */
+    /* ------------------------------------------------------------------ */
+    /* Six portfolio case studies embed inline <svg> diagrams that reference
+       this private namespace 200+ times, each with a hardcoded DARK-theme
+       fallback baked into minified single-line markup, e.g.
+       fill="var(--w88, rgba(255,255,255,0.88))" / fill="var(--bg, #0B1220)".
+       Their only previous definition was public/assets/css/site.css, which
+       the cutover deletes. Without these declarations every diagram silently
+       falls back to white-on-navy in BOTH themes — unreadable in light mode.
+       They are mapped onto semantic tokens so they theme correctly; they are
+       legacy aliases, not additions to the token system. Verify by loading
+       /case-studies/the-fleet-that-patches-itself/ in the light theme. */
+    --bg: var(--color-surface);
+    --w88: var(--color-text);
+    --w7: var(--color-text-body);
+    --w55: var(--color-text-muted);
+    --w5: var(--color-text-muted);
+    --w45: var(--color-text-subtle);
+    --w42: var(--color-border);
+    --ab4: var(--color-accent);
+    /* Same namespace, one occurrence each (a "Merge" success label) with a
+       hardcoded green fallback that fails contrast on the light surface. */
+    --ok: var(--color-accent);
+    --okb5: var(--color-accent-border);
+  }
+
+  /* Theme selection. These are the ONLY [data-theme] selectors permitted in
+     author CSS (§12). Same specificity as :root, so they must follow it. */
+  [data-theme="light"] {
+    color-scheme: light;
+  }
+
+  [data-theme="dark"] {
+    color-scheme: dark;
+  }
+
+  /* Reduced motion collapses the motion tokens themselves, so every component
+     that follows the contract (--dur-* with --ease-out) goes still without
+     needing !important. 0.01ms rather than 0 keeps transitionend/animationend
+     firing for any script that waits on them. */
+  @media (prefers-reduced-motion: reduce) {
+    :root {
+      --dur-fast: 0.01ms;
+      --dur-base: 0.01ms;
+    }
+  }
+}

@@ -1,0 +1,70 @@
+---
+interface ArticleLink {
+  readonly href: string;
+  readonly title: string;
+  readonly label?: string;
+}
+
+interface Props {
+  readonly title: string;
+  readonly description?: string;
+  readonly eyebrow?: string;
+  readonly backLink?: ArticleLink;
+  readonly publishedTime?: Date;
+  readonly readingMinutes?: number;
+  readonly previous?: ArticleLink;
+  readonly next?: ArticleLink;
+  readonly adjacentLabel?: string;
+}
+
+const {
+  title, description, eyebrow, backLink, publishedTime, readingMinutes,
+  previous, next, adjacentLabel = "Adjacent articles",
+} = Astro.props;
+const dateLabel = publishedTime && new Intl.DateTimeFormat("en-GB", {
+  day: "2-digit", month: "long", year: "numeric", timeZone: "UTC",
+}).format(publishedTime);
+---
+
+<main id="main-content" class="article content-grid" tabindex="-1">
+  <header class="article-header">
+    {backLink && <a class="back-link" href={backLink.href} data-pagefind-ignore>{backLink.title}</a>}
+    {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+    <h1>{title}</h1>
+    {description && <p class="article-dek prose prose--lede">{description}</p>}
+    {(publishedTime || readingMinutes !== undefined) && (
+      <p class="article-meta">
+        {publishedTime && <time datetime={publishedTime.toISOString()}>{dateLabel}</time>}
+        {publishedTime && readingMinutes !== undefined && <span aria-hidden="true">·</span>}
+        {readingMinutes !== undefined && <span>{readingMinutes} min read</span>}
+      </p>
+    )}
+    <slot name="meta" />
+    <slot name="proof" />
+    <slot name="topics" />
+    <slot name="actions" />
+  </header>
+  <slot name="toc" />
+  <div data-context-help-mount data-pagefind-ignore></div>
+  <article class="prose content-grid full-bleed" data-article-body>
+    <slot />
+  </article>
+  {(previous || next) && (
+    <nav class="adjacent-nav" aria-label={adjacentLabel} data-pagefind-ignore>
+      {previous && (
+        <a href={previous.href} rel="prev" data-study-direction="previous">
+          <span class="adjacent-nav__label">{previous.label ?? "← Previous"}</span>
+          <strong class="adjacent-nav__title">{previous.title}</strong>
+        </a>
+      )}
+      {next && (
+        <a class="adjacent-nav__next" href={next.href} rel="next" data-study-direction="next">
+          <span class="adjacent-nav__label">{next.label ?? "Next →"}</span>
+          <strong class="adjacent-nav__title">{next.title}</strong>
+        </a>
+      )}
+    </nav>
+  )}
+  <slot name="footer" />
+  <slot name="comments" />
+</main>

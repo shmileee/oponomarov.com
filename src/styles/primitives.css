@@ -1,0 +1,1371 @@
+/*
+ * Content primitives.
+ *
+ * The single stylesheet behind src/lib/content-primitives.json. Every class a
+ * content repository may author in raw Markdown HTML is styled here and
+ * nowhere else. Rules consume Tier 2 semantic tokens and the Tier 3 aliases
+ * defined in tokens.css; no literal colour, palette reference, theme selector
+ * or importance override appears in this file.
+ *
+ * Ported from the live legacy sheets (public/assets/css/site.css,
+ * public/blog-assets/css/main.css, src/styles/docs-content.css and
+ * src/styles/experience.css) and rewritten against the token contract.
+ *
+ * Shared grid placement (wide, full-bleed) lives in layout.css; the
+ * engine-generated table-scroll region lives in prose.css. Every primitive
+ * below composes with those opt-ins because it never exceeds 100% of its
+ * grid area.
+ */
+
+@layer primitives {
+  /* ------------------------------------------------------------------ */
+  /* Hero                                                                */
+  /* ------------------------------------------------------------------ */
+
+  /* One hero for the homepage, 404, contact page and the dotfiles landing
+     page. Replaces experience-hero, docs-hero and docs-hero--home. */
+  .hero {
+    min-inline-size: 0;
+    padding-block: var(--space-section);
+    scroll-margin-block-start: var(--header-height);
+  }
+
+  .hero > h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--text-4xl);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-heading);
+    line-height: var(--leading-tight);
+    text-wrap: balance;
+  }
+
+  /* Decorative terminal cursor inside the heading. aria-hidden, never a
+     control. The blink is the existing brand mark, not a new animation;
+     reset.css removes it under prefers-reduced-motion. */
+  .hero-cursor {
+    display: inline-block;
+    inline-size: 0.1em;
+    block-size: 0.78em;
+    margin-inline-start: 0.12em;
+    background: var(--color-progress);
+    transform: translateY(0.06em);
+    animation: hero-cursor-blink 1.1s steps(1) infinite;
+  }
+
+  @keyframes hero-cursor-blink {
+    0%,
+    55% {
+      opacity: 1;
+    }
+
+    56%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  /* Introductory copy: the shared lede treatment, not a page-specific scale. */
+  .hero-copy {
+    max-inline-size: var(--measure-prose);
+    margin-block: var(--space-8) 0;
+    color: var(--color-text-body);
+    font-family: var(--font-body);
+    font-size: var(--text-lg);
+    line-height: var(--leading-body);
+  }
+
+  .hero-copy > p {
+    margin: 0;
+    font-size: var(--text-lg);
+    line-height: var(--leading-body);
+  }
+
+  .hero-copy > p + p {
+    margin-block-start: var(--prose-flow);
+  }
+
+  .hero-copy strong {
+    color: var(--color-text);
+    font-weight: var(--weight-semibold);
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-4);
+    margin-block-start: var(--space-6);
+  }
+
+  /* Both action links share the tap target, mono label and focus treatment
+     (focus ring itself comes from base.css). */
+  .primary-link,
+  .secondary-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-inline-size: var(--tap-size);
+    min-block-size: var(--tap-size);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    line-height: var(--leading-snug);
+    text-decoration: none;
+    transition:
+      color var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      background-color var(--dur-fast) var(--ease-out);
+  }
+
+  .primary-link {
+    padding: var(--space-2) var(--space-5);
+    border: var(--border-width) solid var(--color-accent-border);
+    border-radius: var(--radius-pill);
+    color: var(--color-accent);
+  }
+
+  .primary-link:hover {
+    border-color: var(--color-accent);
+    background: var(--color-accent-surface);
+    color: var(--color-text);
+  }
+
+  .secondary-link {
+    padding-block: var(--space-2);
+    color: var(--color-text-muted);
+  }
+
+  .secondary-link:hover {
+    color: var(--color-text);
+  }
+
+  /* Definition list of short supporting facts: <div><dt/><dd/></div>. */
+  .hero-signals {
+    display: grid;
+    gap: 0;
+    margin-block: var(--space-10) 0;
+    border-block: var(--border-width) solid var(--color-border);
+  }
+
+  .hero-signals > div {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    align-items: baseline;
+    gap: var(--space-3);
+    min-inline-size: 0;
+    padding-block: var(--space-3);
+  }
+
+  .hero-signals > div + div {
+    border-block-start: var(--border-width) solid var(--color-border-subtle);
+  }
+
+  .hero-signals dt {
+    margin: 0;
+    color: var(--color-text-subtle);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-label);
+    line-height: var(--leading-snug);
+    text-transform: uppercase;
+  }
+
+  .hero-signals dd {
+    margin: 0;
+    color: var(--color-text);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-snug);
+  }
+
+  @media (width >= 48rem) {
+    .hero-signals {
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(0, 1fr);
+    }
+
+    .hero-signals > div {
+      grid-template-columns: minmax(0, 1fr);
+      align-content: start;
+      gap: var(--space-1);
+      padding: var(--space-4) var(--space-5);
+    }
+
+    .hero-signals > div:first-child {
+      padding-inline-start: 0;
+    }
+
+    .hero-signals > div:last-child {
+      padding-inline-end: 0;
+    }
+
+    .hero-signals > div + div {
+      border-block-start: 0;
+      border-inline-start: var(--border-width) solid var(--color-border-subtle);
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Layout primitives                                                   */
+  /* ------------------------------------------------------------------ */
+
+  /* Intrinsically responsive grid of cards, links or dl entries. Replaces
+     principle-grid, home-overview, doc-card-grid and setup-paths. Two
+     columns as soon as the track fits two half-measure cards; an odd last
+     card spans the full row instead of orphaning. */
+  .surface-grid {
+    display: grid;
+    grid-template-columns: repeat(
+      auto-fit,
+      minmax(min(100%, calc((var(--measure-prose) - var(--space-4)) / 2)), 1fr)
+    );
+    gap: var(--space-4);
+    min-inline-size: 0;
+    margin-block: var(--prose-flow);
+    padding: 0;
+  }
+
+  .surface-grid > * {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+    min-inline-size: 0;
+    margin: 0;
+    padding: var(--space-5);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+  }
+
+  .surface-grid > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+
+  .surface-grid > a {
+    color: var(--color-text-body);
+    text-decoration: none;
+    transition:
+      border-color var(--dur-fast) var(--ease-out),
+      background-color var(--dur-fast) var(--ease-out);
+  }
+
+  .surface-grid > a:hover {
+    border-color: var(--color-accent);
+    background: var(--color-accent-surface);
+  }
+
+  .surface-grid > * > :first-child {
+    margin-block-start: 0;
+  }
+
+  .surface-grid > * > :last-child {
+    margin-block-end: 0;
+  }
+
+  /* Card eyebrow: the first span in a card. */
+  .surface-grid > * > span:first-child {
+    display: block;
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-label);
+    line-height: var(--leading-snug);
+    text-transform: uppercase;
+  }
+
+  /* Card title: strong in link cards, dt in definition entries. */
+  .surface-grid > * > strong,
+  .surface-grid > * > dt {
+    display: block;
+    margin: 0;
+    color: var(--color-text);
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-snug);
+    text-wrap: balance;
+  }
+
+  /* Body copy keeps the shared prose tuple; only rhythm changes. */
+  .surface-grid > * > p,
+  .surface-grid > * > dd {
+    margin: 0;
+  }
+
+  /* Link cards push their description to the bottom edge so a row of cards
+     shares one baseline. */
+  .surface-grid > a > p:last-child {
+    margin-block-start: auto;
+    padding-block-start: var(--space-2);
+  }
+
+  /* Paths and path links sit on their own line inside a card. */
+  .surface-grid > * > .path-token,
+  .surface-grid > * > a:has(> .path-token) {
+    display: inline-block;
+    inline-size: fit-content;
+    max-inline-size: 100%;
+  }
+
+  /* Ordered process: <li><span aria-hidden>01</span><div><strong/><p/></div></li>.
+     Replaces install-flow. Native ol semantics are retained; only the marker
+     is drawn by the span. */
+  .steps {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    min-inline-size: 0;
+    margin-block: var(--prose-flow);
+    padding: 0;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    list-style: none;
+  }
+
+  .steps > li {
+    display: grid;
+    grid-template-columns: var(--tap-size) minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-4);
+    min-inline-size: 0;
+    margin: 0;
+    padding: var(--space-4) var(--space-5);
+  }
+
+  .steps > li + li {
+    border-block-start: var(--border-width) solid var(--color-border-subtle);
+  }
+
+  .steps > li > span {
+    display: grid;
+    place-items: center;
+    inline-size: var(--tap-size);
+    block-size: var(--tap-size);
+    border: var(--border-width) solid var(--color-accent-border);
+    border-radius: var(--radius-pill);
+    background: var(--color-accent-surface);
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    line-height: 1;
+  }
+
+  .steps > li > div {
+    display: grid;
+    gap: var(--space-1);
+    min-inline-size: 0;
+    align-self: center;
+  }
+
+  .steps > li strong {
+    display: block;
+    margin: 0;
+    color: var(--color-text);
+    font-family: var(--font-display);
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-snug);
+  }
+
+  .steps > li p {
+    margin: 0;
+  }
+
+  @media (width >= 48rem) {
+    .steps > li > div {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+      align-items: baseline;
+      gap: var(--space-6);
+    }
+  }
+
+  /* Reference-table grouping. The engine wraps every nested table in its own
+     labelled scroll region, so this is rhythm and containment only, never a
+     column-width override. */
+  .setup-reference {
+    display: flow-root;
+    min-inline-size: 0;
+    margin-block: var(--prose-flow);
+  }
+
+  .setup-reference > :first-child {
+    margin-block-start: 0;
+  }
+
+  .setup-reference > :last-child {
+    margin-block-end: 0;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Interactive primitives                                              */
+  /* ------------------------------------------------------------------ */
+
+  /* Tabs. Authors write .tabs > .tab[data-tab-label] sections; the engine
+     inserts [role="tablist"] with [role="tab"] buttons and toggles hidden on
+     the panels. Without JavaScript the sections stack and stay readable. */
+  .tabs {
+    display: grid;
+    gap: var(--space-4);
+    min-inline-size: 0;
+    margin-block: var(--prose-flow);
+  }
+
+  .tabs:has(> [role="tablist"]) {
+    gap: 0;
+  }
+
+  .tabs > [role="tablist"] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    border-block-end: var(--border-width) solid var(--color-border);
+  }
+
+  .tabs [role="tab"] {
+    min-inline-size: var(--tap-size);
+    min-block-size: var(--tap-size);
+    margin-block-end: calc(-1 * var(--border-width));
+    padding: var(--space-2) var(--space-4);
+    border: 0;
+    border-block-end: var(--focus-width) solid transparent;
+    background: none;
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    line-height: var(--leading-snug);
+    cursor: pointer;
+    transition:
+      color var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+  }
+
+  .tabs [role="tab"]:hover {
+    color: var(--color-text);
+  }
+
+  .tabs [role="tab"][aria-selected="true"] {
+    border-block-end-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  .tab {
+    min-inline-size: 0;
+    padding: var(--space-5);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+  }
+
+  .tabs:has(> [role="tablist"]) > .tab {
+    border-block-start: 0;
+    border-start-start-radius: 0;
+    border-start-end-radius: 0;
+  }
+
+  .tab[hidden] {
+    display: none;
+  }
+
+  .tab > :is(h2, h3, h4):first-child {
+    margin-block: 0 var(--space-3);
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-label);
+    line-height: var(--leading-snug);
+    text-transform: uppercase;
+  }
+
+  .tab > :last-child {
+    margin-block-end: 0;
+  }
+
+  /* Native details disclosure with a summary as its first child. Replaces
+     download-disclosure. */
+  .disclosure {
+    min-inline-size: 0;
+    margin-block: var(--prose-flow);
+    border: var(--border-width) solid var(--color-accent-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+  }
+
+  .disclosure > summary {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-block-size: var(--tap-size);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-lg);
+    color: var(--color-text);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-snug);
+    cursor: pointer;
+    list-style: none;
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+
+  .disclosure > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .disclosure > summary::before {
+    flex: 0 0 auto;
+    inline-size: var(--space-4);
+    color: var(--color-accent);
+    content: "+";
+    font-weight: var(--weight-medium);
+    line-height: 1;
+    text-align: center;
+  }
+
+  .disclosure[open] > summary::before {
+    content: "\2212";
+  }
+
+  .disclosure > summary:hover {
+    background: var(--color-accent-surface);
+  }
+
+  .disclosure[open] > summary {
+    border-block-end: var(--border-width) solid var(--color-border);
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
+    background: var(--color-accent-surface);
+  }
+
+  .disclosure > summary ~ * {
+    margin-inline: var(--space-4);
+  }
+
+  .disclosure > summary + * {
+    margin-block-start: var(--space-4);
+  }
+
+  .disclosure > :last-child {
+    margin-block-end: var(--space-4);
+  }
+
+  /* Quick-context help. The hidden source section carries the trigger and
+     the native dialog for ContentInteractions to mount. Whether the engine
+     moves the nodes or unhides them in place, the section itself never adds
+     a box or flow rhythm. */
+  .context-help-source {
+    display: contents;
+  }
+
+  .context-help-source[hidden] {
+    display: none;
+  }
+
+  .context-help-trigger {
+    position: fixed;
+    inset-block-end: calc(
+      var(--space-5) + var(--tap-size) + var(--space-3) + env(safe-area-inset-bottom)
+    );
+    inset-inline-end: max(
+      var(--space-gutter),
+      calc((100vw - var(--measure-page)) / 2 + var(--space-gutter))
+    );
+    z-index: var(--z-back-to-top);
+    display: grid;
+    place-items: center;
+    inline-size: var(--tap-size);
+    block-size: var(--tap-size);
+    padding: 0;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface-raised);
+    color: var(--color-text);
+    box-shadow: var(--shadow-raised);
+    cursor: pointer;
+    font-family: var(--font-display);
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+    line-height: 1;
+    transition:
+      border-color var(--dur-fast) var(--ease-out),
+      background-color var(--dur-fast) var(--ease-out);
+  }
+
+  .context-help-trigger:hover {
+    border-color: var(--color-accent);
+    background: var(--color-accent-surface);
+  }
+
+  /* On narrow screens ContentInteractions parks the trigger in the article
+     shell's mount slot instead of the viewport corner. There it is an inline
+     pill with a visible label; the mount decides its alignment. */
+  [data-context-help-mount] > .context-help-trigger {
+    position: static;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    inline-size: auto;
+    padding: 0 var(--space-4);
+    box-shadow: none;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+  }
+
+  [data-context-help-mount] > .context-help-trigger::after {
+    content: "Quick context";
+  }
+
+  /* Native modal dialog. Closed dialogs keep the UA display: none; the open
+     dialog becomes a single-row grid so the panel, not the document, owns
+     overflow. */
+  .context-help {
+    inline-size: min(var(--measure-prose), calc(100% - 2 * var(--space-gutter)));
+    max-inline-size: none;
+    max-block-size: calc(100dvh - 2 * var(--space-gutter));
+    margin: auto;
+    padding: 0;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-raised);
+    color: var(--color-text-body);
+    box-shadow: var(--shadow-raised);
+  }
+
+  .context-help[open] {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .context-help::backdrop {
+    background: var(--color-header);
+  }
+
+  .context-help__panel {
+    min-block-size: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+
+  .context-help__header {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: var(--z-progress);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-5) var(--space-6);
+    border-block-end: var(--border-width) solid var(--color-border-subtle);
+    background: var(--color-surface-raised);
+  }
+
+  .context-help__header > div {
+    min-inline-size: 0;
+  }
+
+  .context-help__header p {
+    margin: 0 0 var(--space-1);
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-label);
+    line-height: var(--leading-snug);
+    text-transform: uppercase;
+  }
+
+  .context-help__header h2 {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    color: var(--color-text);
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-heading);
+    line-height: var(--leading-snug);
+    text-wrap: balance;
+  }
+
+  .context-help__header button {
+    display: grid;
+    flex: 0 0 auto;
+    place-items: center;
+    inline-size: var(--tap-size);
+    block-size: var(--tap-size);
+    margin-block: calc(-1 * var(--space-2));
+    margin-inline-end: calc(-1 * var(--space-2));
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition:
+      color var(--dur-fast) var(--ease-out),
+      background-color var(--dur-fast) var(--ease-out);
+  }
+
+  .context-help__header button:hover {
+    background: var(--color-accent-surface);
+    color: var(--color-text);
+  }
+
+  .context-help__header svg {
+    inline-size: var(--space-4);
+    block-size: var(--space-4);
+    fill: none;
+    stroke: currentcolor;
+    stroke-linecap: square;
+    stroke-width: 1.5;
+  }
+
+  .context-help__terms {
+    margin: 0;
+    padding: 0 var(--space-6) var(--space-2);
+  }
+
+  .context-help__terms > div {
+    display: grid;
+    gap: var(--space-1);
+    padding-block: var(--space-4);
+  }
+
+  .context-help__terms > div + div {
+    border-block-start: var(--border-width) solid var(--color-border-subtle);
+  }
+
+  .context-help__terms dt {
+    margin: 0;
+    color: var(--color-text);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-snug);
+  }
+
+  .context-help__terms dd {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: var(--leading-body);
+  }
+
+  @media (width >= 40rem) {
+    .context-help__terms > div {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+      align-items: baseline;
+      gap: var(--space-5);
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Shortcuts                                                           */
+  /* ------------------------------------------------------------------ */
+
+  /* Labelled search plus scope buttons; state is aria-pressed, never an
+     authored class. */
+  .shortcut-filter {
+    display: grid;
+    gap: var(--space-3);
+    min-inline-size: 0;
+    margin-block: var(--prose-flow) var(--space-8);
+  }
+
+  .shortcut-filter > label {
+    color: var(--color-text);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-label);
+    line-height: var(--leading-snug);
+    text-transform: uppercase;
+  }
+
+  .shortcut-filter__search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-inline-size: 0;
+  }
+
+  .shortcut-filter__search input {
+    inline-size: 100%;
+    min-block-size: calc(var(--tap-size) + 2 * var(--border-width));
+    padding: var(--space-2) var(--space-4);
+    padding-inline-end: calc(var(--tap-size) + var(--space-4));
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    font-weight: var(--weight-normal);
+    line-height: var(--leading-body);
+    appearance: none;
+  }
+
+  .shortcut-filter__search input::placeholder {
+    color: var(--color-text-subtle);
+    opacity: 1;
+  }
+
+  /* The content supplies its own clear button; hide the duplicate native one. */
+  .shortcut-filter__search input::-webkit-search-decoration,
+  .shortcut-filter__search input::-webkit-search-cancel-button {
+    display: none;
+  }
+
+  .shortcut-filter__search input:focus-visible {
+    border-color: var(--color-accent);
+  }
+
+  .shortcut-filter__search button {
+    position: absolute;
+    inset-block: var(--border-width);
+    inset-inline-end: var(--border-width);
+    min-inline-size: var(--tap-size);
+    padding: 0 var(--space-3);
+    border: 0;
+    border-radius: calc(var(--radius-md) - var(--border-width));
+    background: none;
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      color var(--dur-fast) var(--ease-out),
+      background-color var(--dur-fast) var(--ease-out);
+  }
+
+  .shortcut-filter__search button:hover {
+    background: var(--color-accent-surface);
+    color: var(--color-text);
+  }
+
+  .shortcut-filter__search button[hidden] {
+    display: none;
+  }
+
+  .shortcut-filter__scopes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .shortcut-filter__scopes button {
+    min-inline-size: var(--tap-size);
+    min-block-size: var(--tap-size);
+    padding: var(--space-2) var(--space-4);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface);
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    line-height: var(--leading-snug);
+    cursor: pointer;
+    transition:
+      color var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      background-color var(--dur-fast) var(--ease-out);
+  }
+
+  .shortcut-filter__scopes button:hover {
+    border-color: var(--color-accent-border);
+    color: var(--color-text);
+  }
+
+  .shortcut-filter__scopes button[aria-pressed="true"] {
+    border-color: var(--color-accent);
+    background: var(--color-accent-surface);
+    color: var(--color-accent);
+  }
+
+  /* Polite live region for the engine-generated result count. */
+  .shortcut-filter__status {
+    min-block-size: var(--space-5);
+    margin: 0;
+    color: var(--color-text-subtle);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    line-height: var(--leading-snug);
+  }
+
+  .shortcut-filter-empty {
+    margin-block: var(--prose-flow);
+    padding: var(--space-8);
+    border: var(--border-width) dashed var(--color-border);
+    border-radius: var(--radius-md);
+    text-align: center;
+    text-wrap: balance;
+  }
+
+  .shortcut-filter-empty[hidden] {
+    display: none;
+  }
+
+  /* Filterable group. The engine hides non-matching rows, headings and
+     wrappers with the hidden attribute; restate it so no author display
+     value can keep a filtered element visible or focusable. */
+  .shortcut-filter-section {
+    min-inline-size: 0;
+  }
+
+  .shortcut-filter-section[hidden],
+  .shortcut-filter-section [hidden] {
+    display: none;
+  }
+
+  /* Reference section with headings and ordinary tables. Tables keep native
+     layout inside the engine's scroll region; nothing here fixes a column. */
+  .shortcut-reference {
+    min-inline-size: 0;
+    scroll-margin-block-start: calc(var(--header-height) + var(--space-4));
+  }
+
+  .shortcut-reference > :first-child {
+    margin-block-start: 0;
+  }
+
+  /* Prefix chord summary: label, keys and release instruction in one row. */
+  .shortcut-prefix-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    min-inline-size: 0;
+    margin-block: var(--prose-flow);
+    padding: var(--space-3) var(--space-4);
+    border: var(--border-width) solid var(--color-accent-border);
+    border-inline-start-width: var(--focus-width);
+    border-radius: var(--radius-md);
+    background: var(--color-accent-surface);
+  }
+
+  .shortcut-prefix-summary__label {
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-label);
+    line-height: var(--leading-snug);
+    text-transform: uppercase;
+  }
+
+  .shortcut-prefix-summary__release {
+    margin-inline-start: auto;
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    line-height: var(--leading-snug);
+  }
+
+  /* Visible sequencing word between a prefix and the next key. */
+  .shortcut-then {
+    display: inline-block;
+    margin-inline: var(--space-1);
+    color: var(--color-text-subtle);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    line-height: var(--leading-snug);
+  }
+
+  /* Editor-mode label in a shortcut table. */
+  .shortcut-mode {
+    display: inline-block;
+    padding: var(--space-1) var(--space-2);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface);
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-snug);
+    white-space: nowrap;
+  }
+
+  /* Start of a mode group: accent pill plus a stronger rule above the row. */
+  .shortcut-mode--start {
+    border-color: var(--color-accent-border);
+    background: var(--color-accent-surface);
+    color: var(--color-accent);
+  }
+
+  .shortcut-reference tr:has(.shortcut-mode--start) > td {
+    border-block-start: calc(2 * var(--border-width)) solid var(--color-accent-border);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Inline tokens                                                       */
+  /* ------------------------------------------------------------------ */
+
+  /* Keyboard chord: native kbd keycaps with readable separators. Wraps
+     without clipping. */
+  .keys {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1);
+    vertical-align: baseline;
+  }
+
+  .keys > span {
+    color: var(--color-text-subtle);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    line-height: 1;
+  }
+
+  .keys > kbd {
+    display: inline-block;
+    min-inline-size: calc(var(--space-6) + var(--space-1));
+    padding: var(--space-1) var(--space-2);
+    border: var(--border-width) solid var(--kbd-border);
+    border-radius: var(--radius-sm);
+    background: var(--kbd-bg);
+    color: var(--color-text);
+    box-shadow: 0 var(--border-width) 0 var(--kbd-border);
+    font-family: var(--font-mono);
+    font-size: var(--code-inline-size);
+    font-weight: var(--weight-normal);
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  /* Inline path or path link. The inline-code treatment comes from prose;
+     path-token only adds break behaviour and the link state. Authored wbr
+     marks are preferred break points, anywhere-wrapping is the fallback. */
+  .path-token {
+    hyphens: none;
+    overflow-wrap: anywhere;
+  }
+
+  a.path-token,
+  a:has(> .path-token) {
+    text-decoration: none;
+  }
+
+  a.path-token:hover > code,
+  a.path-token:focus-visible > code,
+  a:hover > .path-token,
+  a:focus-visible > .path-token {
+    color: var(--color-text);
+    text-decoration: underline;
+    text-decoration-color: var(--color-accent);
+    text-underline-offset: var(--space-1);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Portfolio exhibits                                                  */
+  /* ------------------------------------------------------------------ */
+
+  /* Captioned image or video exhibit. P2: content used to carry
+     style="--media-exhibit-width: 840px"; the primitive now owns the default
+     measure. The 100% term keeps it inside whichever grid track the author
+     chose, so wide and full-bleed compose without overflow. */
+  .media-exhibit {
+    inline-size: min(
+      var(--media-exhibit-width, var(--measure-wide)),
+      100%,
+      calc(100vw - 2 * var(--space-gutter))
+    );
+    min-inline-size: 0;
+    margin-block: var(--prose-flow);
+    margin-inline: auto;
+  }
+
+  /* Frame and stage share the fenced-code window language so screenshots,
+     recordings and code read as one family of evidence. Rounded corners
+     come from matching radii, not overflow clipping. */
+  .media-exhibit-frame {
+    margin: 0;
+    border: var(--border-width) solid var(--code-border);
+    border-radius: var(--radius-md);
+    background: var(--code-bg);
+    color: var(--code-muted);
+    box-shadow: var(--shadow-raised);
+  }
+
+  .media-exhibit-stage {
+    display: grid;
+    place-items: center;
+    min-inline-size: 0;
+    padding: var(--space-2);
+    border-end-start-radius: calc(var(--radius-md) - var(--border-width));
+    border-end-end-radius: calc(var(--radius-md) - var(--border-width));
+    background: var(--code-bg);
+  }
+
+  .media-exhibit-stage > img,
+  .media-exhibit-stage > video {
+    display: block;
+    inline-size: 100%;
+    max-inline-size: 100%;
+    block-size: auto;
+    margin: 0;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: none;
+    box-shadow: 0 0 0 var(--border-width) var(--color-border-subtle);
+  }
+
+  .exhibit-toolbar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-inline-size: 0;
+    padding: var(--space-2) var(--space-4);
+    border-block-end: var(--border-width) solid var(--code-border);
+    border-start-start-radius: calc(var(--radius-md) - var(--border-width));
+    border-start-end-radius: calc(var(--radius-md) - var(--border-width));
+    background: var(--code-toolbar-bg);
+  }
+
+  /* Decorative window dots; aria-hidden, no fake controls. */
+  .exhibit-dots {
+    display: flex;
+    flex: 0 0 auto;
+    gap: var(--space-2);
+  }
+
+  .exhibit-dots > i {
+    display: block;
+    inline-size: var(--space-2);
+    block-size: var(--space-2);
+    border-radius: var(--radius-pill);
+    background: var(--color-border);
+  }
+
+  /* Wrappable filename: visible, reachable text, never an ellipsis. */
+  .exhibit-filename {
+    min-inline-size: 0;
+    margin-inline-start: var(--space-2);
+    color: var(--code-muted);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    line-height: var(--leading-snug);
+    overflow-wrap: anywhere;
+  }
+
+  .exhibit-badge {
+    flex: 0 0 auto;
+    margin-inline-start: auto;
+    padding: 0 var(--space-2);
+    border: var(--border-width) solid var(--code-border);
+    border-radius: var(--radius-sm);
+    color: var(--code-muted);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-label);
+    line-height: var(--leading-snug);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .exhibit-caption {
+    min-inline-size: 0;
+    margin: var(--space-3) 0 0;
+    padding-inline: var(--space-1);
+    color: var(--color-text-subtle);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    line-height: var(--leading-snug);
+    overflow-wrap: anywhere;
+    text-align: center;
+    text-wrap: pretty;
+  }
+
+  .exhibit-caption > span:first-child {
+    color: var(--color-accent);
+  }
+
+  /* Inline-SVG diagram or semantic process diagram (the former
+     teardown-exhibit). The SVG palette namespace (--bg, --w88, --ab4, ...)
+     is defined in tokens.css; the diagram scales instead of scrolling so no
+     unlabelled scroll region is created. */
+  .diagram-exhibit {
+    min-inline-size: 0;
+    margin-block: var(--prose-flow);
+    padding: var(--space-5) var(--space-6);
+    border: var(--border-width) solid var(--code-border);
+    border-radius: var(--radius-md);
+    background: var(--code-bg);
+  }
+
+  /* P3: replaces the inline style previously carried by six case-study SVGs. */
+  .diagram-exhibit svg {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+    max-inline-size: 45rem;
+    margin-inline: auto;
+  }
+
+  .diagram-exhibit-label,
+  .diagram-exhibit > p {
+    margin: 0 0 var(--space-4);
+    color: var(--code-muted);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-label);
+    line-height: var(--leading-snug);
+    text-align: center;
+    text-transform: uppercase;
+    text-wrap: balance;
+  }
+
+  .diagram-exhibit-label-secondary {
+    margin-block-start: var(--space-6);
+  }
+
+  /* Semantic process row: <div><span>phase</span><i aria-hidden>→</i>…</div>. */
+  .diagram-exhibit > div:not(.diagram-exhibit-label) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2) var(--space-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    line-height: var(--leading-snug);
+  }
+
+  .diagram-exhibit > div:not(.diagram-exhibit-label) > span {
+    padding: var(--space-1) var(--space-3);
+    border: var(--border-width) solid var(--color-accent-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-accent-surface);
+    color: var(--color-accent);
+  }
+
+  .diagram-exhibit > div:not(.diagram-exhibit-label) > i {
+    color: var(--color-text-subtle);
+    font-style: normal;
+  }
+
+  /* Outer semantic figure grouping a diagram-exhibit with its caption. */
+  .concept-diagram {
+    inline-size: 100%;
+    min-inline-size: 0;
+    margin-block: var(--prose-flow);
+    margin-inline: 0;
+  }
+
+  .concept-diagram > .diagram-exhibit {
+    margin-block: 0;
+  }
+
+  .concept-diagram > .exhibit-caption {
+    margin-block-start: var(--space-4);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Blog article media                                                  */
+  /* ------------------------------------------------------------------ */
+
+  .media-figure {
+    min-inline-size: 0;
+    margin-block: var(--space-10);
+    margin-inline: auto;
+  }
+
+  .media-figure > figcaption {
+    margin-block-start: var(--space-3);
+    color: var(--color-text-subtle);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    line-height: var(--leading-snug);
+    text-align: center;
+    text-wrap: pretty;
+  }
+
+  /* Large screenshot: fills its track; the author adds wide for the wider
+     named track rather than a separate fixed width. */
+  .media-figure-wide {
+    inline-size: 100%;
+    max-inline-size: none;
+  }
+
+  /* Compact media keeps its intrinsic width inside the content track. */
+  .media-figure-compact {
+    inline-size: fit-content;
+    max-inline-size: 100%;
+  }
+
+  .media-frame {
+    min-inline-size: 0;
+    padding: var(--space-2);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-raised);
+  }
+
+  .media-frame > img {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+    margin: 0;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: none;
+  }
+
+  /* Fixed backings describe the captured asset, not the page theme. */
+  .media-frame-dark {
+    background: var(--frame-dark);
+  }
+
+  .media-frame-light {
+    background: var(--frame-light);
+  }
+
+  /* Deliberately scrollable screenshot. Content authors tabindex="0",
+     role="region" and an accessible name; the region shows a focus ring and
+     reserves its scrollbar gutter so the frame does not jump. */
+  .media-frame-scroll {
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-gutter: stable;
+  }
+
+  .media-frame-scroll:focus-visible {
+    outline: var(--focus-width) solid var(--color-focus);
+    outline-offset: var(--focus-offset);
+  }
+
+  /* The image renders at its intrinsic width so detail stays legible, fills
+     the frame when the frame is wider, and is bounded by the page measure. */
+  .media-frame-scroll > img {
+    inline-size: auto;
+    min-inline-size: 100%;
+    max-inline-size: max(100%, var(--measure-page));
+  }
+}

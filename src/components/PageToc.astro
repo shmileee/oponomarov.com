@@ -1,0 +1,70 @@
+---
+import type { MarkdownHeading } from "astro";
+
+interface Props {
+  readonly headings: readonly MarkdownHeading[];
+  readonly label?: string;
+}
+
+const { headings, label = "On this page" } = Astro.props;
+const entries = headings.filter(({ depth, slug, text }) => (depth === 2 || depth === 3) && slug && text.trim());
+---
+
+{entries.length > 0 && (
+  <aside class="toc" data-pagefind-ignore>
+    <details class="toc__details" data-page-toc open>
+      <summary class="toc__summary">{label}</summary>
+      <nav class="toc__nav" aria-label={label}>
+        <ol class="toc__list">
+          {entries.map((heading) => (
+            <li class:list={{ "toc__item--nested": heading.depth === 3 }}>
+              <a href={`#${heading.slug}`} data-toc-link>{heading.text}</a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+    </details>
+  </aside>
+)}
+
+<script>
+  let controller: AbortController | undefined;
+  const initToc = () => {
+    controller?.abort();
+    controller = new AbortController();
+    const { signal } = controller;
+    const desktop = matchMedia("(width >= 80rem)");
+    document.querySelectorAll<HTMLDetailsElement>("[data-page-toc]").forEach((details) => {
+      const syncDisclosure = () => { details.open = desktop.matches; };
+      syncDisclosure();
+      desktop.addEventListener("change", syncDisclosure, { signal });
+      const links = [...details.querySelectorAll<HTMLAnchorElement>("[data-toc-link]")];
+      const targets = links.flatMap((link) => {
+        const heading = document.getElementById(decodeURIComponent(link.hash.slice(1)));
+        return heading ? [{ link, heading }] : [];
+      });
+      const updateActive = () => {
+        const headerBottom = document.querySelector("[data-site-header]")?.getBoundingClientRect().bottom ?? 0;
+        const atEnd = scrollY + innerHeight >= document.documentElement.scrollHeight - 2;
+        const active = atEnd ? targets.at(-1) : targets.findLast(({ heading }) => heading.getBoundingClientRect().top <= headerBottom) ?? targets[0];
+        targets.forEach(({ link }) => {
+          if (link === active?.link) link.setAttribute("aria-current", "location");
+          else link.removeAttribute("aria-current");
+        });
+      };
+      let scheduled = false;
+      addEventListener("scroll", () => {
+        if (scheduled) return;
+        scheduled = true;
+        requestAnimationFrame(() => {
+          scheduled = false;
+          if (!signal.aborted) updateActive();
+        });
+      }, { passive: true, signal });
+      updateActive();
+    });
+  };
+  initToc();
+  document.addEventListener("astro:page-load", initToc);
+  document.addEventListener("astro:before-swap", () => controller?.abort());
+</script>

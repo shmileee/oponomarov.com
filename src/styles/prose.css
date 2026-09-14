@@ -1,0 +1,482 @@
+/* Prose — layer `prose`.
+   The single render boundary for every Markdown fragment: blog and case-study
+   bodies, dotfiles docs, homepage hero / arc / principle copy, the reader
+   dialog, and the 404 copy. One body tuple, one inline-code treatment, one
+   table system, one admonition, one code-frame chrome.
+   Spec: docs/design-system.md §4 (type), §5 (spacing), §8 (prose), §10 (code),
+   §11 (tables). Fixes: D1, D2, D3, D5, D6, D9.
+   Exactly two modifiers exist: `.prose--lede` and `.prose--compact`.
+   A new content type never gets a new prose class. */
+
+@layer prose {
+  /* ------------------------------------------------------------------ */
+  /* Root and modifiers                                                   */
+  /* ------------------------------------------------------------------ */
+
+  .prose {
+    min-inline-size: 0;
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    font-weight: var(--weight-normal);
+    line-height: var(--leading-body);
+    color: var(--color-text-body);
+    overflow-wrap: break-word;
+    text-wrap: pretty;
+  }
+
+  /* The readable measure. When `.prose` is itself the content grid the
+     grid tracks bound the text instead, and the root stays uncapped so
+     `wide` and `full-bleed` can work. */
+  .prose:not(.content-grid) {
+    max-inline-size: var(--measure-prose);
+  }
+
+  .prose--lede {
+    font-size: var(--text-lg);
+  }
+
+  .prose--compact {
+    --prose-flow: var(--space-4);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Vertical rhythm                                                      */
+  /* Block-start margins only, so the same flow works whether `.prose` is */
+  /* a block or a grid. --prose-flow is em-based: every element spaces    */
+  /* itself relative to its own type size.                                */
+  /* ------------------------------------------------------------------ */
+
+  .prose > * + *,
+  .prose :where(section, article, aside, li, blockquote, dd, details, figure):where(:not(.expressive-code *)) > * + * {
+    margin-block-start: var(--prose-flow);
+  }
+
+  .prose :is(li, dd) {
+    --prose-flow: var(--space-3);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Headings — section 4 scale. Level follows document structure.        */
+  /* ------------------------------------------------------------------ */
+
+  .prose :is(h1, h2, h3, h4, h5, h6) {
+    color: var(--color-text);
+    text-wrap: balance;
+  }
+
+  .prose :is(h1, h2, h3, h4) {
+    font-family: var(--font-display);
+  }
+
+  .prose :is(h5, h6) {
+    font-family: var(--font-body);
+  }
+
+  .prose :is(h1, h2) {
+    font-weight: var(--weight-bold);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-heading);
+  }
+
+  .prose :is(h3, h4, h5, h6) {
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-snug);
+  }
+
+  .prose h1 {
+    font-size: var(--text-3xl);
+  }
+
+  .prose h2 {
+    font-size: var(--text-2xl);
+  }
+
+  .prose h3 {
+    font-size: var(--text-xl);
+  }
+
+  .prose h4 {
+    font-size: var(--text-lg);
+  }
+
+  .prose h5 {
+    font-size: var(--text-base);
+  }
+
+  .prose h6 {
+    font-size: var(--text-sm);
+  }
+
+  .prose h2:not(:first-child) {
+    margin-block-start: var(--space-12);
+  }
+
+  .prose h3:not(:first-child) {
+    margin-block-start: var(--space-10);
+  }
+
+  .prose :is(h4, h5, h6):not(:first-child) {
+    margin-block-start: var(--space-8);
+  }
+
+  .prose :is(h1, h2, h3, h4, h5, h6) + * {
+    margin-block-start: var(--space-4);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Inline text                                                          */
+  /* ------------------------------------------------------------------ */
+
+  .prose strong {
+    color: var(--color-text);
+    font-weight: var(--weight-semibold);
+  }
+
+  .prose :is(sup, sub) {
+    line-height: 0;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Lists                                                                */
+  /* ------------------------------------------------------------------ */
+
+  .prose ul {
+    list-style-type: disc;
+  }
+
+  .prose ol {
+    list-style-type: decimal;
+  }
+
+  .prose :is(ul, ol) {
+    padding-inline-start: var(--space-6);
+  }
+
+  .prose li + li,
+  .prose li > :is(ul, ol) {
+    margin-block-start: var(--space-2);
+  }
+
+  .prose ::marker {
+    color: var(--color-text-muted);
+  }
+
+  .prose dt {
+    color: var(--color-text);
+    font-weight: var(--weight-semibold);
+  }
+
+  .prose dd {
+    margin-inline-start: var(--space-6);
+  }
+
+  .prose dd + dt {
+    margin-block-start: var(--space-3);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Quotes and rules                                                     */
+  /* ------------------------------------------------------------------ */
+
+  .prose blockquote {
+    padding-inline-start: var(--space-5);
+    border-inline-start: calc(var(--border-width) * 3) solid var(--color-accent-border);
+    color: var(--color-text-muted);
+  }
+
+  .prose hr {
+    border: 0;
+    border-block-start: var(--border-width) solid var(--color-border);
+  }
+
+  .prose hr:not(:first-child),
+  .prose hr + * {
+    margin-block-start: var(--space-10);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Media and figures                                                    */
+  /* ------------------------------------------------------------------ */
+
+  .prose :is(img, video, svg, iframe) {
+    max-inline-size: 100%;
+    block-size: auto;
+  }
+
+  .prose :is(img, video) {
+    border-radius: var(--radius-md);
+  }
+
+  .prose figcaption {
+    margin-block-start: var(--space-3);
+    color: var(--color-text-subtle);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    line-height: var(--leading-snug);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Inline code — the ONE rule. Expressive Code never touches inline     */
+  /* code, so this is the whole implementation. It stays inline, wraps    */
+  /* anywhere so a long path can never overflow, and has no max-content   */
+  /* width, nowrap, or scroll container.                                  */
+  /* ------------------------------------------------------------------ */
+
+  .prose :not(pre) > code {
+    padding-inline: var(--space-1);
+    border-radius: var(--radius-sm);
+    background: var(--code-inline-bg);
+    color: var(--code-inline-text);
+    font-family: var(--font-mono);
+    font-size: var(--code-inline-size);
+    font-weight: var(--weight-normal);
+    white-space: normal;
+    overflow-wrap: anywhere;
+    box-decoration-break: clone;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Keys                                                                 */
+  /* ------------------------------------------------------------------ */
+
+  .prose kbd {
+    padding-inline: var(--space-2);
+    border: var(--border-width) solid var(--kbd-border);
+    border-block-end-width: calc(var(--border-width) * 2);
+    border-radius: var(--radius-sm);
+    background: var(--kbd-bg);
+    color: var(--color-text);
+    font-family: var(--font-mono);
+    font-size: var(--code-inline-size);
+    font-weight: var(--weight-normal);
+    white-space: nowrap;
+  }
+
+  /* <kbd><kbd>Ctrl</kbd>+<kbd>A</kbd></kbd>: only the leaf keycaps draw. */
+  .prose kbd:has(> kbd) {
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Fenced code                                                          */
+  /* Expressive Code owns the frame, highlighting, wrapping and copy       */
+  /* control in its own layer. This layer sits after it and only sets     */
+  /* flow, containment, and the 44px tap-target floor for the copy        */
+  /* button, so no `!important` is ever needed.                            */
+  /* ------------------------------------------------------------------ */
+
+  .prose .expressive-code {
+    inline-size: 100%;
+    min-inline-size: 0;
+  }
+
+  .prose .expressive-code .copy button {
+    inline-size: var(--tap-size);
+    block-size: var(--tap-size);
+  }
+
+  .prose .expressive-code .copy button::after {
+    margin: var(--space-3);
+  }
+
+  .prose .expressive-code .copy button:focus-visible {
+    outline: var(--focus-width) solid var(--color-focus);
+    outline-offset: var(--focus-offset);
+  }
+
+  /* The first line must clear the larger button. */
+  .prose .expressive-code :nth-child(1 of .ec-line) .code {
+    padding-inline-end: calc(var(--tap-size) + var(--space-4));
+  }
+
+  /* Raw <pre> that did not pass through Expressive Code (authored HTML,
+     fetched reader content) gets the same tokens and never scrolls. */
+  .prose pre:not(.expressive-code *) {
+    padding: var(--space-4) var(--space-5);
+    border: var(--border-width) solid var(--code-border);
+    border-radius: var(--radius-md);
+    background: var(--code-bg);
+    color: var(--code-text);
+    font-family: var(--font-mono);
+    font-size: var(--code-font-size);
+    line-height: var(--leading-code);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Tables                                                               */
+  /* Every table is wrapped at build time by rehypeTableScroll in         */
+  /* <div class="table-scroll wide" tabindex="0" role="region"            */
+  /*      aria-label="…">. The region owns horizontal scrolling and is    */
+  /* keyboard reachable. Tables size to content: no min-width, ever.      */
+  /* ------------------------------------------------------------------ */
+
+  .table-scroll {
+    inline-size: 100%;
+    min-inline-size: 0;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-gutter: stable;
+    border: var(--border-width) solid var(--table-border);
+    border-radius: var(--radius-md);
+  }
+
+  .table-scroll:focus-visible {
+    outline: var(--focus-width) solid var(--color-focus);
+    outline-offset: var(--focus-offset);
+  }
+
+  .prose table {
+    inline-size: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+    font-variant-numeric: tabular-nums;
+    text-align: start;
+  }
+
+  .prose caption {
+    caption-side: bottom;
+    padding-block: var(--space-3);
+    color: var(--color-text-subtle);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    line-height: var(--leading-snug);
+    text-align: start;
+  }
+
+  .prose :is(th, td) {
+    padding: var(--space-3) var(--space-4);
+    border-block-end: var(--border-width) solid var(--table-border);
+    vertical-align: top;
+    text-align: start;
+  }
+
+  .prose th {
+    background: var(--table-head-bg);
+    color: var(--color-text);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    line-height: var(--leading-snug);
+  }
+
+  .prose tbody tr:nth-child(even) {
+    background: var(--table-stripe);
+  }
+
+  /* The region border closes the table; skip the doubled final rule. */
+  .table-scroll tbody tr:last-child > :is(th, td) {
+    border-block-end: 0;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Disclosures                                                          */
+  /* ------------------------------------------------------------------ */
+
+  .prose details {
+    padding-inline: var(--space-5);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+  }
+
+  .prose details[open] {
+    padding-block-end: var(--space-4);
+  }
+
+  .prose summary {
+    display: list-item;
+    min-block-size: var(--tap-size);
+    padding-block: var(--space-2);
+    align-content: center;
+    color: var(--color-text);
+    font-weight: var(--weight-semibold);
+    cursor: pointer;
+  }
+
+  .prose details[open] > summary {
+    border-block-end: var(--border-width) solid var(--color-border-subtle);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Admonitions                                                          */
+  /* Generated by src/lib/remark-admonitions.mjs from [!TYPE] quotes:      */
+  /* <aside class="op-admonition op-admonition--{kind}" role="note">       */
+  /*   <header class="op-admonition__title">Title</header> …               */
+  /* Kinds: note tip important warning caution danger critical. The       */
+  /* palette has no severity hues and none are added: kinds differ by     */
+  /* title text and icon, which is also the accessible distinction.       */
+  /* ------------------------------------------------------------------ */
+
+  .op-admonition {
+    --prose-flow: var(--space-3);
+
+    padding: var(--space-4) var(--space-5);
+    border: var(--border-width) solid var(--color-border);
+    border-inline-start: calc(var(--border-width) * 3) solid var(--color-accent);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    color: var(--color-text-body);
+  }
+
+  .op-admonition__title {
+    display: flex;
+    gap: var(--space-2);
+    align-items: center;
+    color: var(--color-text);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-snug);
+  }
+
+  .op-admonition__title + * {
+    margin-block-start: var(--space-2);
+  }
+
+  /* Icon glyphs are Lucide outlines used as alpha masks; the fill is the
+     accent token, so no colour lives in the SVG. */
+  .op-admonition__title::before {
+    content: "";
+    flex: none;
+    inline-size: var(--space-4);
+    block-size: var(--space-4);
+    background-color: var(--color-accent);
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 16v-4'/%3E%3Cpath d='M12 8h.01'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+
+  .op-admonition--tip > .op-admonition__title::before {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5'/%3E%3Cpath d='M9 18h6'/%3E%3Cpath d='M10 22h4'/%3E%3C/svg%3E");
+  }
+
+  .op-admonition--important > .op-admonition__title::before {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'/%3E%3Cpath d='M12 7v2'/%3E%3Cpath d='M12 13h.01'/%3E%3C/svg%3E");
+  }
+
+  .op-admonition--warning > .op-admonition__title::before,
+  .op-admonition--caution > .op-admonition__title::before {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3'/%3E%3Cpath d='M12 9v4'/%3E%3Cpath d='M12 17h.01'/%3E%3C/svg%3E");
+  }
+
+  .op-admonition--danger > .op-admonition__title::before,
+  .op-admonition--critical > .op-admonition__title::before {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 16h.01'/%3E%3Cpath d='M12 8v4'/%3E%3Cpath d='M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z'/%3E%3C/svg%3E");
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Footnotes (remark-gfm emits <section class="footnotes">)             */
+  /* ------------------------------------------------------------------ */
+
+  .prose .footnotes {
+    margin-block-start: var(--space-12);
+    padding-block-start: var(--space-6);
+    border-block-start: var(--border-width) solid var(--color-border-subtle);
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+  }
+}

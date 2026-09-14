@@ -1,0 +1,293 @@
+/* Shell — layer `components`.
+   Site chrome shared by every page: header, brand, section nav, theme toggle,
+   reading progress, footer, back-to-top.
+   Spec: docs/design-system.md §13 (accessibility floor).
+   Fixes: D7 — measured at 375px, nav links were 40x40, the brand 32x21 and the
+   theme toggle 40x32. Hit areas grow via padding; the glyphs do not. */
+
+@layer components {
+  /* ------------------------------------------------------------------ */
+  /* Header.                                                              */
+  /* Sticky, translucent, and inset from notched edges. Height is a token */
+  /* because PageToc measures the header to decide the active heading.    */
+  /* ------------------------------------------------------------------ */
+
+  .op-header {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: var(--z-header);
+    border-block-end: 1px solid var(--color-border-subtle);
+    background: var(--color-header);
+    backdrop-filter: blur(12px);
+    padding-inline: env(safe-area-inset-left, 0) env(safe-area-inset-right, 0);
+  }
+
+  .op-header__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    inline-size: 100%;
+    max-inline-size: var(--measure-page);
+    min-block-size: var(--header-height);
+    margin-inline: auto;
+    padding-inline: var(--space-gutter);
+  }
+
+  .op-header__tools {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-inline-start: auto;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Brand.                                                               */
+  /* Two spellings: the full path on wide screens, `~/op` on narrow ones. */
+  /* Both live in the DOM so the swap costs no layout shift.              */
+  /* ------------------------------------------------------------------ */
+
+  .op-brand {
+    display: inline-flex;
+    align-items: center;
+    /* Was 32x21. Padding, not font-size, carries it to the 44px floor. */
+    min-block-size: var(--tap-size);
+    padding-inline: var(--space-2);
+    margin-inline-start: calc(var(--space-2) * -1);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--color-text);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .op-brand:focus-visible {
+    outline: var(--focus-width) solid var(--color-focus);
+    outline-offset: var(--focus-offset);
+  }
+
+  .op-brand__short {
+    display: inline;
+  }
+
+  .op-brand__full {
+    display: none;
+  }
+
+  @media (width >= 48rem) {
+    .op-brand__short {
+      display: none;
+    }
+
+    .op-brand__full {
+      display: inline;
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Section navigation.                                                  */
+  /* ------------------------------------------------------------------ */
+
+  .op-app-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1);
+  }
+
+  .op-app-nav a {
+    display: inline-flex;
+    align-items: center;
+    /* Was 40x40. */
+    min-block-size: var(--tap-size);
+    min-inline-size: var(--tap-size);
+    justify-content: center;
+    padding-inline: var(--space-3);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-label);
+    color: var(--color-text-muted);
+    text-decoration: none;
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+
+  .op-app-nav a:focus-visible {
+    outline: var(--focus-width) solid var(--color-focus);
+    outline-offset: var(--focus-offset);
+  }
+
+  .op-app-nav a[aria-current="page"],
+  .op-app-nav a.is-active {
+    color: var(--color-text);
+    background: var(--color-accent-surface);
+  }
+
+  /* Hover is an enhancement: a coarse pointer never sees it, so it may
+     never be the only signal of an affordance. */
+  @media (hover: hover) and (pointer: fine) {
+    .op-app-nav a:hover {
+      color: var(--color-text);
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Theme toggle.                                                        */
+  /* ------------------------------------------------------------------ */
+
+  .op-theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* Was 40x32. */
+    min-block-size: var(--tap-size);
+    min-inline-size: var(--tap-size);
+    padding-inline: var(--space-2);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-sm);
+    background: none;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-label);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: border-color var(--dur-fast) var(--ease-out);
+  }
+
+  .op-theme-toggle:focus-visible {
+    outline: var(--focus-width) solid var(--color-focus);
+    outline-offset: var(--focus-offset);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .op-theme-toggle:hover {
+      border-color: var(--color-accent-border);
+      color: var(--color-text);
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Reading progress.                                                    */
+  /* SiteHeader sets transform: scaleX(ratio) at runtime, so this styles   */
+  /* the bar and its origin only and never fights the inline transform.    */
+  /* ------------------------------------------------------------------ */
+
+  .op-reading-progress {
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline: 0;
+    z-index: var(--z-progress);
+    block-size: 2px;
+    background: var(--color-progress);
+    transform-origin: 0 50%;
+    scale: 1;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Footer.                                                              */
+  /* ------------------------------------------------------------------ */
+
+  .op-footer {
+    border-block-start: 1px solid var(--color-border-subtle);
+    padding-block: var(--space-10);
+    padding-inline: env(safe-area-inset-left, 0) env(safe-area-inset-right, 0);
+    padding-block-end: max(var(--space-10), env(safe-area-inset-bottom, 0));
+  }
+
+  .op-footer__inner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-6);
+    inline-size: 100%;
+    max-inline-size: var(--measure-page);
+    margin-inline: auto;
+    padding-inline: var(--space-gutter);
+  }
+
+  .op-footer__brand {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--color-text);
+  }
+
+  .op-footer__note {
+    max-inline-size: var(--measure-prose);
+    font-size: var(--text-sm);
+    line-height: var(--leading-body);
+    color: var(--color-text-muted);
+  }
+
+  .op-footer__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-inline-start: auto;
+    list-style: none;
+    margin-block: 0;
+    padding: 0;
+  }
+
+  .op-footer__links a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-block-size: var(--tap-size);
+    min-inline-size: var(--tap-size);
+    padding-inline: var(--space-2);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-muted);
+    text-decoration: none;
+  }
+
+  .op-footer__links a:focus-visible {
+    outline: var(--focus-width) solid var(--color-focus);
+    outline-offset: var(--focus-offset);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .op-footer__links a:hover {
+      color: var(--color-text);
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Back to top.                                                         */
+  /* SiteHeader toggles [hidden] past a scroll threshold.                 */
+  /* ------------------------------------------------------------------ */
+
+  .back-to-top {
+    position: fixed;
+    inset-block-end: max(var(--space-5), env(safe-area-inset-bottom, 0));
+    inset-inline-end: max(var(--space-5), env(safe-area-inset-right, 0));
+    z-index: var(--z-back-to-top);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-block-size: var(--tap-size);
+    min-inline-size: var(--tap-size);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-raised);
+    color: var(--color-text-muted);
+    text-decoration: none;
+    cursor: pointer;
+    transition: opacity var(--dur-base) var(--ease-out);
+  }
+
+  .back-to-top[hidden] {
+    display: none;
+  }
+
+  .back-to-top:focus-visible {
+    outline: var(--focus-width) solid var(--color-focus);
+    outline-offset: var(--focus-offset);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .back-to-top:hover {
+      color: var(--color-text);
+    }
+  }
+}

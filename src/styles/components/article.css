@@ -1,0 +1,71 @@
+/* Article — layer `components`.
+   The header block above every article body, and the comments region below it.
+   One implementation replaces three: the blog `.detail-header.post-header`,
+   the case-study `.case-detail-header`, and the docs `.docs-page-header`.
+   Fixes: divergent metadata typography between the three content categories. */
+
+@layer components {
+  /* ------------------------------------------------------------------ */
+  /* Article header.                                                      */
+  /* ArticleShell renders back link, eyebrow, h1, dek, meta, then the      */
+  /* proof / topics / actions slots. Row rhythm lives here so every        */
+  /* category gets identical spacing regardless of which slots it fills.   */
+  /* ------------------------------------------------------------------ */
+
+  .article-header {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: var(--space-3);
+    padding-block-start: var(--space-10);
+  }
+
+  .article-header > h1 {
+    margin: 0;
+    /* Titles carry long unhyphenated product names; wrapping beats
+       widening the grid track. */
+    overflow-wrap: anywhere;
+    text-wrap: balance;
+  }
+
+  /* The dek also carries `.prose .prose--lede`, so its type comes from the
+     prose primitive. Only the measure and colour are header concerns. */
+  .article-dek {
+    max-inline-size: var(--measure-prose);
+    color: var(--color-text-muted);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Metadata line.                                                       */
+  /* Date and reading time rendered identically for posts, case studies    */
+  /* and manuals. Previously each page formatted and styled its own.       */
+  /* ------------------------------------------------------------------ */
+
+  .article-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-label);
+    color: var(--color-text-subtle);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Comments.                                                            */
+  /* Giscus injects an iframe; it must not widen the page on a phone.      */
+  /* ------------------------------------------------------------------ */
+
+  .comments-region {
+    padding-block-start: var(--space-8);
+    border-block-start: 1px solid var(--color-border-subtle);
+  }
+
+  .comments-region iframe {
+    inline-size: 100%;
+    max-inline-size: 100%;
+    border: 0;
+  }
+}

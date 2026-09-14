@@ -1,0 +1,315 @@
+/* Search — layer `components`.
+   The global search trigger and its <dialog>, covering all three products.
+   Spec: docs/design-system.md §13 (accessibility floor).
+
+   Pagefind injects the result list at runtime, so a static snapshot of any
+   page shows `.global-search-results` empty. A liveness scan therefore marks
+   the result selectors dead; that is a false negative. They are styled here
+   deliberately and must not be pruned on that evidence. */
+
+@layer components {
+  /* ------------------------------------------------------------------ */
+  /* Trigger.                                                             */
+  /* ------------------------------------------------------------------ */
+
+  .op-global-search-open {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    /* Was 36x36 at 375px. */
+    min-block-size: var(--tap-size);
+    min-inline-size: var(--tap-size);
+    padding-inline: var(--space-2);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-sm);
+    background: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: border-color var(--dur-fast) var(--ease-out);
+  }
+
+  .op-global-search-open svg {
+    inline-size: 1em;
+    block-size: 1em;
+  }
+
+  .op-global-search-open:focus-visible {
+    outline: var(--focus-width) solid var(--color-focus);
+    outline-offset: var(--focus-offset);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .op-global-search-open:hover {
+      border-color: var(--color-accent-border);
+      color: var(--color-text);
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Dialog.                                                              */
+  /* Bounded by the viewport so it can never overflow at 320px, and       */
+  /* internally scrollable rather than growing the page.                  */
+  /* ------------------------------------------------------------------ */
+
+  .global-search-dialog {
+    inline-size: min(100% - 2 * var(--space-4), var(--measure-wide));
+    max-block-size: min(80vh, 44rem);
+    margin: auto;
+    padding: 0;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-raised);
+    color: var(--color-text-body);
+    overflow: hidden;
+  }
+
+  .global-search-dialog::backdrop {
+    background: var(--color-bg);
+    opacity: 0.72;
+  }
+
+  .global-search-panel {
+    display: flex;
+    flex-direction: column;
+    max-block-size: inherit;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Header and field.                                                    */
+  /* ------------------------------------------------------------------ */
+
+  .global-search-header {
+    display: flex;
+    align-items: start;
+    gap: var(--space-3);
+    padding: var(--space-5);
+    border-block-end: 1px solid var(--color-border-subtle);
+  }
+
+  .global-search-header h2 {
+    margin: 0;
+    font-size: var(--text-lg);
+    line-height: var(--leading-tight);
+  }
+
+  .global-search-header p {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+
+  .global-search-header button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-block-size: var(--tap-size);
+    min-inline-size: var(--tap-size);
+    margin-inline-start: auto;
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-sm);
+    background: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+  }
+
+  .global-search-header button:focus-visible {
+    outline: var(--focus-width) solid var(--color-focus);
+    outline-offset: var(--focus-offset);
+  }
+
+  .global-search-header svg {
+    inline-size: 1em;
+    block-size: 1em;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .global-search-header button:hover {
+      color: var(--color-text);
+    }
+  }
+
+  .global-search-field {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding-inline: var(--space-5);
+    padding-block: var(--space-3);
+    border-block-end: 1px solid var(--color-border-subtle);
+  }
+
+  .global-search-field__icon {
+    display: inline-flex;
+    color: var(--color-text-subtle);
+  }
+
+  .global-search-field__icon svg {
+    inline-size: 1em;
+    block-size: 1em;
+  }
+
+  .global-search-field input {
+    flex: 1;
+    min-inline-size: 0;
+    min-block-size: var(--tap-size);
+    border: 0;
+    background: none;
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    color: var(--color-text);
+  }
+
+  .global-search-field input::placeholder {
+    color: var(--color-text-subtle);
+  }
+
+  .global-search-field input:focus {
+    outline: none;
+  }
+
+  .global-search-field kbd {
+    padding-inline: var(--space-2);
+    padding-block: var(--space-1);
+    border: 1px solid var(--kbd-border);
+    border-radius: var(--radius-sm);
+    background: var(--kbd-bg);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--color-text-subtle);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Product scopes.                                                      */
+  /* Horizontally scrollable on narrow screens rather than wrapping into  */
+  /* a tall stack that pushes the results off-screen.                     */
+  /* ------------------------------------------------------------------ */
+
+  .global-search-scopes {
+    display: flex;
+    gap: var(--space-2);
+    padding-inline: var(--space-5);
+    padding-block: var(--space-3);
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: none;
+  }
+
+  .global-search-scopes::-webkit-scrollbar {
+    display: none;
+  }
+
+  .global-search-scopes button {
+    flex: none;
+    min-block-size: var(--tap-size);
+    padding-inline: var(--space-3);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-pill);
+    background: none;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-label);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .global-search-scopes button:focus-visible {
+    outline: var(--focus-width) solid var(--color-focus);
+    outline-offset: var(--focus-offset);
+  }
+
+  .global-search-scopes button[aria-pressed="true"] {
+    border-color: var(--color-accent-border);
+    background: var(--color-accent-surface);
+    color: var(--color-text);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Results (runtime-injected by Pagefind — see file header).            */
+  /* ------------------------------------------------------------------ */
+
+  .global-search-results {
+    flex: 1;
+    min-block-size: 0;
+    margin: 0;
+    padding: var(--space-3) var(--space-5) var(--space-5);
+    list-style: none;
+    overflow-y: auto;
+    overscroll-behavior-block: contain;
+  }
+
+  .global-search-results li + li {
+    margin-block-start: var(--space-2);
+  }
+
+  .global-search-results a {
+    display: block;
+    padding: var(--space-3);
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    color: var(--color-text-body);
+    text-decoration: none;
+    /* Result titles can be long slugs; wrap rather than widen the dialog. */
+    overflow-wrap: anywhere;
+  }
+
+  .global-search-results a:focus-visible {
+    outline: var(--focus-width) solid var(--color-focus);
+    outline-offset: var(--focus-offset);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .global-search-results a:hover {
+      border-color: var(--color-border-subtle);
+      background: var(--color-surface);
+    }
+  }
+
+  .global-search-results strong,
+  .global-search-results b {
+    display: block;
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
+    color: var(--color-text);
+  }
+
+  .global-search-results p {
+    margin: var(--space-1) 0 0;
+    font-size: var(--text-sm);
+    line-height: var(--leading-body);
+    color: var(--color-text-muted);
+  }
+
+  .global-search-results mark {
+    background: var(--color-accent-surface);
+    color: var(--color-text);
+  }
+
+  .global-search-result-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    margin-block-start: var(--space-1);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-label);
+    color: var(--color-text-subtle);
+  }
+
+  .global-search-result-meta i {
+    font-style: normal;
+  }
+
+  .global-search-result-meta small {
+    font-size: inherit;
+  }
+
+  .global-search-hint {
+    padding-inline: var(--space-5);
+    padding-block-end: var(--space-5);
+    font-size: var(--text-sm);
+    color: var(--color-text-subtle);
+  }
+}
