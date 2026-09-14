@@ -111,6 +111,10 @@ const builtCategories = [...categoryPages].sort();
 if (builtCategories.join("\n") !== expectedCategories.join("\n")) throw new Error(`Built blog category pages diverge from post frontmatter categories.\nExpected: ${formatSet(expectedCategories)}\nActual:   ${formatSet(builtCategories)}`);
 
 const docsSourceDir = join(dotfilesRoot, "docs/content");
+const expectedAdmonitions = [postsSourceDir, docsSourceDir]
+  .flatMap((directory) => readdirSync(directory).filter((name) => name.endsWith(".md")).map((name) => join(directory, name)))
+  .flatMap((path) => readFileSync(path, "utf8").match(/^> \[!(note|info|tip|important|warning|warn|caution|danger|critical)\]/gim) ?? [])
+  .length;
 const expectedDocSlugs = readdirSync(docsSourceDir)
   .filter((name) => name.endsWith(".md"))
   .map((name) => name.replace(/\.md$/, ""))
@@ -163,7 +167,7 @@ if (!docsHtml.includes("data-shortcut-status") || !docsHtml.includes("context-he
 if (!docsHtml.includes("Bootstrap before using tasks") || !docsHtml.includes("OpenCode + OmO")) throw new Error("Full Dotfiles manuals were not migrated");
 const admonitionHtml = blogHtml + docsHtml;
 const admonitionCount = admonitionHtml.split('class="op-admonition ').length - 1;
-if (admonitionCount !== 8) throw new Error(`Expected 8 native Astro admonitions, found ${admonitionCount}`);
+if (admonitionCount !== expectedAdmonitions) throw new Error(`Expected ${expectedAdmonitions} native Astro admonitions, found ${admonitionCount}`);
 for (const variant of ["note", "tip", "important", "warning"]) {
   if (!admonitionHtml.includes(`data-admonition="${variant}"`)) throw new Error(`Built content is missing the ${variant} admonition variant`);
 }
