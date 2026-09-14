@@ -743,7 +743,7 @@
     }
   }
 
-  .contact-note .section-eyebrow {
+  .contact-note .eyebrow {
     margin: 0;
     color: var(--color-accent-soft);
     font-weight: var(--weight-medium);

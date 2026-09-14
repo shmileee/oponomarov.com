@@ -29,6 +29,10 @@
 
   .prose {
     min-inline-size: 0;
+    /* The reading measure is a cap, not a centred column: text starts at the
+       page gutter and stops at 46rem, which is what produces the wide right
+       gutter the design is built around. */
+    max-inline-size: var(--measure-prose);
     font-family: var(--font-body);
     font-size: var(--text-base);
     font-weight: var(--weight-normal);

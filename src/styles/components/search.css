@@ -16,17 +16,14 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: var(--space-2);
-    /* Was 36x36 at 375px. */
     min-block-size: var(--tap-size);
     min-inline-size: var(--tap-size);
-    padding-inline: var(--space-2);
-    border: 1px solid var(--color-border-subtle);
-    border-radius: var(--radius-sm);
+    /* The original is a bare icon in the bar, not a boxed control. */
+    border: 0;
     background: none;
     color: var(--color-text-muted);
     cursor: pointer;
-    transition: border-color var(--dur-fast) var(--ease-out);
+    transition: color var(--dur-fast) var(--ease-out);
   }
 
   .op-global-search-open svg {

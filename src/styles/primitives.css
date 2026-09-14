@@ -35,8 +35,9 @@
     font-family: var(--font-display);
     font-size: var(--text-4xl);
     font-weight: var(--weight-bold);
-    letter-spacing: var(--tracking-heading);
-    line-height: var(--leading-tight);
+    letter-spacing: -0.025em;
+    line-height: var(--leading-display);
+    overflow-wrap: anywhere;
     text-wrap: balance;
   }
 

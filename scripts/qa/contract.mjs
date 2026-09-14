@@ -84,10 +84,12 @@ export function evaluateContract(raw) {
   for (const r of [...normalMeasures, ...wide]) {
     if (!r.mainContainers?.length) fail(2, r, 'main content container', r.mainContainers, 'at least one container');
     for (const container of r.mainContainers ?? []) {
-      if (!(container.width <= 1280)) fail(2, r, `${container.sel} width`, container.width, '<= 1280px');
+      if (!(container.width <= 1140)) fail(2, r, `${container.sel} width`, container.width, '<= 1140px (71.25rem page)');
     }
+    /* 46rem is the design's reading measure (docs/design-system.md section 3);
+       736px is that measure at the default root size. */
     if (r.viewportWidth === 2560) for (const container of r.proseContainers ?? []) {
-      if (!(container.width <= 704)) fail(2, r, `${container.sel} width`, container.width, '<= 704px at 2560px');
+      if (!(container.width <= 736)) fail(2, r, `${container.sel} width`, container.width, '<= 736px (46rem measure) at 2560px');
     }
   }
   for (const route of routes) for (const colorScheme of THEMES) {

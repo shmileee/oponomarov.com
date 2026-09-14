@@ -93,21 +93,21 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--space-1);
+    /* The original sits the sections at the right of the bar, widely spaced. */
+    justify-content: flex-end;
+    gap: var(--space-6);
+    margin-inline-start: auto;
   }
 
   .op-app-nav a {
     display: inline-flex;
     align-items: center;
-    /* Was 40x40. */
     min-block-size: var(--tap-size);
-    min-inline-size: var(--tap-size);
-    justify-content: center;
-    padding-inline: var(--space-3);
-    border-radius: var(--radius-sm);
+    /* Label treatment, not a button: mono, uppercase, widely tracked. */
     font-family: var(--font-mono);
     font-size: var(--text-xs);
-    letter-spacing: var(--tracking-label);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
     color: var(--color-text-muted);
     text-decoration: none;
     transition: color var(--dur-fast) var(--ease-out);
@@ -121,7 +121,9 @@
   .op-app-nav a[aria-current="page"],
   .op-app-nav a.is-active {
     color: var(--color-text);
-    background: var(--color-accent-surface);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.45em;
   }
 
   /* Hover is an enhancement: a coarse pointer never sees it, so it may
@@ -140,19 +142,19 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    /* Was 40x32. */
     min-block-size: var(--tap-size);
-    min-inline-size: var(--tap-size);
-    padding-inline: var(--space-2);
-    border: 1px solid var(--color-border-subtle);
-    border-radius: var(--radius-sm);
+    padding-inline: var(--space-3);
+    border: var(--border-width) solid var(--color-border);
+    /* A pill, matching the original chrome. */
+    border-radius: var(--radius-pill);
     background: none;
     font-family: var(--font-mono);
     font-size: var(--text-xs);
-    letter-spacing: var(--tracking-label);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
     color: var(--color-text-muted);
     cursor: pointer;
-    transition: border-color var(--dur-fast) var(--ease-out);
+    transition: color var(--dur-fast) var(--ease-out);
   }
 
   .op-theme-toggle:focus-visible {

@@ -251,13 +251,14 @@
   /* Eyebrow: mono / semibold / snug at --text-xs with label tracking (§4) */
   /* ------------------------------------------------------------------ */
   .eyebrow {
-    margin-block-end: var(--space-5);
-    color: var(--color-accent-soft);
+    /* The original label treatment: mono, uppercase, widely tracked, muted,
+       with a full space below it before the heading. */
+    margin: 0 0 var(--space-4);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
-    font-weight: var(--weight-semibold);
-    line-height: var(--leading-snug);
-    letter-spacing: var(--tracking-label);
+    font-weight: var(--weight-normal);
+    letter-spacing: 0.16em;
     text-transform: uppercase;
+    color: var(--color-text-subtle);
   }
 }
