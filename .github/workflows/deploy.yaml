@@ -5,7 +5,7 @@
 # carry the converted layout). It builds the engine plus the three public
 # content repos (checked out tokenlessly at build time) and publishes dist/
 # to Pages.
-name: Deploy
+name: deploy
 
 on:
   push:
