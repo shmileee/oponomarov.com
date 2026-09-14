@@ -15,7 +15,7 @@ const posts = sortPosts((await getCollection("posts")).filter((post) => post.dat
 
 <SiteLayout activeApp="blog" canonicalOrigin="https://oponomarov.com" title={title} description={`Notes filed under ${title}.`} searchType="Topic" rssHref="/blog/feed.xml">
   <main id="main-content" class="content-grid" tabindex="-1">
-    <section aria-labelledby="category-title">
+    <section class="category-detail" aria-labelledby="category-title">
       <header class="detail-header"><a class="back-link" href="/blog/">all notes</a><h1 id="category-title">{title}</h1></header>
       {posts.length > 0 ? (
         <ol class="article-list category-list" data-pagefind-ignore>

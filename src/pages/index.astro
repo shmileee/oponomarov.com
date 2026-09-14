@@ -91,7 +91,7 @@ const readerManifest = orderedStudies.map(({ entry, study }) => ({
                 <div><dt>Evidence</dt><dd>{spotlightItem.study.data.evidence}</dd></div>
               </dl>
             )}
-            <div class=""><p>{spotlightItem.study.data.spotlightProof}</p></div>
+            <div class="prose"><p>{spotlightItem.study.data.spotlightProof}</p></div>
             <div class="topic-list" aria-label="Topics">{spotlightItem.study.data.topics.map((topic) => <span>{topic}</span>)}</div>
           </header>
           <div class="hero-actions"><a class="primary-link" href={hrefFor(spotlightItem.entry.folder)} data-open-study={spotlightItem.entry.id}>Read case study →</a></div>

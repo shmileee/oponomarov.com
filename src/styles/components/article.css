@@ -35,6 +35,15 @@
     padding-block: var(--space-section) var(--space-6);
   }
 
+  /* The published manuals closed their header with a hairline above the
+     lead paragraph; case studies and posts ran straight into the body. The
+     app attribute the shell emits is the same key prose.css uses for the
+     portfolio's numbered headings. */
+  [data-app="dotfiles"] .article-header {
+    padding-block-end: var(--space-8);
+    border-block-end: var(--border-width) solid var(--color-border-subtle);
+  }
+
   .article-header > .back-link {
     margin-block-end: var(--space-10);
     color: var(--color-accent-soft);
@@ -93,44 +102,18 @@
     align-self: stretch;
   }
 
+  /* The chips themselves are the shared quiet pill (components/navigation.css);
+     only the header rhythm is set here. */
   .article-header > .topic-list {
     margin-block-start: var(--space-5);
   }
 
-  /* Chips in the header are the quiet outlined pills of the published
-     pages: a hairline, no fill, no tracking, a 24px box. */
-  .article-header .topic-list > * {
-    min-block-size: var(--space-6);
-    padding-block: 0;
-    padding-inline: var(--space-3);
-    border-color: var(--color-border);
-    background: none;
-    line-height: var(--leading-snug);
-    letter-spacing: normal;
-  }
-
-  /* Where the chip wraps a link, the item draws the pill and the link keeps
-     its 44px hit area, pulled back into the pill with negative margins so
-     the row stays 24px tall. */
-  .article-header .topic-list > :has(> a) {
-    padding-inline: var(--space-3);
-    border: var(--border-width) solid var(--color-border);
-  }
-
-  .article-header .topic-list a {
-    margin-block: calc((var(--space-6) - var(--tap-size)) / 2);
-    padding: 0;
-    border: 0;
-    background: none;
-    color: var(--color-text-muted);
-  }
-
-  .article-header .topic-list > :has(> a:hover) {
-    border-color: var(--color-accent);
-  }
-
-  .article-header .topic-list a:hover {
-    color: var(--color-text);
+  /* The homepage spotlight is the same header composition inline: proof list,
+     then a prose intro on the reading measure, then the chips, each a full
+     step apart as the published spotlight set them. */
+  .spotlight-header > .prose,
+  .spotlight-header > .topic-list {
+    margin-block-start: var(--space-6);
   }
 
   /* ------------------------------------------------------------------ */
@@ -144,7 +127,7 @@
   }
 
   .article .adjacent-nav a {
-    padding: var(--space-5);
+    padding: var(--space-4);
     border-color: var(--color-border);
     color: var(--color-text);
   }

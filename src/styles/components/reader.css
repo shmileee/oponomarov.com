@@ -144,14 +144,15 @@
   }
 
   /* Shared eyebrow line: the homepage spotlight reuses this class, so the
-     base rule lives here and the dialog refines it below. */
+     base rule lives here and the dialog refines it below. The published line
+     tracked at 0.14em, a step under the label token. */
   .reader-meta {
     margin: 0 0 var(--space-5);
     color: var(--color-accent);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     font-weight: var(--weight-semibold);
-    letter-spacing: var(--tracking-label);
+    letter-spacing: 0.14em;
     line-height: var(--leading-snug);
     text-transform: uppercase;
   }

@@ -21,13 +21,13 @@ const categories = [...categoryCounts].sort(([a], [b]) => a.localeCompare(b));
   <main id="main-content" class="content-grid" tabindex="-1">
     <section class="hero section-shell" aria-labelledby="page-title">
       <h1 id="page-title">Engineering notes<span class="hero-cursor" aria-hidden="true"></span></h1>
-      <div class="prose"><p class="">A home for poorly researched ideas that I find myself repeating a lot anyway.</p></div>
+      <p class="hero-lead">A home for poorly researched ideas that I find myself repeating a lot anyway.</p>
       <div class="hero-actions">
         <a class="secondary-link" href="/blog/feed.xml">RSS feed →</a>
       </div>
     </section>
 
-    <section class="archive section wide" id="notes" aria-labelledby="notes-title" data-pagefind-ignore>
+    <section class="archive section full-bleed content-grid" id="notes" aria-labelledby="notes-title" data-pagefind-ignore>
       <div class="section-shell archive-shell">
         <header class="section-heading archive-heading">
           <h2 id="notes-title">All notes</h2>

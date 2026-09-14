@@ -62,17 +62,6 @@ const target = `/case-studies/${entry.folder}/`;
     description={study.data.summary}
     eyebrow={`Case study ${String(entry.number).padStart(2, "0")}${study.data.featured ? " · featured" : ""}`}
     backLink={{ href: "/#index", title: "all case studies" }}
-    previous={{
-      href: `/case-studies/${previous.folder}/`,
-      title: previousStudy.data.title,
-      label: `Previous Case ${String(previous.number).padStart(2, "0")}`,
-    }}
-    next={{
-      href: `/case-studies/${next.folder}/`,
-      title: nextStudy.data.title,
-      label: `Next Case ${String(next.number).padStart(2, "0")}`,
-    }}
-    adjacentLabel="Adjacent case studies"
   >
     <Fragment slot="proof">
       {study.data.role && study.data.evidence && (
@@ -85,9 +74,26 @@ const target = `/case-studies/${entry.folder}/`;
     </Fragment>
     <div slot="topics" class="topic-list" aria-label="Topics">{study.data.topics.map((topic: string) => <span>{topic}</span>)}</div>
     <Content />
-    <nav slot="footer" class="link-row" aria-label="Portfolio navigation" data-pagefind-ignore>
-      <a href="/#index">View all work →</a>
-      <a href="/contact/">Contact</a>
-    </nav>
+    <Fragment slot="footer">
+      {/* The published adjacent cards stack kicker, case number and title on
+          three lines; the shared shell renders a single label, so the case
+          study composes the nav itself from the same primitives. */}
+      <nav class="adjacent-nav" aria-label="Adjacent case studies" data-pagefind-ignore>
+        <a href={`/case-studies/${previous.folder}/`} rel="prev" data-study-direction="previous">
+          <span class="adjacent-nav__label">Previous</span>
+          <span class="adjacent-nav__number">Case {String(previous.number).padStart(2, "0")}</span>
+          <strong class="adjacent-nav__title">{previousStudy.data.title}</strong>
+        </a>
+        <a class="adjacent-nav__next" href={`/case-studies/${next.folder}/`} rel="next" data-study-direction="next">
+          <span class="adjacent-nav__label">Next</span>
+          <span class="adjacent-nav__number">Case {String(next.number).padStart(2, "0")}</span>
+          <strong class="adjacent-nav__title">{nextStudy.data.title}</strong>
+        </a>
+      </nav>
+      <nav class="link-row" aria-label="Portfolio navigation" data-pagefind-ignore>
+        <a href="/#index">View all work →</a>
+        <a href="/contact/">Contact</a>
+      </nav>
+    </Fragment>
   </ArticleShell>
 </SiteLayout>}

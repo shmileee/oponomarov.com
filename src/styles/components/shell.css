@@ -2,8 +2,14 @@
    Site chrome shared by every page: header, brand, section nav, theme toggle,
    reading progress, footer, back-to-top.
    Spec: docs/design-system.md §13 (accessibility floor).
+   Geometry and treatment are ported from the published chrome sheet
+   (src/styles/global.css on `main`, bundled as SiteHeader.*.css): the section
+   nav hugs the tools at the end of the bar, the footer's contact links are
+   circular bordered icon buttons, and the back-to-top control keys its
+   visibility on the `data-visible` attribute SiteHeader actually writes.
    Fixes: D7 — measured at 375px, nav links were 40x40, the brand 32x21 and the
-   theme toggle 40x32. Hit areas grow via padding; the glyphs do not. */
+   theme toggle 40x32. Hit areas grow via padding; the glyphs do not. The
+   published 32–40px controls stay at the 44px floor here by design (§13). */
 
 @layer components {
   /* ------------------------------------------------------------------ */
@@ -24,9 +30,14 @@
 
   .op-header__inner {
     display: flex;
+    /* One row down to 375px. Wrapping is the 320px fallback only; the row
+       gap then equals the column gap. */
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--space-3);
+    /* Anything left over on a wrapped line (the tools alone) sits at the end,
+       where it lives on the unwrapped row. */
+    justify-content: flex-end;
+    gap: clamp(var(--space-4), 3vw, var(--space-8));
     inline-size: 100%;
     max-inline-size: var(--measure-page);
     min-block-size: var(--header-height);
@@ -36,9 +47,9 @@
 
   .op-header__tools {
     display: flex;
+    flex: none;
     align-items: center;
-    gap: var(--space-2);
-    margin-inline-start: auto;
+    gap: var(--space-1);
   }
 
   /* ------------------------------------------------------------------ */
@@ -49,14 +60,16 @@
 
   .op-brand {
     display: inline-flex;
+    flex: none;
     align-items: center;
     /* Was 32x21. Padding, not font-size, carries it to the 44px floor. */
     min-block-size: var(--tap-size);
     padding-inline: var(--space-2);
     margin-inline-start: calc(var(--space-2) * -1);
     font-family: var(--font-mono);
-    font-size: var(--text-sm);
+    font-size: var(--text-xs);
     font-weight: var(--weight-medium);
+    letter-spacing: 0.02em;
     color: var(--color-text);
     text-decoration: none;
     white-space: nowrap;
@@ -91,22 +104,26 @@
 
   .op-app-nav {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
-    /* The original sits the sections at the right of the bar, widely spaced. */
-    justify-content: flex-end;
-    gap: var(--space-6);
+    /* The original sits the sections at the end of the bar, right beside the
+       tools: this is the only auto margin on the row, so it takes all the
+       slack. */
+    gap: clamp(var(--space-3), 2vw, var(--space-5));
+    min-inline-size: 0;
     margin-inline-start: auto;
+    white-space: nowrap;
   }
 
   .op-app-nav a {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
+    min-inline-size: var(--tap-size);
     min-block-size: var(--tap-size);
     /* Label treatment, not a button: mono, uppercase, widely tracked. */
     font-family: var(--font-mono);
     font-size: var(--text-xs);
-    letter-spacing: 0.14em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--color-text-muted);
     text-decoration: none;
@@ -118,12 +135,14 @@
     outline-offset: var(--focus-offset);
   }
 
+  /* The current section carries a 2px accent rule set well below the label. */
   .op-app-nav a[aria-current="page"],
   .op-app-nav a.is-active {
     color: var(--color-text);
     text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 0.45em;
+    text-decoration-color: var(--color-accent);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.45rem;
   }
 
   /* Hover is an enhancement: a coarse pointer never sees it, so it may
@@ -140,8 +159,10 @@
 
   .op-theme-toggle {
     display: inline-flex;
+    flex: none;
     align-items: center;
     justify-content: center;
+    min-inline-size: var(--tap-size);
     min-block-size: var(--tap-size);
     padding-inline: var(--space-3);
     border: var(--border-width) solid var(--color-border);
@@ -150,7 +171,7 @@
     background: none;
     font-family: var(--font-mono);
     font-size: var(--text-xs);
-    letter-spacing: 0.14em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--color-text-muted);
     cursor: pointer;
@@ -166,6 +187,49 @@
     .op-theme-toggle:hover {
       border-color: var(--color-accent-border);
       color: var(--color-text);
+    }
+  }
+
+  /* Narrow bar. The published chrome tightens the gaps below 58rem and
+     again below 42rem, where the toggle becomes a round icon button so the
+     brand, three sections and both tools share one 3.5rem row. The nearest
+     steps on the fixed scale are 64rem and 48rem. */
+  @media (width < 64rem) {
+    .op-header__inner,
+    .op-app-nav {
+      gap: var(--space-3);
+    }
+  }
+
+  @media (width < 48rem) {
+    .op-header__inner {
+      gap: var(--space-2);
+    }
+
+    .op-app-nav {
+      gap: var(--space-1);
+    }
+
+    .op-app-nav a {
+      letter-spacing: 0.04em;
+    }
+
+    .op-theme-toggle {
+      inline-size: var(--tap-size);
+      padding: 0;
+      letter-spacing: 0;
+    }
+
+    /* The written label (the toggle's only child, already aria-hidden)
+       collapses; a half-disc glyph stands in for it. The button keeps its
+       aria-label. */
+    .op-theme-toggle > span {
+      font-size: 0;
+    }
+
+    .op-theme-toggle > span::before {
+      content: "\25D0";
+      font-size: var(--text-sm);
     }
   }
 
@@ -197,33 +261,42 @@
 
   /* ------------------------------------------------------------------ */
   /* Footer.                                                              */
+  /* Brand and note at the start, the contact links at the end; below     */
+  /* 48rem the two stack, as the published chrome did below 42rem.        */
   /* ------------------------------------------------------------------ */
 
   .op-footer {
     border-block-start: 1px solid var(--color-border-subtle);
-    padding-block: var(--space-10);
     padding-inline: env(safe-area-inset-left, 0) env(safe-area-inset-right, 0);
-    padding-block-end: max(var(--space-10), env(safe-area-inset-bottom, 0));
+    padding-block-end: env(safe-area-inset-bottom, 0);
+    font-family: var(--font-mono);
   }
 
   .op-footer__inner {
     display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-6);
+    justify-content: space-between;
+    gap: var(--space-8);
     inline-size: 100%;
     max-inline-size: var(--measure-page);
     margin-inline: auto;
+    padding-block: var(--space-10);
     padding-inline: var(--space-gutter);
   }
 
+  .op-footer__inner > * {
+    min-inline-size: 0;
+  }
+
   .op-footer__brand {
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
+    margin: 0;
+    font-size: var(--text-xs);
     color: var(--color-text);
   }
 
   .op-footer__note {
     max-inline-size: var(--measure-prose);
+    margin: var(--space-1) 0 0;
+    font-family: var(--font-body);
     font-size: var(--text-sm);
     line-height: var(--leading-body);
     color: var(--color-text-muted);
@@ -231,24 +304,35 @@
 
   .op-footer__links {
     display: flex;
-    flex-wrap: wrap;
+    flex: none;
+    align-items: center;
     gap: var(--space-2);
-    margin-inline-start: auto;
     list-style: none;
     margin-block: 0;
     padding: 0;
   }
 
+  /* Circular bordered icon buttons. The published button was 2.5rem; the
+     44px floor (§13) sizes it here. */
   .op-footer__links a {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-block-size: var(--tap-size);
-    min-inline-size: var(--tap-size);
-    padding-inline: var(--space-2);
-    border-radius: var(--radius-sm);
+    display: grid;
+    place-items: center;
+    inline-size: var(--tap-size);
+    block-size: var(--tap-size);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-pill);
     color: var(--color-text-muted);
     text-decoration: none;
+    transition:
+      color var(--dur-base) var(--ease-out),
+      border-color var(--dur-base) var(--ease-out),
+      background-color var(--dur-base) var(--ease-out);
+  }
+
+  .op-footer__links svg {
+    inline-size: var(--space-4);
+    block-size: var(--space-4);
+    fill: currentcolor;
   }
 
   .op-footer__links a:focus-visible {
@@ -258,33 +342,59 @@
 
   @media (hover: hover) and (pointer: fine) {
     .op-footer__links a:hover {
+      border-color: var(--color-accent);
+      background: var(--color-accent-surface);
       color: var(--color-text);
+    }
+  }
+
+  @media (width < 48rem) {
+    .op-footer__inner {
+      flex-direction: column;
     }
   }
 
   /* ------------------------------------------------------------------ */
   /* Back to top.                                                         */
-  /* SiteHeader toggles [hidden] past a scroll threshold.                 */
+  /* SiteHeader writes data-visible="true" past a scroll threshold. Until  */
+  /* then the control is invisible, unclickable and out of the tab order.  */
   /* ------------------------------------------------------------------ */
 
   .back-to-top {
     position: fixed;
-    inset-block-end: max(var(--space-5), env(safe-area-inset-bottom, 0));
-    inset-inline-end: max(var(--space-5), env(safe-area-inset-right, 0));
+    inset-block-end: max(clamp(var(--space-4), 3vw, var(--space-8)), env(safe-area-inset-bottom, 0));
+    inset-inline-end: max(clamp(var(--space-4), 3vw, var(--space-8)), env(safe-area-inset-right, 0));
     z-index: var(--z-back-to-top);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     min-block-size: var(--tap-size);
     min-inline-size: var(--tap-size);
-    border: 1px solid var(--color-border-subtle);
-    border-radius: var(--radius-pill);
-    background: var(--color-surface-raised);
-    box-shadow: var(--shadow-raised);
+    padding: var(--space-2) var(--space-3);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
     color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    line-height: 1;
     text-decoration: none;
     cursor: pointer;
-    transition: opacity var(--dur-base) var(--ease-out);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      opacity var(--dur-base) var(--ease-out),
+      visibility var(--dur-base) var(--ease-out),
+      color var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+  }
+
+  .back-to-top[data-visible="true"] {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
   }
 
   .back-to-top[hidden] {
@@ -298,6 +408,7 @@
 
   @media (hover: hover) and (pointer: fine) {
     .back-to-top:hover {
+      border-color: var(--color-accent-border);
       color: var(--color-text);
     }
   }
