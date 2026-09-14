@@ -61,7 +61,7 @@ const target = `/case-studies/${entry.folder}/`;
     title={study.data.title}
     description={study.data.summary}
     eyebrow={`Case study ${String(entry.number).padStart(2, "0")}${study.data.featured ? " · featured" : ""}`}
-    backLink={{ href: "/#index", title: "← all case studies" }}
+    backLink={{ href: "/#index", title: "all case studies" }}
     previous={{
       href: `/case-studies/${previous.folder}/`,
       title: previousStudy.data.title,
