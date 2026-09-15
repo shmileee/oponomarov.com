@@ -1,5 +1,6 @@
 ---
 import "../styles/index.css";
+import { ClientRouter } from "astro:transitions";
 import BackToTop from "./BackToTop.astro";
 import ContentInteractions from "./ContentInteractions.astro";
 import SiteFavicons from "./SiteFavicons.astro";
@@ -59,6 +60,13 @@ const image = ogImage ? new URL(ogImage, canonicalOrigin) : undefined;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="author" content={ownerName} />
     <meta name="color-scheme" content="light dark" />
+    {/* Client-side navigation between the three sections: the router swaps the
+        document in place with a soft cross-fade, so moving from a hub into an
+        article no longer reloads the chrome. Every script that binds to the
+        page re-initialises on astro:page-load and lets go on
+        astro:before-swap; the theme attribute is restored on astro:after-swap
+        (SiteHeader), because the swap replaces the root element's attributes. */}
+    <ClientRouter />
     <script is:inline>
 const saved = localStorage.getItem("om-theme");
 const preferred = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";

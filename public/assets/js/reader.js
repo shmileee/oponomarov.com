@@ -11,10 +11,20 @@ const [{ isGuardedArrowTarget, visibleFocusables }, readerModel] = await Promise
 const { createContentLoader, createManifestIndex, isPrimarySameTab, isReaderState, STUDY_HASH } =
   readerModel;
 
-export function setupReader() {
+/* `signal` (an AbortSignal) releases every listener this call binds; the
+   homepage module aborts it before the client router swaps the document and
+   calls setupReader again against the new one. */
+export function setupReader({ signal } = {}) {
   const dialog = document.querySelector("[data-reader]");
   if (!(dialog instanceof HTMLDialogElement)) return;
   const portfolioDocumentTitle = document.title;
+  /* Under the client router the reader keeps out of the history stack: it
+     shows the open study in the URL with replaceState and clears it on close,
+     so Back leaves the homepage the way it does everywhere else, and never
+     lands on an entry the router would answer by re-rendering the page under
+     the open dialog. Without the router (a plain load) it keeps the published
+     behaviour: opening pushes an entry and Back closes the dialog. */
+  const routed = Boolean(document.querySelector('meta[name="astro-view-transitions-enabled"]'));
 
   const manifestNode = dialog.querySelector("[data-reader-manifest]");
   const study = dialog.querySelector("[data-reader-study]");
@@ -67,7 +77,7 @@ export function setupReader() {
   };
 
   const closeReader = () => {
-    if (isReaderState(history.state)) {
+    if (!routed && isReaderState(history.state)) {
       if (closingMarkedEntry) return;
       closingMarkedEntry = true;
       hideReader();
@@ -82,13 +92,14 @@ export function setupReader() {
 
   const updateHistory = (entry, mode) => {
     const hash = `#study-${entry.id}`;
-    if (mode === "push") {
-      history.pushState({ portfolioReader: true, id: entry.id }, "", hash);
-    } else if (mode === "replace") {
-      const state = isReaderState(history.state)
+    if (mode === "none") return;
+    if (routed || mode === "replace") {
+      const state = !routed && isReaderState(history.state)
         ? { portfolioReader: true, id: entry.id }
         : history.state;
       history.replaceState(state, "", hash);
+    } else if (mode === "push") {
+      history.pushState({ portfolioReader: true, id: entry.id }, "", hash);
     }
   };
 
@@ -160,6 +171,10 @@ export function setupReader() {
     else hideReader();
   };
 
+  /* Capture phase: the client router's own document click listener was
+     registered first and would otherwise navigate to the study page before
+     this handler could claim the click for the dialog. Capturing runs first
+     and preventDefault() tells the router to stand down. */
   document.addEventListener("click", (event) => {
     const anchor = event.target.closest("a");
     if (!anchor || !isPrimarySameTab(event, anchor)) return;
@@ -182,17 +197,17 @@ export function setupReader() {
     event.preventDefault();
     if (!dialog.open) returnFocus = anchor;
     showStudy(entry, dialog.open ? "replace" : "push");
-  });
-  closeButton?.addEventListener("click", closeReader);
-  previousButton?.addEventListener("click", () => navigate("previous"));
-  nextButton?.addEventListener("click", () => navigate("next"));
+  }, { capture: true, signal });
+  closeButton?.addEventListener("click", closeReader, { signal });
+  previousButton?.addEventListener("click", () => navigate("previous"), { signal });
+  nextButton?.addEventListener("click", () => navigate("next"), { signal });
   dialog.addEventListener("cancel", (event) => {
     event.preventDefault();
     closeReader();
-  });
+  }, { signal });
   dialog.addEventListener("click", (event) => {
     if (event.target === dialog) closeReader();
-  });
+  }, { signal });
   dialog.addEventListener("keydown", (event) => {
     const isArrow = event.key === "ArrowLeft" || event.key === "ArrowRight";
     const isModified = event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
@@ -211,8 +226,8 @@ export function setupReader() {
       event.preventDefault();
       first?.focus();
     }
-  });
-  window.addEventListener("popstate", handleLocation);
-  window.addEventListener("hashchange", handleLocation);
+  }, { signal });
+  if (!routed) window.addEventListener("popstate", handleLocation, { signal });
+  window.addEventListener("hashchange", handleLocation, { signal });
   handleLocation();
 }

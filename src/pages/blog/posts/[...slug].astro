@@ -48,41 +48,50 @@ const readingMinutes = Math.floor((post.body || "").split(/\s+/).length / 220) +
     <section slot="comments" class="comments-region" aria-labelledby="comments-title" data-pagefind-ignore><h2 id="comments-title">Comments</h2><div id="comments"></div></section>
   </ArticleShell>
 
-  <script is:inline>
-    function loadGiscusComments() {
-      const script = document.createElement("script");
-      script.src = "https://giscus.app/client.js";
-      script.async = true;
-      script.crossOrigin = "anonymous";
-      const settings = {
-        repo: "shmileee/blog",
-        "repo-id": "R_kgDONajVjQ",
-        category: "Comments",
-        "category-id": "DIC_kwDONajVjc4ClC6H",
-        mapping: "pathname",
-        strict: "1",
-        "reactions-enabled": "0",
-        "emit-metadata": "0",
-        "input-position": "top",
-        theme: document.documentElement.dataset.theme === "light" ? "light" : "transparent_dark",
-        lang: "en",
-        loading: "lazy",
+  {/* data-astro-rerun: the client router only re-executes an inline script
+      whose text changed, and this one is identical on every note, so without
+      it the second note visited never loaded its comments. */}
+  <script is:inline data-astro-rerun>
+    (() => {
+      const container = document.getElementById("comments");
+      if (!container) return;
+      const load = () => {
+        /* Once per article, and never into a container the router has already
+           swapped away: a timer started on the previous note must not plant
+           its widget on this one. */
+        if (container.dataset.loaded === "true" || !container.isConnected) return;
+        container.dataset.loaded = "true";
+        const script = document.createElement("script");
+        script.src = "https://giscus.app/client.js";
+        script.async = true;
+        script.crossOrigin = "anonymous";
+        const settings = {
+          repo: "shmileee/blog",
+          "repo-id": "R_kgDONajVjQ",
+          category: "Comments",
+          "category-id": "DIC_kwDONajVjc4ClC6H",
+          mapping: "pathname",
+          strict: "1",
+          "reactions-enabled": "0",
+          "emit-metadata": "0",
+          "input-position": "top",
+          theme: document.documentElement.dataset.theme === "light" ? "light" : "transparent_dark",
+          lang: "en",
+          loading: "lazy",
+        };
+        Object.entries(settings).forEach(([key, value]) => script.setAttribute(`data-${key}`, value));
+        container.appendChild(script);
       };
-      Object.entries(settings).forEach(([key, value]) => script.setAttribute(`data-${key}`, value));
-      document.getElementById("comments")?.appendChild(script);
-    }
-    let scriptLoaded = false;
-    function loadCommentScriptOnce() {
-      if (scriptLoaded) return;
-      loadGiscusComments();
-      scriptLoaded = true;
-    }
-    setTimeout(loadCommentScriptOnce, 5000);
-    window.addEventListener("scroll", loadCommentScriptOnce, { once: true, passive: true });
-    window.addEventListener("om-theme-change", (event) => {
-      const frame = document.querySelector("iframe.giscus-frame");
-      if (!frame) return;
-      frame.contentWindow?.postMessage({ giscus: { setConfig: { theme: event.detail === "light" ? "light" : "transparent_dark" } } }, "https://giscus.app");
-    });
+      setTimeout(load, 5000);
+      window.addEventListener("scroll", load, { once: true, passive: true });
+      if (!window.omGiscusThemeBound) {
+        window.omGiscusThemeBound = true;
+        window.addEventListener("om-theme-change", (event) => {
+          const frame = document.querySelector("iframe.giscus-frame");
+          if (!frame) return;
+          frame.contentWindow?.postMessage({ giscus: { setConfig: { theme: event.detail === "light" ? "light" : "transparent_dark" } } }, "https://giscus.app");
+        });
+      }
+    })();
   </script>
 </SiteLayout>

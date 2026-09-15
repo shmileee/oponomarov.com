@@ -53,6 +53,17 @@ const apps = [
 </header>
 
 <script>
+  /* Bundled once per site load. Every navigation (a full load, or the client
+     router swapping the document) re-runs initShell against the fresh DOM and
+     the previous run's listeners are dropped through an AbortController, so
+     no scroll handler outlives the elements it drove. */
+  let controller: AbortController | undefined;
+
+  const readSavedTheme = () => {
+    const saved = localStorage.getItem("om-theme");
+    if (saved === "light" || saved === "dark") return saved;
+    return matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  };
   const getTheme = () => document.documentElement.dataset.theme === "light" ? "light" : "dark";
 
   const persistTheme = (theme: "dark" | "light") => {
@@ -72,31 +83,31 @@ const apps = [
   };
 
   const initShell = () => {
+    controller?.abort();
+    controller = new AbortController();
+    const { signal } = controller;
+
     updateControls();
     document.querySelectorAll<HTMLButtonElement>("[data-op-theme-toggle]").forEach((button) => {
-      if (button.dataset.bound === "true") return;
-      button.dataset.bound = "true";
       button.addEventListener("click", () => {
         persistTheme(getTheme() === "dark" ? "light" : "dark");
         updateControls();
-      });
+      }, { signal });
     });
 
     const progress = document.querySelector<HTMLElement>("[data-reading-progress]");
-    if (progress && progress.dataset.bound !== "true") {
-      progress.dataset.bound = "true";
+    if (progress) {
       const update = () => {
         const available = document.documentElement.scrollHeight - innerHeight;
         const ratio = available > 0 ? Math.min(1, scrollY / available) : 0;
         progress.style.transform = `scaleX(${ratio})`;
       };
-      addEventListener("scroll", update, { passive: true });
+      addEventListener("scroll", update, { passive: true, signal });
       update();
     }
 
     const toTop = document.querySelector<HTMLButtonElement>("[data-back-to-top]");
-    if (toTop && toTop.dataset.bound !== "true") {
-      toTop.dataset.bound = "true";
+    if (toTop) {
       let scheduled = false;
       const update = () => {
         toTop.dataset.visible = String(scrollY > 640);
@@ -107,15 +118,23 @@ const apps = [
         scheduled = true;
         requestAnimationFrame(update);
       };
-      addEventListener("scroll", schedule, { passive: true });
-      addEventListener("resize", schedule);
+      addEventListener("scroll", schedule, { passive: true, signal });
+      addEventListener("resize", schedule, { signal });
       toTop.addEventListener("click", () => {
         scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
-      });
+      }, { signal });
       update();
     }
   };
 
   initShell();
   document.addEventListener("astro:page-load", initShell);
+  document.addEventListener("astro:before-swap", () => controller?.abort());
+  /* The swap copies the incoming document's root attributes over the current
+     ones, which drops the theme the inline head script set on first load; put
+     it back before the new page paints, so a reader on the saved theme never
+     sees the other one flash through. */
+  document.addEventListener("astro:after-swap", () => {
+    document.documentElement.dataset.theme = readSavedTheme();
+  });
 </script>

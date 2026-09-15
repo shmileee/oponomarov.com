@@ -225,13 +225,20 @@
       if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) hide();
     });
     dialog.addEventListener("close", () => open.focus());
+  };
+
+  /* One document-level shortcut for the life of the tab. The client router
+     swaps the page (and this dialog) underneath it, so it resolves the
+     current trigger at keypress time rather than closing over one. */
+  if (!window.omSearchShortcutBound) {
+    window.omSearchShortcutBound = true;
     document.addEventListener("keydown", (event) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
-        show();
+        document.querySelector("[data-global-search-open]")?.click();
       }
     });
-  };
+  }
 
   initGlobalSearch();
   document.addEventListener("astro:page-load", initGlobalSearch);
