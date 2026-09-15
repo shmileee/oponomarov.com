@@ -10,23 +10,25 @@ function fixture() {
   const routes = ['/', '/article/'];
   const viewports = [320, 375, 768, 1440].map((width) => ({ width, name: `vp-${width}` }));
   const fp = { fontFamily: 'sans-serif', fontSize: '16px', lineHeight: '24px', color: 'rgb(0, 0, 0)', backgroundColor: 'rgb(240, 240, 240)', borderRadius: '4px', padding: '2px' };
+  /* Inline code carries the size of the text it sits in: S3 compares the ratio. */
+  const inlineFp = { ...fp, fontSize: '14px', parentFontSize: '16px', ratio: 0.875 };
   const results = routes.flatMap((route) => ['light', 'dark'].flatMap((colorScheme) => viewports.map((vp) => ({
     route, colorScheme, viewport: vp.name, viewportWidth: vp.width,
     theme: colorScheme, bodyBackgroundColor: colorScheme === 'light' ? 'white' : 'black',
     themeInitScriptHash: '12345678', themeInitScriptCount: 1, bodyFontSize: '16px',
     typography: { bodyProse: { ...fp } },
-    measure: { mainContainers: [{ sel: 'main', width: Math.min(vp.width, 1280) }], proseContainers: [] },
-    code: { pres: [], inlines: [{ ...fp }] }, escapers: [], tables: [], smallTargets: [],
+    measure: { mainContainers: [{ sel: 'main', width: Math.min(vp.width, 1140) }], proseContainers: [] },
+    code: { pres: [], inlines: [{ ...inlineFp }] }, escapers: [], tables: [], smallTargets: [],
     selfScrollers: [], inlineStyleAttrs: [], imagesMissingDims: [], imagesMissingAlt: [],
     h1Count: 1, status: 200, sheets: ['/_astro/main.ABCdef12.css'],
   }))));
   return {
     schemaVersion: 2, metadata: { routes, viewports }, results, consoleErrors: [],
     zoomResults: results.map((r) => ({ route: r.route, viewport: r.viewport, colorScheme: r.colorScheme, viewportWidth: r.viewportWidth, bodyFontSize: '32px', pageOverflows: false })),
-    measureResults: routes.flatMap((route) => ['light', 'dark'].map((colorScheme) => ({ route, colorScheme, viewport: 'ultrawide-2560', viewportWidth: 2560, mainContainers: [{ sel: 'main', width: 1280 }], proseContainers: [{ sel: '.prose', width: 704 }] }))),
+    measureResults: routes.flatMap((route) => ['light', 'dark'].map((colorScheme) => ({ route, colorScheme, viewport: 'ultrawide-2560', viewportWidth: 2560, mainContainers: [{ sel: 'main', width: 1140 }], proseContainers: [{ sel: '.prose', width: 704 }] }))),
     interactions: {
       skipLinks: routes.flatMap((route) => ['light', 'dark'].map((colorScheme) => ({ route, colorScheme, matchesSkipLink: true, insideViewport: true }))),
-      readerDialogs: ['light', 'dark'].map((colorScheme) => ({ route: '/', colorScheme, open: true, preBackgrounds: ['rgb(24, 24, 24)'] })),
+      readerDialogs: ['light', 'dark'].map((colorScheme) => ({ route: '/', colorScheme, open: true, proseLength: 500, preBackgrounds: ['rgb(24, 24, 24)'] })),
     },
   };
 }
@@ -38,7 +40,7 @@ test('complete valid evidence passes all 14 scenarios', () => {
 const violations = [
   (raw) => { raw.results[0].theme = 'dark'; },
   (raw) => { raw.results[0].typography.bodyProse.fontSize = '17px'; },
-  (raw) => { raw.measureResults[0].proseContainers[0].width = 704.01; },
+  (raw) => { raw.measureResults[0].proseContainers[0].width = 736.01; },
   (raw) => { raw.results[0].code.inlines.push({ ...raw.results[0].code.inlines[0], padding: '3px' }); },
   (raw) => { raw.results[0].code.pres.push({ path: 'pre', index: 1, scrollWidth: 102, clientWidth: 100 }); },
   (raw) => { raw.results[0].escapers.push({ path: 'div', left: 0, right: 322 }); },
@@ -60,6 +62,23 @@ for (const [id, mutate] of violations.entries()) {
     assert.ok(scenario.failures.every((f) => f.route && f.viewport && Object.hasOwn(f, 'actual') && Object.hasOwn(f, 'expected')));
   });
 }
+
+test('S3 compares inline code as a ratio of its parent, never as an absolute size', () => {
+  /* A card capsule at 14px inside 13px copy is the defect the ratio catches:
+     identical absolute size, different proportion. */
+  const raw = fixture();
+  raw.results[0].code.inlines.push({ ...raw.results[0].code.inlines[0], parentFontSize: '13px' });
+  assert.ok(evaluateContract(raw)[3].failures.length > 0);
+  /* The same proportion at a different absolute size is the design working:
+     a 21px capsule inside a 24px heading is still 0.875. */
+  const scaled = fixture();
+  scaled.results[0].code.inlines.push({ ...scaled.results[0].code.inlines[0], fontSize: '21px', parentFontSize: '24px' });
+  assert.equal(evaluateContract(scaled)[3].failures.length, 0);
+  /* A sample without the parent size is missing evidence, not a pass. */
+  const blind = fixture();
+  delete blind.results[0].code.inlines[0].parentFontSize;
+  assert.ok(evaluateContract(blind)[3].failures.length > 0);
+});
 
 test('only the specified target, clipping and inline-style exceptions pass', () => {
   const raw = fixture();

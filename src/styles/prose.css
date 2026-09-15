@@ -336,10 +336,12 @@
 
   /* ------------------------------------------------------------------ */
   /* Inline code — the ONE rule. Expressive Code never touches inline     */
-  /* code, so this is the whole implementation. It stays inline, wraps    */
-  /* anywhere so a long path can never overflow, and has no max-content   */
-  /* width, nowrap, or scroll container. The single exception is a       */
-  /* code-led table cell, declared with the tables below.                 */
+  /* code, so this is the whole implementation: paragraph, list, link,    */
+  /* heading, admonition, card, step and table cell all render this one   */
+  /* capsule. It stays inline, wraps anywhere so a long path can never    */
+  /* overflow, and has no max-content width, nowrap, or scroll container. */
+  /* The single exception is code inside a table cell, declared with the  */
+  /* tables below.                                                        */
   /* ------------------------------------------------------------------ */
 
   .prose :not(pre) > code {
@@ -350,16 +352,13 @@
     background: var(--code-inline-bg);
     color: var(--code-inline-text);
     font-family: var(--font-mono);
-    /* Sized from the body ramp rather than from the element around it: S3
-       asserts one computed size across every body context, and the prose
-       contexts that carry code (paragraphs, lists, admonitions, table
-       cells) are all set at --text-base, so this absolute value reads as
-       --code-scale of the surrounding text there while staying identical
-       from route to route. It is the same token fenced code uses, so a
-       capsule and the block beneath it are one size. Card and step copy
-       (primitives) is set a step smaller; the same capsule is proportionally
-       larger there, which is the price of the one-size contract. */
-    font-size: var(--code-inline-font-size);
+    /* Sized from the text around it, not from the body ramp. The invariant
+       is the ratio: a capsule is --code-inline-scale of whatever it sits in,
+       so it reads as the same token in a 19px paragraph, a 15px card line,
+       a step description and a 36px heading. An absolute size pinned to
+       --text-base made the capsule 8% LARGER than card and step copy, which
+       is set a step smaller. S3 asserts this ratio, not an absolute px. */
+    font-size: var(--code-inline-size);
     font-weight: var(--weight-normal);
     /* An inline box only contributes its own line-height to the line box,
        so a snug leading keeps the capsule inside the strut of any text it
@@ -372,20 +371,17 @@
     box-decoration-break: clone;
   }
 
-  /* Heading code keeps the monospaced cue without a capsule competing with
-     the heading hierarchy. */
-  .prose :is(h1, h2, h3, h4, h5, h6) code {
-    padding: 0;
-    border: 0;
-    background: none;
-    color: inherit;
-    font-size: var(--code-inline-size);
-    font-weight: var(--weight-medium);
-    letter-spacing: -0.02em;
-  }
+  /* Heading code keeps the capsule: there is deliberately no heading
+     override here. The published blog stripped it and inherited the heading
+     colour, which was invisible there because its inline text was near-body
+     grey; against this accent capsule the same rule rendered 26 spans as
+     plain bold text with no code cue at all. The sizing reference
+     (developer.hashicorp.com) keeps background, border and radius on heading
+     code, and so does this design: one treatment, sized by the em rule above
+     so it follows the heading it sits in.
 
-  /* Linked code keeps the capsule colour: S3 asserts one inline-code tuple
-     across every body context, so a link may not recolour it. */
+     Linked code keeps the capsule colour for the same reason: S3 asserts one
+     inline-code tuple across every context, so a link may not recolour it. */
 
   /* ------------------------------------------------------------------ */
   /* Keys                                                                 */
@@ -497,6 +493,11 @@
     display: none;
   }
 
+  /* Expressive Code sizes the frame from its UI font size and only the
+     <code> from --code-font-size, so the <pre> that paints the block's
+     background was 0.9rem while the text inside it was 17px. One size for
+     the whole block: any em-derived geometry on the <pre> now shares the
+     text's basis. */
   .prose .expressive-code .frame pre {
     border: 0;
     border-start-start-radius: 0;
@@ -504,6 +505,8 @@
     border-end-start-radius: var(--radius-md);
     border-end-end-radius: var(--radius-md);
     background: var(--code-bg);
+    font-size: var(--code-font-size);
+    line-height: var(--leading-code);
   }
 
   .prose .expressive-code pre > code {
@@ -626,9 +629,9 @@
     inline-size: 100%;
     border-collapse: collapse;
     border-spacing: 0;
-    /* Body size, as §4 sets every normal cell. It is also what keeps a
-       capsule in a cell the same proportion of its text as one in a
-       paragraph, since inline code is one absolute size everywhere. */
+    /* Body size, as §4 sets every normal cell. Inline code is em-relative,
+       so a capsule in a cell is the same fraction of its text as one in a
+       paragraph. */
     font-size: var(--text-base);
     font-variant-numeric: tabular-nums;
     line-height: var(--leading-body);
@@ -682,36 +685,61 @@
     padding-block-end: var(--space-4);
   }
 
-  /* A leading cell that opens with verbatim code labels its row: a
-     command, a path, a role. It is not a sentence, and split across lines
-     its cloned capsule reads as two rows, so the cell sizes to its content
-     and never breaks. This is the one place inline code refuses to wrap:
-     the scroll container the general rule forbids is exactly what the
-     region provides. The rule is positional because CSS cannot tell a cell
-     that is only code from a sentence that opens with one, and it stops at
-     the first column because Chromium breaks a path nowhere but a word
-     everywhere, so a long path in a middle column held atomic would push
-     the whole table into scrolling on a desktop that otherwise holds it.
-     A first cell that opens with a keycap sequence (.keys) keeps wrapping. */
-  .prose td:first-child:has(> code:first-child),
-  .prose td:first-child:has(> a:first-child > code:first-child) {
+  /* Code in a table cell never breaks. This is the deliberate opposite of
+     the prose rule above, and the two must be read together:
+
+       PROSE       a long unbreakable token WRAPS (overflow-wrap: anywhere),
+                   because a paragraph has no scroll container and a token
+                   that refuses to break escapes a 320px viewport.
+       TABLE CELL  a token NEVER wraps (white-space: nowrap), because a
+                   command or path split across lines reads as two rows,
+                   and the cell already sits inside the focusable
+                   .table-scroll region: a genuinely wide table scrolls,
+                   which is the correct escape valve there.
+
+     Every column, not only the first: the reported break was
+     `config/private_dot_config/mise/config.toml` in the second column of
+     the setup manual, and the owner wants no cell code split anywhere. A
+     long path held atomic can push a table into scrolling on a viewport
+     that otherwise held it; that is the accepted price. The sentence
+     around a token in a description cell still wraps between its words. */
+  .prose :is(td, th) code {
     white-space: nowrap;
   }
 
-  .prose td:first-child:has(> code:first-child) code,
-  .prose td:first-child:has(> a:first-child > code:first-child) code {
+  /* A cell that opens with verbatim code labels its row: a command, a path,
+     a role, `<code>a</code> / <code>b</code>`, a linked name with its ↗.
+     It is not a sentence, so the whole cell sizes to its content and its
+     parts stay on one line. The rule is positional because CSS cannot see
+     text nodes: `<td>Starts <code>x</code> with…</td>` also has code as its
+     first element child. What separates the two in every reference table
+     is the column. The last column is the description and stays a wrapping
+     sentence (only its tokens are atomic, above); every column before it
+     labels the row. A cell that opens with a keycap sequence (.keys) is
+     not code and keeps wrapping between its keys. */
+  .prose td:not(:last-child):has(> code:first-child),
+  .prose td:not(:last-child):has(> a:first-child > code:first-child) {
     white-space: nowrap;
   }
 
-  /* In a two-column table led by such a cell, the description keeps at
-     least a third of the reading measure, so when the pair outgrows a
-     phone the region scrolls a table of readable rows rather than one
-     whose description column has collapsed to a word per line. Wider
-     tables are left intrinsic: the same floor would push a three-column
-     table into scrolling on a desktop that can otherwise hold it. */
+  /* The description column of a table with a code-led column keeps a floor.
+     A code column can no longer give up width by breaking its token, so a
+     table that outgrows its region could only make room by collapsing the
+     description to a word per line; with the floor, the region scrolls a
+     table of readable rows instead. The floor is on the LAST column only
+     (the description), never on a code column, and it is a share of the
+     reading measure that shrinks as columns are added: a third beside one
+     code column, a quarter when a label column precedes the code as well,
+     so a three-column table whose columns already fit is not tipped into a
+     scroll of a few pixels by a floor sized for a pair. */
   .prose td:first-child:has(> code:first-child) + td:last-child,
   .prose td:first-child:has(> a:first-child > code:first-child) + td:last-child {
     min-inline-size: calc(var(--measure-prose) / 3);
+  }
+
+  .prose td:not(:first-child, :last-child):has(> code:first-child) ~ td:last-child,
+  .prose td:not(:first-child, :last-child):has(> a:first-child > code:first-child) ~ td:last-child {
+    min-inline-size: calc(var(--measure-prose) / 4);
   }
 
   /* ------------------------------------------------------------------ */

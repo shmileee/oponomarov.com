@@ -12,6 +12,14 @@ const NAMES = [
 const THEMES = ['light', 'dark'];
 const key = (r) => JSON.stringify([r.route, r.viewport, r.colorScheme]);
 const tuple = (value, fields) => Object.fromEntries(fields.map((field) => [field, value[field]]));
+/* Inline code's size relative to the text it sits in, from the two recorded
+   computed sizes. Three decimals absorb float noise in a computed px value
+   (0.8750001) without hiding a real divergence (0.875 vs 1.08). null when
+   either size is missing, which S3 treats as missing evidence, never a pass. */
+const ratioToParent = (sample) => {
+  const ratio = parseFloat(sample?.fontSize) / parseFloat(sample?.parentFontSize);
+  return Number.isFinite(ratio) ? Math.round(ratio * 1000) / 1000 : null;
+};
 
 export function normalizeSheets(sheets) {
   return [...new Set(sheets.map((href) => {
@@ -69,8 +77,24 @@ export function evaluateContract(raw) {
       const label = `for OS ${colorScheme} at ${viewport}`;
       const prose = atWidth.filter((r) => r.typography?.bodyProse);
       parity(1, prose, (r) => tuple(r.typography.bodyProse, ['fontFamily', 'fontSize', 'lineHeight', 'color']), `bodyProse ${label}`);
+      /* S3 asserts the RATIO of inline code to the text it sits in, not one
+         absolute pixel size. Inline code is em-sized on purpose: card and
+         step copy sit a step below body text, and a capsule pinned to the
+         body ramp rendered 8% larger than the words around it there while
+         still "passing" an absolute-size check. This is a refinement, not a
+         relaxation. The tuple is as strict as before in every other field,
+         and it still fails if any context - paragraph, list, table cell,
+         card, step, heading - renders inline code at a different fraction
+         of its parent, or if a sample arrives without the evidence to
+         compute that fraction. */
       const inline = atWidth.flatMap((r) => (r.code?.inlines ?? []).map((code) => ({ ...r, sample: code })));
-      parity(3, inline, (r) => tuple(r.sample, ['fontFamily', 'fontSize', 'backgroundColor', 'color', 'borderRadius', 'padding']), `inline code ${label}`);
+      for (const r of inline) {
+        if (ratioToParent(r.sample) === null) fail(3, r, `inline code ${r.sample.path ?? ''} size evidence`, tuple(r.sample, ['fontSize', 'parentFontSize']), 'computed fontSize and parentFontSize');
+      }
+      parity(3, inline.filter((r) => ratioToParent(r.sample) !== null), (r) => ({
+        ...tuple(r.sample, ['fontFamily', 'backgroundColor', 'color', 'borderRadius', 'padding']),
+        ratioToParent: ratioToParent(r.sample),
+      }), `inline code ${label}`);
     }
   }
   parity(0, good, (r) => r.themeInitScriptHash, 'theme-init script hash');

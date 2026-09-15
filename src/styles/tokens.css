@@ -176,16 +176,6 @@
     --code-text: light-dark(var(--p-ink-900), var(--p-neutral-200));
     --code-muted: light-dark(var(--p-neutral-600), var(--p-neutral-400));
     --code-border: var(--color-border);
-    /* Code sits on the body ramp. One unitless scale drives both sizes:
-       fenced code takes that fraction of --text-base, and inline code in a
-       heading or keycap takes the same fraction of the text it sits in, so
-       a paragraph, its capsules and the block beneath them read as one size
-       family. The value is tuned by screenshot, not arithmetic: Public Sans
-       and IBM Plex Mono share an x-height (0.517em / 0.516em), so equal sizes
-       would match heights exactly, but the mono's 0.6em advance and the
-       capsule chrome make it read larger than it measures. 0.925 is where the
-       mono lowercase sits level with the body line to the eye; 0.875 reads
-       short, 0.95 starts to dominate the line. */
     /* Code sizing follows the HashiCorp developer docs, measured from
        developer.hashicorp.com: inline code at 0.875 of its surrounding text,
        code blocks at full body size. A block is a focal element and reads at
@@ -196,16 +186,18 @@
        19px, so copying 1.0 straight across rendered 19px code where the
        reference shows 16px. The block scale is set so the absolute size lands
        near the reference (0.9 x 19px = 17.1px) while still reading a step
-       above the inline capsule. */
+       above the inline capsule.
+
+       The two sizes have different bases on purpose. A fenced block is sized
+       from the body ramp: it is a block of its own and every block on the
+       site is one size. An inline capsule is sized in em, from the text it
+       sits in: the invariant is the RATIO, not the pixel. Card and step copy
+       sit a step below body text, and a capsule pinned to the body ramp was
+       8% larger than the words around it there. S3 asserts the ratio. */
     --code-inline-scale: 0.875;
     --code-block-scale: 0.9;
     --code-font-size: calc(var(--text-base) * var(--code-block-scale));
     --code-inline-size: calc(var(--code-inline-scale) * 1em);
-    /* Absolute twin of the above. Inline code is pinned to the body ramp
-       rather than to its parent so S3 holds - one computed inline size on
-       every route - which an em value cannot guarantee inside card or step
-       copy that sits a step smaller. */
-    --code-inline-font-size: calc(var(--text-base) * var(--code-inline-scale));
     /* Tight as the glyphs: an inline span must not open up the line it sits in.
        HashiCorp sets inline line-height equal to the inline font size. */
     --leading-code-inline: 1;

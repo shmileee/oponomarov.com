@@ -260,12 +260,17 @@ const PROBE = () => {
     };
   };
 
-  /* S1 and S3 compare like with like. A lede is deliberately larger than body
-     copy and inline code is em-relative, so sampling a `.prose--lede`
-     paragraph on one route and a body paragraph on another reports a
-     divergence the design intends. Headings are excluded for the same reason. */
+  /* S1 compares like with like. A lede is deliberately larger than body
+     copy, so sampling a `.prose--lede` paragraph on one route and a body
+     paragraph on another reports a divergence the design intends. Headings
+     are excluded for the same reason. */
   const IN_LARGER_CONTEXT = '.prose--lede, .hero, .hero-copy, header, h1, h2, h3, h4, h5, h6, figcaption, .article-dek';
   const isBodyContext = (el) => el && !el.closest(IN_LARGER_CONTEXT);
+  /* S3 needs no such scoping. Inline code is em-relative, and the contract
+     compares its RATIO to the text it sits in rather than its absolute size,
+     so a capsule in a heading, a card, a step or a lede is a legitimate
+     sample: the ratio is the invariant, and it must hold in every context. */
+  const isInlineCode = (el) => !el.closest('pre');
 
   const paragraphSelectors = ['.prose p', '[data-article-body] p', 'article .prose p'];
   const bodyProseSelector = paragraphSelectors.find((sel) =>
@@ -281,8 +286,7 @@ const PROBE = () => {
 
   // 4. Code fingerprints.
   const pre = prose?.el?.querySelector('pre') || document.querySelector('pre');
-  const inlineCode = Array.from((prose?.el || document).querySelectorAll('code'))
-    .find((c) => !c.closest('pre') && isBodyContext(c));
+  const inlineCode = Array.from((prose?.el || document).querySelectorAll('code')).find(isInlineCode);
   const codeFp = (el) => {
     if (!el) return null;
     const cs = getComputedStyle(el);
@@ -305,6 +309,17 @@ const PROBE = () => {
       clientWidth: el.clientWidth,
       scrolls: el.scrollWidth > el.clientWidth + 1,
     };
+  };
+  /* An inline span is em-sized, so its size only means something next to
+     the size of the text it sits in. Record the parent's computed size and
+     the ratio; S3 asserts the ratio. Three decimals absorb float noise in
+     the computed value without hiding a real divergence (0.875 vs 1.08). */
+  const inlineFp = (el) => {
+    const fp = codeFp(el);
+    if (!fp) return null;
+    const parentFontSize = el.parentElement ? getComputedStyle(el.parentElement).fontSize : null;
+    const ratio = parentFontSize ? Math.round((parseFloat(fp.fontSize) / parseFloat(parentFontSize)) * 1000) / 1000 : null;
+    return { ...fp, parentFontSize, ratio };
   };
 
   // 5. Tables.
@@ -391,13 +406,13 @@ const PROBE = () => {
       h2: fingerprint(h2),
     },
     code: {
-      pre: codeFp(pre), inline: codeFp(inlineCode),
+      pre: codeFp(pre), inline: inlineFp(inlineCode),
       pres: [...document.querySelectorAll('pre')].map((el, index) => ({ sel: describe(el), path: ancestry(el), index, ...codeFp(el) })),
-      /* Same body-context scoping as the single fingerprint above: the
-         contract compares across this array, so an em-relative span inside a
-         heading or lede would read as a divergence the design intends. */
-      inlines: [...document.querySelectorAll('code')].filter((el) => !el.closest('pre') && isBodyContext(el))
-        .map((el, index) => ({ sel: describe(el), path: ancestry(el), index, ...codeFp(el) })),
+      /* Every non-fenced span on the page, headings and cards included: the
+         contract compares the ratio to the parent across this array, and
+         that ratio is the one thing every context must agree on. */
+      inlines: [...document.querySelectorAll('code')].filter(isInlineCode)
+        .map((el, index) => ({ sel: describe(el), path: ancestry(el), index, ...inlineFp(el) })),
     },
     tables,
     sheets,
