@@ -1107,11 +1107,11 @@
     background: var(--code-toolbar-bg);
   }
 
+  /* Typography is the table-header label from prose.css; only the filled
+     band's symmetric padding belongs to this primitive. Restating weight and
+     tracking here gave one manual two different column headings. */
   .shortcut-reference th {
     padding-block: var(--space-4);
-    color: var(--color-text-subtle);
-    font-weight: var(--weight-semibold);
-    letter-spacing: 0.1em;
   }
 
   .shortcut-reference th + th {
