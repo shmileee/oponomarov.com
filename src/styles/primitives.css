@@ -408,6 +408,13 @@
     max-inline-size: 100%;
   }
 
+  /* A card's path link is a standalone target, not a word in a sentence, so
+     it keeps the tap floor that running-text path links (below) give up. */
+  .surface-grid > * > a.path-token,
+  .surface-grid > * > a:has(> .path-token) {
+    min-block-size: var(--tap-size);
+  }
+
   /* Ordered process: <li><span aria-hidden>01</span><div><strong/><p/></div></li>.
      Replaces install-flow. Native ol semantics are retained; only the marker
      is drawn by the span. */
@@ -424,11 +431,14 @@
     list-style: none;
   }
 
+  /* The published row: a 2.5rem marker column, a 1.25rem gutter, and every
+     cell centred on the row's vertical middle, so the marker, the title and
+     the copy share one axis whether the copy runs one line or three. */
   .steps > li {
     display: grid;
-    grid-template-columns: var(--tap-size) minmax(0, 1fr);
+    grid-template-columns: var(--space-10) minmax(0, 1fr);
     align-items: center;
-    gap: var(--space-4);
+    gap: var(--space-5);
     min-inline-size: 0;
     margin: 0;
     padding: var(--space-4) var(--space-5);
@@ -438,11 +448,13 @@
     border-block-start: var(--border-width) solid var(--color-border);
   }
 
+  /* The marker is decoration (aria-hidden), never a control, so it keeps the
+     published 2.5rem disc rather than the 44px tap floor. */
   .steps > li > span {
     display: grid;
     place-items: center;
-    inline-size: var(--tap-size);
-    block-size: var(--tap-size);
+    inline-size: var(--space-10);
+    block-size: var(--space-10);
     border: var(--border-width) solid var(--color-accent-border);
     border-radius: var(--radius-pill);
     background: var(--color-accent-surface);
@@ -453,11 +465,13 @@
     line-height: 1;
   }
 
+  /* No flow margin: the prose layer spaces a list item's children, which
+     would drop the copy 12px below the marker it is centred against. */
   .steps > li > div {
     display: grid;
-    gap: var(--space-1);
+    gap: var(--space-2);
     min-inline-size: 0;
-    align-self: center;
+    margin: 0;
   }
 
   /* The published step: a 1rem display title beside 15px muted copy. */
@@ -478,10 +492,14 @@
     line-height: var(--leading-body);
   }
 
+  /* From 48rem the title and the copy sit side by side in the published
+     0.7 : 1.3 split, centred on each other: a one-line title beside a
+     three-line paragraph reads as one row, not as a title hanging from the
+     paragraph's first baseline. */
   @media (width >= 48rem) {
     .steps > li > div {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-      align-items: baseline;
+      grid-template-columns: minmax(11rem, 0.7fr) minmax(0, 1.3fr);
+      align-items: center;
       gap: var(--space-6);
     }
   }
@@ -593,13 +611,22 @@
   }
 
   /* Native details disclosure with a summary as its first child. Replaces
-     download-disclosure. */
+     download-disclosure. The prose layer gives every details a 1.25rem
+     inline padding; here the box carries a 1rem content gutter instead and
+     the summary is pulled back over it, so the whole row is the hover and
+     focus target and a 100%-wide child (a code frame, a table region) sits
+     an equal 1rem from both borders. */
   .disclosure {
     min-inline-size: 0;
     margin-block: var(--prose-flow);
+    padding: 0 var(--space-4);
     border: var(--border-width) solid var(--color-accent-border);
     border-radius: var(--radius-lg);
     background: var(--color-surface);
+  }
+
+  .disclosure[open] {
+    padding-block-end: var(--space-4);
   }
 
   .disclosure > summary {
@@ -607,8 +634,9 @@
     align-items: center;
     gap: var(--space-3);
     min-block-size: var(--tap-size);
+    margin-inline: calc(-1 * var(--space-4));
     padding: var(--space-3) var(--space-4);
-    border-radius: var(--radius-lg);
+    border-radius: calc(var(--radius-lg) - var(--border-width));
     color: var(--color-text);
     font-family: var(--font-mono);
     font-size: var(--text-sm);
@@ -637,7 +665,8 @@
     content: "\2212";
   }
 
-  .disclosure > summary:hover {
+  .disclosure > summary:hover,
+  .disclosure > summary:focus-visible {
     background: var(--color-accent-surface);
   }
 
@@ -648,16 +677,8 @@
     background: var(--color-accent-surface);
   }
 
-  .disclosure > summary ~ * {
-    margin-inline: var(--space-4);
-  }
-
   .disclosure > summary + * {
     margin-block-start: var(--space-4);
-  }
-
-  .disclosure > :last-child {
-    margin-block-end: var(--space-4);
   }
 
   /* Quick-context help. The hidden source section carries the trigger and
@@ -672,15 +693,18 @@
     display: none;
   }
 
+  /* The floating trigger sits in the viewport's bottom-right corner on the
+     same edge offset as the back-to-top control (components/shell.css) and
+     one tap size plus a gap above it, so the two stack as a pair and never
+     collide. The offset is the viewport's, not the page column's: a corner
+     control that tracked the measure drifted inward on wide screens. */
   .context-help-trigger {
     position: fixed;
     inset-block-end: calc(
-      var(--space-5) + var(--tap-size) + var(--space-3) + env(safe-area-inset-bottom)
+      max(clamp(var(--space-4), 3vw, var(--space-8)), env(safe-area-inset-bottom, 0)) +
+        var(--tap-size) + var(--space-3)
     );
-    inset-inline-end: max(
-      var(--space-gutter),
-      calc((100vw - var(--measure-page)) / 2 + var(--space-gutter))
-    );
+    inset-inline-end: max(clamp(var(--space-4), 3vw, var(--space-8)), env(safe-area-inset-right, 0));
     z-index: var(--z-back-to-top);
     display: grid;
     place-items: center;
@@ -1081,8 +1105,23 @@
     vertical-align: middle;
   }
 
+  /* Key columns: every cell before the action is a shortcut. A literal key
+     token never breaks inside itself, and from 48rem the whole cell stays on
+     one line so a prefix, its "then" and the command key read as one
+     gesture. Below that the cell may break between its parts, never inside
+     them; the engine's scroll region owns any overflow. */
   .shortcut-reference td:not(:last-child) {
     text-align: center;
+  }
+
+  .shortcut-reference td:not(:last-child) code {
+    white-space: nowrap;
+  }
+
+  @media (width >= 48rem) {
+    .shortcut-reference td:not(:last-child) {
+      white-space: nowrap;
+    }
   }
 
   .shortcut-reference td:last-child {
@@ -1165,14 +1204,16 @@
   /* Inline tokens                                                       */
   /* ------------------------------------------------------------------ */
 
-  /* Keyboard chord: native kbd keycaps with readable separators. Wraps
-     without clipping. */
+  /* Keyboard chord: native kbd keycaps with readable separators. A chord is
+     one unit and never breaks between its keys; in a table the scroll
+     region takes any overflow, so nothing clips. */
   .keys {
     display: inline-flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
     gap: var(--space-1);
     vertical-align: baseline;
+    white-space: nowrap;
   }
 
   .keys > span {
@@ -1213,13 +1254,12 @@
     overflow-wrap: anywhere;
   }
 
+  /* In running text the path link is an ordinary inline link. S7 exempts
+     inline prose links from the tap floor, and an inline-flex box with a
+     44px minimum inflated its line and pushed the surrounding copy out of
+     rhythm; card links keep the floor in the surface-grid rules above. */
   a.path-token,
   a:has(> .path-token) {
-    /* Reachable by thumb as well as readable: inline-flex keeps the token on
-       the text baseline while the minimum carries it to the 44px floor. */
-    display: inline-flex;
-    align-items: center;
-    min-block-size: var(--tap-size);
     text-decoration: none;
   }
 

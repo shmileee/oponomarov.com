@@ -17,7 +17,25 @@ export function createManifestIndex(manifestNode) {
   };
 }
 
+/* Expressive Code's hashed assets: `/_astro/ec.<hash>.css` and `.js`. */
+const CODE_ASSET = /\/ec\.[^/]+\.(?:css|js)$/;
+
+const isCodeAsset = (value) => {
+  if (!value) return false;
+  try {
+    return CODE_ASSET.test(new URL(value, window.location.origin).pathname);
+  } catch {
+    return false;
+  }
+};
+
 function normalizeProse(prose, responseUrl) {
+  /* The code assets travel inside the prose (see adoptCodeAssets). Drop them
+     from the injected copy: the <link> would load the sheet a second time and
+     the <script> would sit in the DOM inert. */
+  for (const asset of prose.querySelectorAll('link[rel="stylesheet"][href], script[src]')) {
+    if (isCodeAsset(asset.getAttribute("href") ?? asset.getAttribute("src"))) asset.remove();
+  }
   for (const element of prose.querySelectorAll("[src], [poster], [href]")) {
     for (const attribute of ["src", "poster", "href"]) {
       const value = element.getAttribute(attribute);
@@ -33,21 +51,27 @@ function normalizeProse(prose, responseUrl) {
   return prose.innerHTML;
 }
 
-/* Expressive Code ships a hashed stylesheet that is only linked on pages that
-   actually contain a fenced code block. The homepage has none, so a study
-   pulled into the reader would render its code unstyled. Adopt the sheet from
-   the fetched document the first time one is seen. */
-function adoptCodeStylesheet(source) {
-  for (const link of source.querySelectorAll('link[rel="stylesheet"]')) {
-    const href = link.getAttribute("href");
-    if (!href || !/\/ec\.[^/]+\.css$/.test(href)) continue;
-    const absolute = new URL(href, window.location.origin).href;
-    if (document.querySelector(`link[rel="stylesheet"][href="${CSS.escape(href)}"]`)) return;
-    const adopted = document.createElement("link");
-    adopted.rel = "stylesheet";
-    adopted.href = absolute;
+/* Expressive Code emits its hashed stylesheet and its script module inline,
+   beside the first code block of any page that has one. The homepage has
+   none, so a study pulled into the reader arrives carrying both. Injected via
+   innerHTML, the <link> loads but the <script> never runs (scripts inserted
+   that way are inert by spec), which left the copy button with no click
+   handler: nothing reached the clipboard and no "Copied!" tooltip was ever
+   created. Adopt both into <head> the first time each is seen. The module
+   binds every copy button already in the document and watches <body> for new
+   ones, so it does not matter whether it lands before or after the study. */
+function adoptCodeAssets(source) {
+  for (const node of source.querySelectorAll('link[rel="stylesheet"][href], script[src]')) {
+    const attribute = node.localName === "link" ? "href" : "src";
+    const value = node.getAttribute(attribute);
+    if (!isCodeAsset(value)) continue;
+    const absolute = new URL(value, window.location.origin).href;
+    if (document.head.querySelector(`${node.localName}[${attribute}="${CSS.escape(absolute)}"]`)) continue;
+    const adopted = document.createElement(node.localName);
+    if (node.localName === "link") adopted.rel = "stylesheet";
+    else adopted.type = "module";
+    adopted.setAttribute(attribute, absolute);
     document.head.append(adopted);
-    return;
   }
 }
 
@@ -64,7 +88,7 @@ export function createContentLoader() {
          for any page not yet on the shared shell. */
       const prose = source.querySelector("[data-article-body]") ?? source.querySelector(".prose");
       if (!prose) throw new Error("Study response has no canonical prose");
-      adoptCodeStylesheet(source);
+      adoptCodeAssets(source);
       return normalizeProse(prose, response.url);
     });
     cache.set(entry.id, pending);

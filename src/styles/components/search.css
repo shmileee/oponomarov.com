@@ -26,9 +26,14 @@
     transition: color var(--dur-fast) var(--ease-out);
   }
 
+  /* The glyph is a filled path with no paint of its own: an unfilled SVG
+     paints black, which vanishes on the dark bar. currentcolor keys it to the
+     button's text colour so it themes with the chrome. The published icon
+     is 1rem; the 44px hit area comes from the button, never the glyph. */
   .op-global-search-open svg {
-    inline-size: 1em;
-    block-size: 1em;
+    inline-size: var(--space-4);
+    block-size: var(--space-4);
+    fill: currentcolor;
   }
 
   .op-global-search-open:focus-visible {
@@ -38,7 +43,6 @@
 
   @media (hover: hover) and (pointer: fine) {
     .op-global-search-open:hover {
-      border-color: var(--color-accent-border);
       color: var(--color-text);
     }
   }
@@ -116,9 +120,14 @@
     outline-offset: var(--focus-offset);
   }
 
+  /* The close glyph is two stroked lines, not a filled shape. */
   .global-search-header svg {
     inline-size: 1em;
     block-size: 1em;
+    fill: none;
+    stroke: currentcolor;
+    stroke-linecap: round;
+    stroke-width: 1.5;
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -144,6 +153,7 @@
   .global-search-field__icon svg {
     inline-size: 1em;
     block-size: 1em;
+    fill: currentcolor;
   }
 
   .global-search-field input {

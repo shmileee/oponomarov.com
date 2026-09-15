@@ -176,8 +176,19 @@
     --code-text: light-dark(var(--p-ink-900), var(--p-neutral-200));
     --code-muted: light-dark(var(--p-neutral-600), var(--p-neutral-400));
     --code-border: var(--color-border);
-    --code-font-size: var(--text-sm);
-    --code-inline-size: 0.875em;
+    /* Code sits on the body ramp. One unitless scale drives both sizes:
+       fenced code takes that fraction of --text-base, and inline code in a
+       heading or keycap takes the same fraction of the text it sits in, so
+       a paragraph, its capsules and the block beneath them read as one size
+       family. The value is tuned by screenshot, not arithmetic: Public Sans
+       and IBM Plex Mono share an x-height (0.517em / 0.516em), so equal sizes
+       would match heights exactly, but the mono's 0.6em advance and the
+       capsule chrome make it read larger than it measures. 0.925 is where the
+       mono lowercase sits level with the body line to the eye; 0.875 reads
+       short, 0.95 starts to dominate the line. */
+    --code-scale: 0.925;
+    --code-font-size: calc(var(--text-base) * var(--code-scale));
+    --code-inline-size: calc(var(--code-scale) * 1em);
     --code-inline-bg: var(--color-accent-surface);
     --code-inline-text: light-dark(var(--p-blue-700), var(--p-blue-300));
 
