@@ -194,8 +194,12 @@
 
   .comments-region h2 {
     margin-block-end: var(--space-8);
-    /* The same derived section size as a prose h2. */
+    /* The same derived section size, weight and tracking as a prose h2. The
+       region sits outside `.prose`, so nothing there reaches it and base's
+       bold h2 won: "Comments" rendered heavier than the section headings
+       directly above it. */
     font-size: calc((var(--text-xl) + var(--text-2xl)) / 2);
+    font-weight: calc((var(--weight-semibold) + var(--weight-bold)) / 2);
     letter-spacing: -0.02em;
   }
 
