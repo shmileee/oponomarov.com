@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { evaluateContract, normalizeSheets } from './contract.mjs';
+import { CONTRAST_KINDS, contrastRatio, evaluateContract, isLargeText, normalizeSheets } from './contract.mjs';
 import { deriveRoutes } from './measure.mjs';
 
 function fixture() {
@@ -12,6 +12,12 @@ function fixture() {
   const fp = { fontFamily: 'sans-serif', fontSize: '16px', lineHeight: '24px', color: 'rgb(0, 0, 0)', backgroundColor: 'rgb(240, 240, 240)', borderRadius: '4px', padding: '2px' };
   /* Inline code carries the size of the text it sits in: S3 compares the ratio. */
   const inlineFp = { ...fp, fontSize: '14px', parentFontSize: '16px', ratio: 0.875 };
+  /* S14: one sample of every required kind, ink and painted background as
+     opaque hex. #595959 on white is 7:1; the probe's own ratio is ignored. */
+  const contrast = CONTRAST_KINDS.map((kind) => ({
+    kind, sel: kind, path: `main ${kind}`, color: 'oklch(0.44 0 0)', fontSize: 16, fontWeight: 400,
+    foreground: '#595959', background: '#ffffff', ratio: 7, reason: null,
+  }));
   const results = routes.flatMap((route) => ['light', 'dark'].flatMap((colorScheme) => viewports.map((vp) => ({
     route, colorScheme, viewport: vp.name, viewportWidth: vp.width,
     theme: colorScheme, bodyBackgroundColor: colorScheme === 'light' ? 'white' : 'black',
@@ -20,6 +26,7 @@ function fixture() {
     measure: { mainContainers: [{ sel: 'main', width: Math.min(vp.width, 1140) }], proseContainers: [] },
     code: { pres: [], inlines: [{ ...inlineFp }] }, escapers: [], tables: [], smallTargets: [],
     selfScrollers: [], inlineStyleAttrs: [], imagesMissingDims: [], imagesMissingAlt: [],
+    contrast: contrast.map((sample) => ({ ...sample })),
     h1Count: 1, status: 200, sheets: ['/_astro/main.ABCdef12.css'],
   }))));
   return {
@@ -33,9 +40,10 @@ function fixture() {
   };
 }
 
-test('complete valid evidence passes all 14 scenarios', () => {
-  assert.deepEqual(evaluateContract(fixture()).map((s) => s.failures.length), Array(14).fill(0));
+test('complete valid evidence passes all 15 scenarios', () => {
+  assert.deepEqual(evaluateContract(fixture()).map((s) => s.failures.length), Array(15).fill(0));
 });
+
 
 const violations = [
   (raw) => { raw.results[0].theme = 'dark'; },
@@ -52,6 +60,8 @@ const violations = [
   (raw) => { raw.zoomResults[0].bodyFontSize = '16px'; },
   (raw) => { raw.interactions.readerDialogs[0].preBackgrounds = ['rgba(0, 0, 0, 0)']; },
   (raw) => { raw.interactions.skipLinks[0].insideViewport = false; },
+  /* #949494 on white is 3.03:1: fine for large text, a failure for body text. */
+  (raw) => { raw.results[0].contrast[0].foreground = '#949494'; },
 ];
 for (const [id, mutate] of violations.entries()) {
   test(`S${id} rejects its violation with route/viewport and actual/expected evidence`, () => {
@@ -78,6 +88,56 @@ test('S3 compares inline code as a ratio of its parent, never as an absolute siz
   const blind = fixture();
   delete blind.results[0].code.inlines[0].parentFontSize;
   assert.ok(evaluateContract(blind)[3].failures.length > 0);
+});
+
+test('S14 measures WCAG contrast from the painted pair and applies the large-text floor', () => {
+  assert.equal(contrastRatio('#000000', '#ffffff'), 21);
+  assert.equal(contrastRatio('#767676', '#ffffff'), 4.54);
+  assert.equal(contrastRatio('#ffffff', '#0b1220'), contrastRatio('#0b1220', '#ffffff'));
+  assert.equal(contrastRatio('oklch(1 0 0)', '#ffffff'), null);
+  assert.equal(isLargeText(24, 400), true);
+  assert.equal(isLargeText(18.66, 700), true);
+  assert.equal(isLargeText(18.66, 600), false);
+  assert.equal(isLargeText(23.9, 400), false);
+  /* 3.03:1 passes at 24px, and at 18.66px bold, but not at 18.66px semibold. */
+  const large = fixture();
+  large.results[0].contrast.push({ ...large.results[0].contrast[0], foreground: '#949494', fontSize: 24, fontWeight: 400 });
+  large.results[0].contrast.push({ ...large.results[0].contrast[0], foreground: '#949494', fontSize: 18.66, fontWeight: 700 });
+  assert.equal(evaluateContract(large)[14].failures.length, 0);
+  large.results[0].contrast.push({ ...large.results[0].contrast[0], foreground: '#949494', fontSize: 18.66, fontWeight: 600 });
+  assert.equal(evaluateContract(large)[14].failures.length, 1);
+  /* 4.5:1 exactly is the floor, not a failure; the probe's own ratio field is not trusted. */
+  const edge = fixture();
+  edge.results[0].contrast.push({ ...edge.results[0].contrast[0], foreground: '#767676', ratio: 1 });
+  assert.equal(evaluateContract(edge)[14].failures.length, 0);
+  edge.results[0].contrast.push({ ...edge.results[0].contrast[0], foreground: '#777777', ratio: 21 });
+  assert.equal(evaluateContract(edge)[14].failures.length, 1);
+});
+
+test('S14 never passes on missing evidence: unresolved backgrounds, absent kinds, absent probes', () => {
+  const unresolved = fixture();
+  unresolved.results[0].contrast.push({ kind: 'prose-link', path: 'main a', color: 'oklch(0.5 0.2 262)', fontSize: 16, fontWeight: 400, foreground: null, background: null, ratio: null, reason: 'background-image "url(...)" on div.card' });
+  const [failure] = evaluateContract(unresolved)[14].failures;
+  assert.ok(failure && /background/.test(failure.field) && /background-image/.test(failure.actual));
+  /* A background the probe resolved but could not name as opaque hex is not evidence either. */
+  const malformed = fixture();
+  malformed.results[0].contrast.push({ ...malformed.results[0].contrast[0], background: 'rgba(0, 0, 0, 0)' });
+  assert.ok(evaluateContract(malformed)[14].failures.length > 0);
+  /* Every required kind must be sampled in both themes; a theme that lost its
+     navigation samples fails even when every recorded sample is fine. */
+  const missingKind = fixture();
+  for (const r of missingKind.results.filter((r) => r.colorScheme === 'dark')) r.contrast = r.contrast.filter((s) => s.kind !== 'nav-active');
+  const failures = evaluateContract(missingKind)[14].failures;
+  assert.equal(failures.length, 1);
+  assert.equal(failures[0].colorScheme, 'dark');
+  assert.ok(/nav-active/.test(failures[0].field));
+  /* An optional kind (the TOC label) is checked when present but not required. */
+  const optional = fixture();
+  optional.results[0].contrast.push({ ...optional.results[0].contrast[0], kind: 'toc-label', foreground: '#949494' });
+  assert.equal(evaluateContract(optional)[14].failures.length, 1);
+  const absent = fixture();
+  delete absent.results[0].contrast;
+  assert.ok(evaluateContract(absent)[14].failures.some((f) => f.field === 'contrast probe'));
 });
 
 test('only the specified target, clipping and inline-style exceptions pass', () => {

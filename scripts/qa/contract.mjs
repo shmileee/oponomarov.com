@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** S0–S13 are contracts, not baseline snapshots. Missing evidence is never green. */
+/** S0–S14 are contracts, not baseline snapshots. Missing evidence is never green. */
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -8,6 +8,7 @@ const NAMES = [
   'THEME PARITY', 'PROSE TYPOGRAPHY', 'PROSE MEASURE', 'INLINE CODE',
   'CODE WRAP', 'NO ESCAPERS', 'TABLE A11Y', 'TAP TARGETS',
   'STYLESHEET PARITY', 'NO CLIPPING', 'HYGIENE', 'ZOOM', 'READER DIALOG', 'SKIP LINK',
+  'CONTRAST',
 ];
 const THEMES = ['light', 'dark'];
 const key = (r) => JSON.stringify([r.route, r.viewport, r.colorScheme]);
@@ -20,6 +21,34 @@ const ratioToParent = (sample) => {
   const ratio = parseFloat(sample?.fontSize) / parseFloat(sample?.parentFontSize);
   return Number.isFinite(ratio) ? Math.round(ratio * 1000) / 1000 : null;
 };
+
+/* S14. The probe records each text sample's ink and the background painted
+   behind it as opaque sRGB hex, both already composited (a translucent ink
+   over its surface, a translucent surface over the layers beneath). The
+   contract recomputes WCAG 2.x relative luminance and contrast from those
+   two hexes rather than trusting the probe's own ratio, so the threshold
+   logic is testable here without a browser. */
+export const CONTRAST_KINDS = ['body-prose', 'prose-link', 'nav-link', 'nav-active', 'toc-link', 'article-meta', 'inline-code'];
+const hexChannels = (hex) => {
+  const m = /^#([0-9a-f]{6})$/i.exec(hex ?? '');
+  return m ? [0, 2, 4].map((i) => parseInt(m[1].slice(i, i + 2), 16) / 255) : null;
+};
+const relativeLuminance = (channels) => {
+  const [r, g, b] = channels.map((c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+/** WCAG contrast ratio of two opaque #rrggbb colours, or null when either is not one. */
+export function contrastRatio(foreground, background) {
+  const fg = hexChannels(foreground), bg = hexChannels(background);
+  if (!fg || !bg) return null;
+  const [hi, lo] = [relativeLuminance(fg), relativeLuminance(bg)].sort((x, y) => y - x);
+  return Math.round(((hi + 0.05) / (lo + 0.05)) * 100) / 100;
+}
+/** WCAG large text: 18pt (24px), or 14pt (18.66px) at bold weight. Both must be finite numbers. */
+export function isLargeText(fontSize, fontWeight) {
+  return fontSize >= 24 || (fontSize >= 18.66 && fontWeight >= 700);
+}
+export const contrastFloor = (fontSize, fontWeight) => (isLargeText(fontSize, fontWeight) ? 3 : 4.5);
 
 export function normalizeSheets(sheets) {
   return [...new Set(sheets.map((href) => {
@@ -209,6 +238,42 @@ export function evaluateContract(raw) {
     for (const route of routes) {
       const skip = skipLinks.find((r) => r.route === route && r.colorScheme === colorScheme);
       if (!skip || skip.error || skip.matchesSkipLink !== true || skip.insideViewport !== true) fail(13, skip ?? { route, viewport: 'phone-375', colorScheme }, 'first Tab from body', skip ?? 'missing', 'focused .skip-link with bounding rect inside viewport');
+    }
+  }
+
+  /* S14 - every sampled ink clears WCAG AA against what is actually painted
+     behind it, in both themes. A sample the probe could not resolve (no
+     opaque layer before the root, an image, an unknown colour syntax, an
+     ancestor with opacity) fails: the ratio is unknown, not acceptable. A
+     theme with no sample of one of the required kinds fails too, so a probe
+     that stopped finding navigation links could never pass by omission. */
+  for (const r of good) {
+    if (!Array.isArray(r.contrast)) { fail(14, r, 'contrast probe', r.contrast, 'array of text samples'); continue; }
+    for (const sample of r.contrast) {
+      const where = `${sample.kind} ${sample.path ?? sample.sel ?? ''}`.trim();
+      if (!sample.foreground || !sample.background) {
+        fail(14, r, `${where} background`, sample.reason ?? '(missing)', 'painted background resolved to an opaque colour');
+        continue;
+      }
+      const ratio = contrastRatio(sample.foreground, sample.background);
+      const size = Number(sample.fontSize), weight = Number(sample.fontWeight);
+      if (ratio === null || !Number.isFinite(size) || !Number.isFinite(weight)) {
+        fail(14, r, `${where} evidence`, tuple(sample, ['foreground', 'background', 'fontSize', 'fontWeight']), 'opaque #rrggbb ink and background with numeric font size and weight');
+        continue;
+      }
+      const floor = contrastFloor(size, weight);
+      if (ratio < floor) {
+        fail(14, r, `${where} contrast`, { ratio: `${ratio}:1`, ...tuple(sample, ['color', 'foreground', 'background', 'fontSize', 'fontWeight']) },
+          `>= ${floor}:1 (WCAG AA, ${floor === 3 ? 'large' : 'body'} text)`);
+      }
+    }
+  }
+  for (const colorScheme of THEMES) {
+    const themed = good.filter((r) => r.colorScheme === colorScheme);
+    for (const kind of CONTRAST_KINDS) {
+      if (!themed.some((r) => (r.contrast ?? []).some((sample) => sample.kind === kind))) {
+        fail(14, { route: '(run)', viewport: '(matrix)', colorScheme }, `${kind} samples`, 'none', `at least one ${kind} sample in the ${colorScheme} theme`);
+      }
     }
   }
   return scenarios;

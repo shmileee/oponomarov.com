@@ -154,6 +154,20 @@ if (/>THE (?:SITUATION|INTERESTING PART)<|>WHAT (?:I DID|IT CHANGED)</.test(port
 if (!portfolioHomeHtml.includes("/assets/js/study-index.js")) throw new Error("The portfolio home page does not load the case-study index and reader");
 const readerScript = readFileSync(join(dist, "assets/js/reader.js"), "utf8");
 if (!readerScript.includes('new CustomEvent("oponomarov:content-updated"') || !readerScript.includes("closeButton.focus()")) throw new Error("The portfolio reader is missing dynamic enhancement or initial focus management");
+/* Every article route carries a table of contents, case studies included: the
+   rule is a property of ArticleShell, not of whichever routes remembered to
+   pass headings. Counted per route rather than over the joined HTML, so one
+   study keeping its TOC cannot cover for the rest losing theirs. The Dotfiles
+   landing page is the one deliberate exemption and is asserted separately. */
+for (const name of canonicalCaseStudies) {
+  const html = readFileSync(join(dist, "case-studies", name, "index.html"), "utf8");
+  if (!html.includes("toc__list")) throw new Error(`Case study ${name} renders no table of contents`);
+}
+for (const slug of expectedDocRoutes) {
+  const html = readFileSync(join(dist, "dotfiles", slug, "index.html"), "utf8");
+  if (!html.includes("toc__list")) throw new Error(`Dotfiles manual ${slug} renders no table of contents`);
+}
+if (docsHomeHtml.includes("toc__list")) throw new Error("The Dotfiles landing page is a hub, not an article, and must not render a table of contents");
 /* Inline code, the layer architecture and the single stylesheet set are design
    invariants; scripts/verify-design.mjs owns them against the real output. */
 if (/\{%|\{\{\s*['"]\//.test(blogHtml)) throw new Error("Unconverted Jekyll syntax remains in blog output");

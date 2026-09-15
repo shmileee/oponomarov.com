@@ -476,8 +476,8 @@ Markdown nested in block HTML; do not indent it into a code block.
 | `secondary-link` | Secondary action link | dotfiles | `<a class="secondary-link" href="https://github.com/shmileee/dotfiles">Browse the repository</a>` |
 | `surface-grid` | Intrinsically responsive cards, links, or `dl` entries | dotfiles | `<div class="surface-grid"><article><h3>OpenCode</h3><p>Managed configuration.</p></article></div>` |
 | `steps` | Numbered process; retain native `ol` semantics | dotfiles | `<ol class="steps"><li><span aria-hidden="true">01</span><div><strong>Bootstrap</strong><p>Validate the platform.</p></div></li></ol>` |
-| `tabs` | Group enhanced with generated tab controls | dotfiles | `<div class="tabs"><section class="tab" data-tab-label="macOS"><h3>macOS</h3><p>Install the command-line tools.</p></section></div>` |
-| `tab` | Labelled content panel inside tabs | dotfiles | `<section class="tab" data-tab-label="Ubuntu"><h3>Ubuntu</h3><p>Use an ARM64 machine.</p></section>` |
+| `tabs` | Group enhanced with generated tab controls | dotfiles | `<div class="tabs"><section class="tab" data-tab-label="macOS"><span>macOS</span><p>Install the command-line tools.</p></section></div>` |
+| `tab` | Labelled content panel inside tabs; an opening `span` repeats the label as the panel eyebrow (never a heading) | dotfiles | `<section class="tab" data-tab-label="Ubuntu"><span>Ubuntu</span><p>Use an ARM64 machine.</p></section>` |
 | `disclosure` | Native collapsible details | dotfiles | `<details class="disclosure"><summary>Review the installer first</summary><p>Inspect the downloaded script.</p></details>` |
 | `setup-reference` | Reference grouping around ordinary Markdown tables; not the scrolling region | dotfiles | `<div class="setup-reference">` before the Markdown table, then `</div>` |
 | `keys` | Key chord with native keycaps | dotfiles | `<span class="keys"><kbd>Ctrl</kbd><span>+</span><kbd>A</kbd></span>` |

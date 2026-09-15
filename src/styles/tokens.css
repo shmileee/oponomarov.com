@@ -51,6 +51,17 @@
     --p-blue-400: oklch(0.713740 0.143381 254.6240); /* #60a5fa */
     --p-blue-400-a35: oklch(0.713740 0.143381 254.6240 / 0.35); /* rgba(96, 165, 250, 0.35) */
     --p-blue-600: oklch(0.546150 0.215208 262.8809); /* #2563eb */
+    /* Not a conversion: blue-600 lowered by 0.02 L, chroma and hue unchanged.
+       #2563eb is the published light-mode link ink and reads at 4.14:1 on
+       --color-accent-surface (the tinted aside card, the pressed scope
+       button, the TOC entry in view below 80rem), under the 4.5:1 AA floor
+       for body-size text. 0.526 is the lowest lightness drop that clears
+       4.5:1 on every light surface a link sits on (4.53:1 on the tinted
+       card, 5.19:1 on the page, 5.66:1 on white, as the browser paints
+       them); 0.528 already fails the card. S14 asserts it. The alpha
+       variants below stay the exact blue-600 values:
+       they tint surfaces and borders, not text. */
+    --p-blue-620: oklch(0.526000 0.215208 262.8809); /* #1f5ce4 */
     --p-blue-600-a14: oklch(0.546150 0.215208 262.8809 / 0.14); /* rgba(37, 99, 235, 0.14) */
     --p-blue-600-a10: oklch(0.546150 0.215208 262.8809 / 0.1); /* rgba(37, 99, 235, 0.1) */
     --p-blue-600-a40: oklch(0.546150 0.215208 262.8809 / 0.4); /* rgba(37, 99, 235, 0.4) */
@@ -74,7 +85,7 @@
     --color-border: light-dark(var(--p-ink-900-a16), var(--p-white-a16));
     --color-border-subtle: light-dark(var(--p-ink-900-a09), var(--p-white-a08));
     --color-accent: light-dark(var(--p-blue-700), var(--p-blue-400));
-    --color-accent-soft: light-dark(var(--p-blue-600), var(--p-blue-300));
+    --color-accent-soft: light-dark(var(--p-blue-620), var(--p-blue-300));
     --color-accent-surface: light-dark(var(--p-blue-600-a10), var(--p-blue-600-a14));
     --color-accent-border: light-dark(var(--p-blue-600-a40), var(--p-blue-400-a35));
     --color-focus: light-dark(var(--p-blue-700), var(--p-blue-300));

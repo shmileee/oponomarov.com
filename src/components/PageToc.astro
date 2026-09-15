@@ -13,7 +13,15 @@ const count = `${entries.length} ${entries.length === 1 ? "section" : "sections"
 
 {/* One markup serves both renderings (components/navigation.css): a bordered
     disclosure card below 80rem, a sticky rail beside the article above it,
-    where layout.css places it and the count and marker are hidden. */}
+    where layout.css places it and the count and marker are hidden.
+
+    Who gets one: every route rendered through ArticleShell — docs pages, blog
+    posts and case studies — passes its own headings here, so presence and
+    behaviour are a property of the shell rather than of each route. The one
+    deliberate exemption is /dotfiles/, a hub landing page that is not an
+    article: it indexes the docs set rather than being read top to bottom, has
+    no reading progress and no adjacent navigation, and so renders no shell and
+    no rail. .omo/qa/toc-audit.mjs encodes that exemption as an expectation. */}
 {entries.length > 0 && (
   <aside class="toc" data-pagefind-ignore>
     <details class="toc__details" data-page-toc open>
@@ -42,14 +50,40 @@ const count = `${entries.length} ${entries.length === 1 ? "section" : "sections"
     const { signal } = controller;
     const desktop = matchMedia("(width >= 80rem)");
     document.querySelectorAll<HTMLDetailsElement>("[data-page-toc]").forEach((details) => {
-      const syncDisclosure = () => { details.open = desktop.matches; };
+      const summary = details.querySelector("summary");
+      const syncDisclosure = () => {
+        details.open = desktop.matches;
+        /* In the rail the label is a caption, not a control: it must not be
+           able to collapse the only copy of the navigation, and it is not a
+           tab stop. Below the rail it is the disclosure's button again. */
+        if (summary) summary.tabIndex = desktop.matches ? -1 : 0;
+      };
       syncDisclosure();
       desktop.addEventListener("change", syncDisclosure, { signal });
+      /* Enter and Space on a <summary> both dispatch click, so one listener
+         covers pointer and keyboard. */
+      summary?.addEventListener("click", (event) => {
+        if (desktop.matches) event.preventDefault();
+      }, { signal });
       const links = [...details.querySelectorAll<HTMLAnchorElement>("[data-toc-link]")];
       const targets = links.flatMap((link) => {
         const heading = document.getElementById(decodeURIComponent(link.hash.slice(1)));
         return heading ? [{ link, heading }] : [];
       });
+      /* The rail is bounded to the viewport and scrolls inside itself, so on a
+         long page the entry in view can sit outside the visible band. Bring it
+         back only when the active entry changes, so a reader who has scrolled
+         the rail by hand is not fought on every frame. */
+      const nav = details.querySelector<HTMLElement>(".toc__nav");
+      let revealed: HTMLAnchorElement | undefined;
+      const reveal = (link: HTMLAnchorElement) => {
+        if (!nav || nav.scrollHeight <= nav.clientHeight + 1) return;
+        const top = link.offsetTop - nav.offsetTop;
+        const margin = link.offsetHeight;
+        const atLeast = top + link.offsetHeight + margin - nav.clientHeight;
+        const atMost = Math.max(top - margin, 0);
+        nav.scrollTop = Math.min(Math.max(nav.scrollTop, atLeast), atMost);
+      };
       const updateActive = () => {
         const headerBottom = document.querySelector("[data-site-header]")?.getBoundingClientRect().bottom ?? 0;
         const atEnd = scrollY + innerHeight >= document.documentElement.scrollHeight - 2;
@@ -58,6 +92,8 @@ const count = `${entries.length} ${entries.length === 1 ? "section" : "sections"
           if (link === active?.link) link.setAttribute("aria-current", "location");
           else link.removeAttribute("aria-current");
         });
+        if (active?.link && active.link !== revealed) reveal(active.link);
+        revealed = active?.link;
       };
       let scheduled = false;
       addEventListener("scroll", () => {

@@ -46,7 +46,17 @@ samples within each OS preference; routes without prose or code have no sample
 for that invariant. `firstParagraph` retains a generic fallback for diagnostics;
 `bodyProse` only uses the explicit prose selectors and is the S1 input.
 
-The checker prints all 14 PASS/FAIL lines with actual/expected evidence for each
+S14 (CONTRAST) samples body prose, prose links, navigation links, the active
+navigation item, TOC links, article meta and inline code on every route,
+viewport and OS preference. The probe converts Chrome's computed colours
+exactly (it reports `oklch()`, not `rgb()`), composites the ink over every
+translucent background layer down to the first opaque one (a gradient counts
+each stop and the worst pair is kept), and records both as opaque hex. The
+contract recomputes WCAG contrast from that pair: 4.5:1 under 24px (or under
+18.66px bold), 3:1 at or above. A background the probe could not resolve
+fails, and each of the seven kinds must appear in both themes.
+
+The checker prints all 15 PASS/FAIL lines with actual/expected evidence for each
 failure and exits 1 if any scenario fails. The report is informational, supports
 the old baseline schema, and exits normally even when contracts are red. The
 current design is intentionally red; these assertions must not be relaxed to

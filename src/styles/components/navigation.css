@@ -17,9 +17,21 @@
   /* the end of this block strip the card back to the published rail:     */
   /* a hairline on the left, a small mono label, quiet entries, and an    */
   /* accent marker on the entry in view.                                  */
+  /* ...................................................................  */
+  /* Reference measured from the HashiCorp Terraform docs sidecar         */
+  /* (.omo/qa/hashicorp-toc.mjs, 1600x900): sticky under a 128px header   */
+  /* at a 160px offset, bounded to calc(100vh - 184px), scrolling in an   */
+  /* inner container, 14px/20px entries, muted grey going to full-        */
+  /* strength text on the entry in view. The two deliberate departures    */
+  /* are 44px rows instead of their 28px (the accessibility floor this    */
+  /* design system holds itself to) and wrapping instead of their         */
+  /* nowrap/ellipsis, so no heading is ever unreadable.                   */
   /* ------------------------------------------------------------------ */
 
   .toc {
+    /* The sticky offset is named once, in layout.css, as --toc-rail-inset;
+       every height bound below is built from it so the two cannot drift. */
+
     /* The card never outgrows the reading measure it introduces. */
     max-inline-size: var(--measure-prose);
     border: var(--border-width) solid var(--color-border);
@@ -186,6 +198,11 @@
      and makes it sticky; here the card becomes the published rail. */
   @media (width >= 80rem) {
     .toc {
+      /* The sticky box is bounded to the screen it sits on, so the rail can
+         never run off the bottom however many headings a page has. The label
+         row plus the list below it add up to exactly this, which leaves the
+         same 24px of air at the foot of the screen the reference rail does. */
+      max-block-size: calc(100dvh - var(--toc-rail-inset) - var(--space-6));
       border: 0;
       border-radius: 0;
       background: none;
@@ -200,12 +217,13 @@
       margin-block-start: var(--space-section);
     }
 
-    /* Label and list share one hairline, and the list takes whatever height
-       the viewport leaves below the sticky offset. */
+    /* Label and list share one hairline. The details box carries no height
+       bound of its own: it is overflow:visible, so a bound here only shrank
+       the box while the list kept drawing past it. The bound belongs on the
+       scroller below. */
     .toc__details {
       display: flex;
       flex-direction: column;
-      max-block-size: calc(100dvh - (var(--header-height) + var(--space-6)) - var(--space-12));
       border-inline-start: var(--border-width) solid var(--color-border);
     }
 
@@ -239,24 +257,37 @@
       display: none;
     }
 
+    /* The list, not the card, is what scrolls, so the viewport bound lives
+       here — on the one element with overflow-y:auto. It was on .toc__details
+       instead, which clipped nothing and scrolled nothing: /dotfiles/opencode/
+       ran its last entry 9px below a 1280x800 viewport and four entries below
+       a 1280x600 one, with no way to reach them.
+       The bound is the same arithmetic the reference rail uses (sticky offset,
+       then 24px of air at the foot of the screen), less the label row that
+       sits above the list inside the same sticky box. */
     .toc__nav {
       min-block-size: 0;
-      max-block-size: none;
+      max-block-size: calc(100dvh - var(--toc-rail-inset) - var(--tap-size) - var(--space-6));
       padding: 0 0 var(--space-2);
       border-block-start: 0;
       scrollbar-width: thin;
+      scrollbar-color: var(--color-border) transparent;
     }
 
+    /* Two heading levels, told apart by tone first and indent second: a
+       12px step is enough to read as nesting when the parent entry is also
+       the brighter of the two, and it keeps long labels off a narrow ledge. */
     .toc__list a {
       position: relative;
       padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
       border-radius: 0;
-      color: var(--color-text-subtle);
+      color: var(--color-text-muted);
       font-size: var(--text-xs);
     }
 
     .toc__item--nested a {
       padding-inline-start: calc(var(--space-4) + var(--space-3));
+      color: var(--color-text-subtle);
     }
 
     .toc__list a:hover {
@@ -265,16 +296,22 @@
     }
 
     .toc__list a[aria-current="location"] {
-      background: none;
+      background: var(--color-accent-surface);
       color: var(--color-text);
+      /* The entry in view keeps the weight of its neighbours. Going semibold
+         here re-wrapped a two-line label as you scrolled, so the list moved
+         under the pointer; the marker and the tone say it instead, which is
+         what the reference rail does too. */
+      font-weight: var(--weight-normal);
     }
 
-    /* The marker sits over the hairline: one border width outside the
-       entry, one inside. */
+    /* The marker is flush inside the entry rather than straddling the
+       hairline: the list is a scroll container, so anything drawn outside its
+       inline-start content edge is unreachable overflow and gets clipped. */
     .toc__list a[aria-current="location"]::before {
       content: "";
       position: absolute;
-      inset: 0 auto 0 calc(-1 * var(--border-width));
+      inset: 0 auto 0 0;
       inline-size: calc(2 * var(--border-width));
       background: var(--color-accent);
     }

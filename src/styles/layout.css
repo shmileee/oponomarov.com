@@ -130,9 +130,22 @@
       [content-end wide-end full-end];
   }
 
+  /* The rail's sticky offset, named once. components/navigation.css bounds the
+     scrolling list to exactly the space this offset leaves, so the two can
+     never drift apart. Declared outside the media query so the bound is never
+     built from an undefined custom property (which would compute to `none` and
+     silently restore an unbounded rail). */
+  .toc {
+    --toc-rail-inset: calc(var(--header-height) + var(--space-6));
+  }
+
   @media (width >= 80rem) {
-    /* Reading column plus rail: any content grid that carries a TOC (the
-       article shell, and the docs landing page which renders its own). */
+    /* Reading column plus rail: any content grid that carries a TOC. Every
+       article route does — manuals, notes and case studies all render one
+       through ArticleShell. The Dotfiles landing page (/dotfiles/) is the one
+       deliberate exemption: it is an overview with no sections of its own to
+       navigate, so it keeps the single reading column and this rule does not
+       match it. */
     .content-grid:has(> .toc) {
       grid-template-columns:
         [full-start] minmax(var(--space-gutter), 1fr)
@@ -145,10 +158,14 @@
 
     /* The rail runs beside the first two rows — header and body in the
        article shell, body and adjacent navigation on the landing page — and
-       sticks below the site header while they scroll past. */
+       sticks below the site header while they scroll past. Its width is the
+       fixed --toc-width at every width above the breakpoint: the reference
+       rail (HashiCorp's docs sidecar) is likewise a constant 312px from 1280
+       to 2560px, because a table of contents is a list of short labels, not a
+       reading column, and widening it only pushes it away from the text. */
     .content-grid:has(> .toc) > .toc {
       position: sticky;
-      inset-block-start: calc(var(--header-height) + var(--space-6));
+      inset-block-start: var(--toc-rail-inset);
       grid-column: toc;
       grid-row: 1 / span 2;
       align-self: start;

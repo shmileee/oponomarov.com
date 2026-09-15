@@ -77,8 +77,12 @@
   }
 
   /* Introductory copy. The published lede ran at the body step (19px on a
-     desktop, 17px on a phone) on a 42rem measure with its paragraphs set
-     solid, not on the larger dek step the prose modifier would give it. */
+     desktop, 17px on a phone) on a 42rem measure, not on the larger dek step
+     the prose modifier would give it. The published site also set its two
+     paragraphs solid (`.hero-copy p { margin: 0 }`); that is not carried
+     over. The block is a prose fragment, so its paragraphs sit on the one
+     prose flow like every other pair on the site: two paragraphs with no
+     gap between them read as one paragraph with a hard break in it. */
   .hero-copy {
     max-inline-size: calc(var(--measure-prose) - var(--space-16));
     margin-block: var(--space-8) 0;
@@ -89,13 +93,8 @@
   }
 
   .hero-copy > p {
-    margin: 0;
     font-size: var(--text-base);
     line-height: var(--leading-body);
-  }
-
-  .hero-copy > p + p {
-    margin-block-start: 0;
   }
 
   .hero-copy strong {
@@ -247,13 +246,16 @@
      it. Replaces principle-grid, home-overview, doc-card-grid and setup-paths.
      One column on a phone, two from 40rem; a set of exactly three cards sits
      in one row from 48rem (the published documentation cards), otherwise an
-     odd last card spans the full row instead of orphaning. */
+     odd last card spans the full row instead of orphaning.
+     No block margin of its own: the prose flow spaces it (block-start only,
+     as every prose sibling). The grid body does not collapse margins, so a
+     block-end margin here added itself to the next heading's flow and the
+     grid closed on 122px where every other block closed on 90. */
   .surface-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-3);
     min-inline-size: 0;
-    margin-block: var(--space-6) var(--space-8);
     padding: 0;
   }
 
@@ -417,13 +419,14 @@
 
   /* Ordered process: <li><span aria-hidden>01</span><div><strong/><p/></div></li>.
      Replaces install-flow. Native ol semantics are retained; only the marker
-     is drawn by the span. */
+     is drawn by the span. Rhythm comes from the prose flow: an own margin
+     here outranked the heading rule (later layer) and put a flow's worth of
+     air under a heading that gives every other list none. */
   .steps {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: 0;
     min-inline-size: 0;
-    margin-block: var(--prose-flow);
     padding: 0;
     border: var(--border-width) solid var(--color-border);
     border-radius: var(--radius-lg);
@@ -505,12 +508,11 @@
   }
 
   /* Reference-table grouping. The engine wraps every nested table in its own
-     labelled scroll region, so this is rhythm and containment only, never a
-     column-width override. */
+     labelled scroll region, so this is containment only, never a
+     column-width override; the prose flow owns its rhythm. */
   .setup-reference {
     display: flow-root;
     min-inline-size: 0;
-    margin-block: var(--prose-flow);
   }
 
   .setup-reference > :first-child {
@@ -527,12 +529,12 @@
 
   /* Tabs. Authors write .tabs > .tab[data-tab-label] sections; the engine
      inserts [role="tablist"] with [role="tab"] buttons and toggles hidden on
-     the panels. Without JavaScript the sections stack and stay readable. */
+     the panels. Without JavaScript the sections stack and stay readable.
+     Rhythm comes from the prose flow; see .steps. */
   .tabs {
     display: grid;
     gap: var(--space-4);
     min-inline-size: 0;
-    margin-block: var(--prose-flow);
   }
 
   .tabs:has(> [role="tablist"]) {
@@ -595,7 +597,14 @@
     display: none;
   }
 
-  .tab > :is(h2, h3, h4):first-child {
+  /* Panel eyebrow: the first span in a tab, the same treatment as the card
+     eyebrow above. It repeats the tab label at the top of the panel so the
+     stacked, script-less rendering still says which panel is which. It is
+     a label, not a heading: authored as <h3> it entered the document
+     outline and the table of contents at 13px mono, so headings inside a
+     panel now render as headings and only a span takes this treatment. */
+  .tab > span:first-child {
+    display: block;
     margin-block: 0 var(--space-3);
     color: var(--color-accent);
     font-family: var(--font-mono);
@@ -615,10 +624,9 @@
      inline padding; here the box carries a 1rem content gutter instead and
      the summary is pulled back over it, so the whole row is the hover and
      focus target and a 100%-wide child (a code frame, a table region) sits
-     an equal 1rem from both borders. */
+     an equal 1rem from both borders. Rhythm comes from the prose flow. */
   .disclosure {
     min-inline-size: 0;
-    margin-block: var(--prose-flow);
     padding: 0 var(--space-4);
     border: var(--border-width) solid var(--color-accent-border);
     border-radius: var(--radius-lg);
@@ -908,12 +916,11 @@
   /* ------------------------------------------------------------------ */
 
   /* Labelled search plus scope buttons; state is aria-pressed, never an
-     authored class. */
+     authored class. Rhythm comes from the prose flow. */
   .shortcut-filter {
     display: grid;
     gap: var(--space-3);
     min-inline-size: 0;
-    margin-block: var(--prose-flow) var(--space-8);
   }
 
   /* The published label tracked at 0.08em, half the label token. */
@@ -1046,7 +1053,6 @@
   }
 
   .shortcut-filter-empty {
-    margin-block: var(--prose-flow);
     padding: var(--space-8);
     border: var(--border-width) dashed var(--color-border);
     border-radius: var(--radius-md);
@@ -1129,14 +1135,14 @@
     text-wrap: pretty;
   }
 
-  /* Prefix chord summary: label, keys and release instruction in one row. */
+  /* Prefix chord summary: label, keys and release instruction in one row.
+     Rhythm comes from the prose flow. */
   .shortcut-prefix-summary {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: var(--space-2) var(--space-3);
     min-inline-size: 0;
-    margin-block: var(--prose-flow);
     padding: var(--space-3) var(--space-4);
     border: var(--border-width) solid var(--color-accent-border);
     border-inline-start-width: var(--focus-width);
@@ -1498,9 +1504,11 @@
   /* Blog article media                                                  */
   /* ------------------------------------------------------------------ */
 
+  /* Rhythm comes from the prose flow's figure rule, the same as the
+     portfolio exhibits: an own 40px margin here gave blog figures a
+     different pitch from every other figure on the site. */
   .media-figure {
     min-inline-size: 0;
-    margin-block: var(--space-10);
     margin-inline: auto;
   }
 

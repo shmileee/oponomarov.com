@@ -166,7 +166,9 @@
   /* Case-study bodies number their sections: a two-digit counter leads the
      heading and a hairline fills the rest of the line. The portfolio app is
      the only surface that renders these, so the counter keys off the app
-     attribute the shell already emits rather than a third prose modifier. */
+     attribute the shell already emits rather than a third prose modifier.
+     The heading keeps the section heading's own leading: a second value
+     here rendered `.prose h2` at two line-heights for one size. */
   [data-app="portfolio"] .article .prose[data-article-body] {
     counter-reset: prose-section;
   }
@@ -178,7 +180,6 @@
     padding-block-end: 0;
     border-block-end: 0;
     counter-increment: prose-section;
-    line-height: var(--leading-snug);
     letter-spacing: -0.01em;
   }
 
@@ -416,9 +417,14 @@
   /* without a single `!important`.                                        */
   /* ------------------------------------------------------------------ */
 
+  /* The wrapper takes the surrounding text size, not Expressive Code's UI
+     size (0.9rem): the flow above is em-based, so a 14.4px wrapper sat 18px
+     under a paragraph where every other block sits 24. Nothing inside reads
+     from it: the title, the copy control and the <pre> are all sized below. */
   .prose .expressive-code {
     inline-size: 100%;
     min-inline-size: 0;
+    font-size: inherit;
   }
 
   .prose .expressive-code .frame {

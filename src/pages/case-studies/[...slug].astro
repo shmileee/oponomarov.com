@@ -1,6 +1,7 @@
 ---
 import { getCollection, render } from "astro:content";
 import ArticleShell from "../../components/ArticleShell.astro";
+import PageToc from "../../components/PageToc.astro";
 import SiteLayout from "../../components/SiteLayout.astro";
 import { caseStudyCatalog } from "../../lib/catalog";
 
@@ -24,7 +25,10 @@ export async function getStaticPaths() {
 }
 
 const { entry, study, previous, next, previousStudy, nextStudy, redirect } = Astro.props;
-const { Content } = await render(study);
+/* A case study is a sectioned document like a manual or a note, so it takes the
+   same table of contents they do: the rule is "every article rendered through
+   ArticleShell gets one", not "whichever routes happened to pass headings". */
+const { Content, headings } = await render(study);
 const target = `/case-studies/${entry.folder}/`;
 ---
 
@@ -73,6 +77,7 @@ const target = `/case-studies/${entry.folder}/`;
       )}
     </Fragment>
     <div slot="topics" class="topic-list" aria-label="Topics">{study.data.topics.map((topic: string) => <span>{topic}</span>)}</div>
+    <PageToc slot="toc" headings={headings} />
     <Content />
     <Fragment slot="footer">
       {/* The published adjacent cards stack kicker, case number and title on
