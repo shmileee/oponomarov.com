@@ -147,6 +147,7 @@ async function startServer(rootDir) {
 }
 
 /** Runs in the browser. Returns the full measurement record for one page. */
+// allow: SIZE_OK — Playwright serializes PROBE into the browser, so its DOM helpers must remain in this closure.
 const PROBE = () => {
   const vw = window.innerWidth;
   const docEl = document.documentElement;
@@ -579,9 +580,29 @@ const PROBE = () => {
     return { content, wide, full, rail, children, tables };
   })();
 
+  // 11. Typographic parity samples (S16-S20). Rendered elements only: a closed
+  //     <dialog> (context-help, global search) has computed styles but no box,
+  //     and its heading/keycap are component chrome, not article content.
+  const typeSample = (el) => { const cs = getComputedStyle(el); return {
+    sel: describe(el), path: ancestry(el), text: (el.textContent || '').trim().slice(0, 30),
+    fontFamily: cs.fontFamily, fontSize: cs.fontSize, fontWeight: cs.fontWeight, lineHeight: cs.lineHeight,
+    letterSpacing: cs.letterSpacing, textTransform: cs.textTransform, textAlign: cs.textAlign }; };
+  const rendered = (selector) => [...document.querySelectorAll(selector)].filter(isRendered);
+  const parity = {
+    proseH2: rendered('.prose h2').map(typeSample),
+    commentsH2: rendered('.comments-region h2').map(typeSample),
+    th: rendered('th').map(typeSample),
+    /* Every direct prose paragraph except the lede step, which is larger by
+       design (docs section 4). Unlike S1 this does NOT exclude `header`: the
+       one paragraph this scenario exists to catch sits inside one
+       (src/pages/blog/index.astro:34). */
+    proseParagraphs: rendered('.prose > p').filter((el) => !el.closest('.prose--lede')).map(typeSample),
+  };
+
   return {
     viewportWidth: vw,
     articleGrid,
+    parity,
     theme: docEl.dataset.theme ?? null,
     bodyBackgroundColor: getComputedStyle(document.body).backgroundColor,
     bodyFontSize: getComputedStyle(document.body).fontSize,
@@ -614,6 +635,10 @@ const PROBE = () => {
          that ratio is the one thing every context must agree on. */
       inlines: [...document.querySelectorAll('code')].filter(isInlineCode)
         .map((el, index) => ({ sel: describe(el), path: ancestry(el), index, ...inlineFp(el) })),
+      /* Keycaps are em-relative like inline code (docs section 4 line 291).
+         `.global-search-field kbd` is dialog chrome outside the content model,
+         so it is deliberately not in this set. */
+      kbds: rendered('.prose kbd').map((el, index) => ({ sel: describe(el), path: ancestry(el), index, ...inlineFp(el) })),
     },
     tables,
     sheets,

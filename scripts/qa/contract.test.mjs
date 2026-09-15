@@ -12,6 +12,8 @@ function fixture() {
   const fp = { fontFamily: 'sans-serif', fontSize: '16px', lineHeight: '24px', color: 'rgb(0, 0, 0)', backgroundColor: 'rgb(240, 240, 240)', borderRadius: '4px', padding: '2px' };
   /* Inline code carries the size of the text it sits in: S3 compares the ratio. */
   const inlineFp = { ...fp, fontSize: '14px', parentFontSize: '16px', ratio: 0.875 };
+  const h2 = { fontFamily: 'sans-serif', fontSize: '36.1px', fontWeight: '650', lineHeight: '43.32px', letterSpacing: '-0.722px' };
+  const th = { fontFamily: 'sans-serif', fontSize: '13.4px', fontWeight: '500', letterSpacing: '2.144px', textTransform: 'uppercase', textAlign: 'left' };
   /* S14: one sample of every required kind, ink and painted background as
      opaque hex. #595959 on white is 7:1; the probe's own ratio is ignored. */
   const contrast = CONTRAST_KINDS.map((kind) => ({
@@ -37,7 +39,11 @@ function fixture() {
     themeInitScriptHash: '12345678', themeInitScriptCount: 1, bodyFontSize: '16px',
     typography: { bodyProse: { ...fp } },
     measure: { mainContainers: [{ sel: 'main', width: Math.min(vp.width, 1140) }], proseContainers: [] },
-    code: { pres: [], inlines: [{ ...inlineFp }] }, escapers: [], tables: [], smallTargets: [],
+    code: { pres: [], inlines: [{ ...inlineFp }], kbds: [{ ...inlineFp }] }, escapers: [], tables: [], smallTargets: [],
+    parity: {
+      proseH2: [{ ...h2 }], commentsH2: route === '/article/' ? [{ ...h2 }] : [], th: [{ ...th }],
+      proseParagraphs: [{ fontFamily: 'sans-serif', fontSize: '19px', lineHeight: '30.4px' }],
+    },
     selfScrollers: [], inlineStyleAttrs: [], imagesMissingDims: [], imagesMissingAlt: [],
     contrast: contrast.map((sample) => ({ ...sample })),
     articleGrid: route === '/article/' ? articleGrid(vp) : null,
@@ -54,8 +60,8 @@ function fixture() {
   };
 }
 
-test('complete valid evidence passes all 16 scenarios', () => {
-  assert.deepEqual(evaluateContract(fixture()).map((s) => s.failures.length), Array(16).fill(0));
+test('complete valid evidence passes all 21 scenarios', () => {
+  assert.deepEqual(evaluateContract(fixture()).map((s) => s.failures.length), Array(21).fill(0));
 });
 
 
@@ -78,6 +84,11 @@ const violations = [
   (raw) => { raw.results[0].contrast[0].foreground = '#949494'; },
   /* A wide track that collapsed onto the content track at desktop width. */
   (raw) => { const r = raw.results.find((r) => r.route === '/article/' && r.viewportWidth === 1440); r.articleGrid.wide = { ...r.articleGrid.content }; r.articleGrid.full = { ...r.articleGrid.content }; },
+  (raw) => { raw.results[0].parity.proseH2.push({ ...raw.results[0].parity.proseH2[0], letterSpacing: '-0.36px' }); },
+  (raw) => { raw.results.find((r) => r.route === '/article/').parity.commentsH2[0].fontWeight = '700'; },
+  (raw) => { raw.results[0].parity.th.push({ ...raw.results[0].parity.th[0], fontWeight: '600', letterSpacing: '1.3px' }); },
+  (raw) => { raw.results[0].code.kbds.push({ ...raw.results[0].code.kbds[0], fontSize: '13.4px', parentFontSize: '19px' }); },
+  (raw) => { raw.results[0].parity.proseParagraphs.push({ ...raw.results[0].parity.proseParagraphs[0], fontSize: '15.4px' }); },
 ];
 for (const [id, mutate] of violations.entries()) {
   test(`S${id} rejects its violation with route/viewport and actual/expected evidence`, () => {
@@ -104,6 +115,28 @@ test('S3 compares inline code as a ratio of its parent, never as an absolute siz
   const blind = fixture();
   delete blind.results[0].code.inlines[0].parentFontSize;
   assert.ok(evaluateContract(blind)[3].failures.length > 0);
+});
+
+test('S16-S20 never pass on missing evidence', async (t) => {
+  const cases = [
+    ['parity probe is absent', 10, (raw) => { delete raw.results[0].parity; }],
+    ['table headers are absent everywhere', 18, (raw) => { for (const r of raw.results) r.parity.th = []; }],
+    ['keycap parent size is absent', 19, (raw) => { delete raw.results[0].code.kbds[0].parentFontSize; }],
+    ['comments headings are absent everywhere', 17, (raw) => { for (const r of raw.results) r.parity.commentsH2 = []; }],
+    ['keycaps agree at 0.8 but inline code is 0.875', 19, (raw) => { for (const r of raw.results) r.code.kbds[0].fontSize = '12.8px'; }],
+    ['section headings are absent everywhere', 16, (raw) => { for (const r of raw.results) r.parity.proseH2 = []; }],
+    ['keycaps are absent everywhere', 19, (raw) => { for (const r of raw.results) r.code.kbds = []; }],
+    ['prose paragraphs are absent everywhere', 20, (raw) => { for (const r of raw.results) r.parity.proseParagraphs = []; }],
+  ];
+  for (const [condition, id, mutate] of cases) await t.test(`S${id} rejects evidence when ${condition}`, () => {
+    // Given: otherwise valid evidence with one missing or incompatible input.
+    const raw = fixture();
+    mutate(raw);
+    // When: the contract evaluates the run.
+    const scenario = evaluateContract(raw)[id];
+    // Then: the affected scenario cannot pass.
+    assert.ok(scenario?.failures.length > 0);
+  });
 });
 
 test('S14 measures WCAG contrast from the painted pair and applies the large-text floor', () => {

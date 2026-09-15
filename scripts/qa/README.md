@@ -66,7 +66,18 @@ child under the rail, every child inside the track it opted into, and any
 scrolling table region to have first taken the smaller of its parent's width
 and the wide track.
 
-The checker prints all 16 PASS/FAIL lines with actual/expected evidence for each
+S16–S20 check typographic parity within each viewport and OS preference:
+section headings (S16), comments headings against section headings (S17), table
+headers (S18), keycaps (S19), and direct prose paragraphs (S20). Samples are
+rendered-only, excluding closed-dialog chrome that has computed styles but no
+box. S19 samples `.prose kbd`, not all `kbd` elements (global-search keycaps are
+component chrome), and compares the computed size ratio to the parent and to
+inline code, never an absolute pixel size. S20 excludes `.prose--lede`, whose
+larger type is intentional, but deliberately does **not** exclude `header`:
+the blog archive intro is prose inside one. Empty sample sets fail their
+scenario; absent parity arrays or `code.kbds` also fail S10 hygiene.
+
+The checker prints all 21 PASS/FAIL lines with actual/expected evidence for each
 failure and exits 1 if any scenario fails. The report is informational, supports
 the old baseline schema, and exits normally even when contracts are red. The
 current design is intentionally red; these assertions must not be relaxed to

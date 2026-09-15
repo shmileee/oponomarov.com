@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-/** S0–S15 are contracts, not baseline snapshots. Missing evidence is never green. */
+/** S0–S20 are contracts, not baseline snapshots. Missing evidence is never green. */
+// allow: SIZE_OK — The scenario matrix shares run-wide evidence and failure reporting; keep S0–S15 intact for the additive RED proof.
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -9,6 +10,7 @@ const NAMES = [
   'CODE WRAP', 'NO ESCAPERS', 'TABLE A11Y', 'TAP TARGETS',
   'STYLESHEET PARITY', 'NO CLIPPING', 'HYGIENE', 'ZOOM', 'READER DIALOG', 'SKIP LINK',
   'CONTRAST', 'WIDE TRACKS',
+  'SECTION HEADINGS', 'COMMENTS HEADING', 'TABLE HEADERS', 'KEYCAPS', 'PROSE PARAGRAPHS',
 ];
 const THEMES = ['light', 'dark'];
 const key = (r) => JSON.stringify([r.route, r.viewport, r.colorScheme]);
@@ -124,6 +126,24 @@ export function evaluateContract(raw) {
         ...tuple(r.sample, ['fontFamily', 'backgroundColor', 'color', 'borderRadius', 'padding']),
         ratioToParent: ratioToParent(r.sample),
       }), `inline code ${label}`);
+      const samples = (pick) => atWidth.flatMap((r) => (pick(r) ?? []).map((sample) => ({ ...r, sample })));
+      const H2 = ['fontFamily', 'fontSize', 'fontWeight', 'lineHeight', 'letterSpacing'];
+      const h2s = samples((r) => r.parity?.proseH2);
+      parity(16, h2s, (r) => tuple(r.sample, H2), `prose h2 ${label}`);
+      const comments = samples((r) => r.parity?.commentsH2);
+      if (!comments.length || !h2s.length) fail(17, { route: '(run)', viewport, colorScheme }, 'comments/section heading samples', { comments: comments.length, sections: h2s.length }, 'at least one .comments-region h2 and one .prose h2');
+      for (const r of comments) {
+        const expected = tuple(h2s[0]?.sample ?? {}, H2), actual = tuple(r.sample, H2);
+        if (!h2s.length || JSON.stringify(actual) !== JSON.stringify(expected)) fail(17, r, `comments h2 vs section h2 (reference ${h2s[0]?.route})`, actual, expected);
+      }
+      parity(18, samples((r) => r.parity?.th), (r) => tuple(r.sample, ['fontFamily', 'fontSize', 'fontWeight', 'letterSpacing', 'textTransform', 'textAlign']), `th ${label}`);
+      const kbds = samples((r) => r.code?.kbds);
+      for (const r of kbds) if (ratioToParent(r.sample) === null) fail(19, r, `kbd ${r.sample.path ?? ''} size evidence`, tuple(r.sample, ['fontSize', 'parentFontSize']), 'computed fontSize and parentFontSize');
+      const kbdsRatio = kbds.filter((r) => ratioToParent(r.sample) !== null);
+      parity(19, kbdsRatio, (r) => ({ fontFamily: r.sample.fontFamily, ratioToParent: ratioToParent(r.sample) }), `kbd ${label}`);
+      const inlineRef = inline.find((r) => ratioToParent(r.sample) !== null);
+      if (kbdsRatio.length && (!inlineRef || ratioToParent(kbdsRatio[0].sample) !== ratioToParent(inlineRef.sample))) fail(19, kbdsRatio[0], 'kbd ratio vs inline code ratio', ratioToParent(kbdsRatio[0].sample), inlineRef ? ratioToParent(inlineRef.sample) : 'an inline code sample to compare with');
+      parity(20, samples((r) => r.parity?.proseParagraphs), (r) => tuple(r.sample, ['fontFamily', 'fontSize', 'lineHeight']), `prose > p ${label}`);
     }
   }
   parity(0, good, (r) => r.themeInitScriptHash, 'theme-init script hash');
@@ -190,7 +210,8 @@ export function evaluateContract(raw) {
     for (const field of ['escapers', 'selfScrollers', 'tables', 'sheets', 'smallTargets', 'inlineStyleAttrs', 'imagesMissingDims', 'imagesMissingAlt']) {
       if (!Array.isArray(r[field])) fail(10, r, `probe field ${field}`, r[field], 'array');
     }
-    if (!Array.isArray(r.code?.pres) || !Array.isArray(r.code?.inlines) || !Object.hasOwn(r.typography ?? {}, 'bodyProse')) {
+    for (const field of ['proseH2', 'commentsH2', 'th', 'proseParagraphs']) if (!Array.isArray(r.parity?.[field])) fail(10, r, `probe field parity.${field}`, r.parity?.[field], 'array');
+    if (!Array.isArray(r.code?.pres) || !Array.isArray(r.code?.inlines) || !Array.isArray(r.code?.kbds) || !Object.hasOwn(r.typography ?? {}, 'bodyProse')) {
       fail(10, r, 'code/prose probe', 'incomplete', 'all pre/inline samples and explicit bodyProse fingerprint or null');
     }
   }
