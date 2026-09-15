@@ -1269,14 +1269,16 @@
   .keys > span {
     color: var(--color-text-subtle);
     font-family: var(--font-mono);
-    font-size: var(--text-xs);
+    font-size: var(--code-inline-size);
     font-weight: var(--weight-medium);
     line-height: 1;
   }
 
-  /* The published keycap: a 28px-minimum cap at the small label step with a
-     one-pixel shelf under it. Like inline code, it reads the same size in a
-     paragraph and a table cell. */
+  /* The published keycap: a 28px-minimum cap with a one-pixel shelf under it.
+     Like inline code (docs section 4), it is em-relative — the same fraction
+     of whatever text it sits in — so a chord inside a table cell and a bare
+     <kbd> in the paragraph above it read as one component. A fixed step here
+     rendered those two at 13.4px and 16.625px on the same page. */
   .keys > kbd {
     display: inline-flex;
     align-items: center;
@@ -1289,7 +1291,7 @@
     color: var(--color-text);
     box-shadow: 0 var(--border-width) 0 var(--kbd-border);
     font-family: var(--font-mono);
-    font-size: var(--text-xs);
+    font-size: var(--code-inline-size);
     font-weight: var(--weight-normal);
     line-height: var(--leading-snug);
     text-align: center;
