@@ -541,7 +541,10 @@ Markdown nested in block HTML; do not indent it into a code block.
 
 Inline SVG retains meaningful `viewBox`, geometry, labels, and intrinsic media
 dimensions. Remove `style="max-width:720px"`, `style="--media-exhibit-width:
-840px"`, and similar layout overrides. Existing SVG references such as `--w5`,
+840px"`, and similar layout overrides. A `diagram-exhibit` SVG scales with its
+column down to a 36rem floor; below 40rem the exhibit pans sideways instead
+of shrinking a flowchart's labels to four pixels, and ContentInteractions
+makes it a named, focusable region only while it actually overflows. Existing SVG references such as `--w5`,
 `--w45`, `--w88`, `--ab4`, and `--bg` are legacy tokens, not additions to this
 system: migrate their color roles to semantic tokens. SVG geometry is not a
 new page measure. Do not add page-specific selectors to preserve those aliases.

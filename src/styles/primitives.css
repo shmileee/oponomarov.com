@@ -1509,6 +1509,29 @@
     margin-inline: auto;
   }
 
+  /* A diagram scales with its column down to a floor. Scaled into a 350px
+     phone column, an 800px flowchart set its labels at four pixels; the
+     floor keeps them legible and the exhibit pans sideways instead, the
+     one place on the site a horizontal scroll is the lesser evil.
+     ContentInteractions makes the exhibit a named, focusable region only
+     while it actually overflows, so a desktop reader gets no extra tab
+     stop. */
+  @media (width < 40rem) {
+    .diagram-exhibit:has(> svg) {
+      overflow-x: auto;
+      overscroll-behavior-inline: contain;
+    }
+
+    .diagram-exhibit > svg {
+      min-inline-size: 36rem;
+    }
+
+    .diagram-exhibit:focus-visible {
+      outline: var(--focus-width) solid var(--color-focus);
+      outline-offset: var(--focus-offset);
+    }
+  }
+
   .diagram-exhibit-label,
   .diagram-exhibit > p {
     margin: 0 0 var(--space-4);

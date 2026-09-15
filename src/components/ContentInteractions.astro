@@ -88,6 +88,31 @@
       });
     });
 
+    /* Diagram exhibits pan sideways below 40rem (primitives.css). A region
+       that scrolls must be reachable from the keyboard and announced, so
+       each exhibit becomes a named region exactly while it overflows, and
+       gives the tab stop back when the column is wide enough again. */
+    const diagrams = [...document.querySelectorAll<HTMLElement>(".diagram-exhibit:has(> svg)")];
+    const syncDiagramRegions = () => {
+      diagrams.forEach((exhibit) => {
+        const scrolls = exhibit.scrollWidth > exhibit.clientWidth + 1;
+        if (scrolls) {
+          const label = exhibit.querySelector(".diagram-exhibit-label, p")?.textContent?.replace(/\s+/g, " ").trim();
+          exhibit.tabIndex = 0;
+          exhibit.setAttribute("role", "region");
+          exhibit.setAttribute("aria-label", label || "Diagram");
+        } else {
+          exhibit.removeAttribute("tabindex");
+          exhibit.removeAttribute("role");
+          exhibit.removeAttribute("aria-label");
+        }
+      });
+    };
+    if (diagrams.length > 0) {
+      syncDiagramRegions();
+      addEventListener("resize", syncDiagramRegions, { signal });
+    }
+
     const filter = document.querySelector<HTMLElement>("[data-shortcut-filter]");
     const input = filter?.querySelector<HTMLInputElement>("[data-shortcut-query]");
     const sections = [...document.querySelectorAll<HTMLElement>("[data-shortcut-section]")];
