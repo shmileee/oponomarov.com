@@ -209,15 +209,23 @@
   }
 
   @media (width < 48rem) {
+    /* The row's own gaps close up: the nav's auto margin already takes the
+       slack wherever there is any, so these only bite when the bar is tight,
+       and the tool icons sit centred in 44px boxes with 14px of their own
+       air. That is what lets the 360px Android bar (brand 45, three labels
+       179, two tools 88, inside a 328px row) hold one line; it used to wrap
+       into a stray second row holding two icons. 320px still wraps. */
     .op-header__inner {
-      gap: var(--space-2);
+      gap: var(--space-1);
+    }
+
+    .op-header__tools {
+      gap: 0;
     }
 
     /* The three labels need daylight between them more than they need
        tracking: at 4px apart with 0.04em tracking they read as one word
-       ("PORTFOLIO NOTES DOTFILES"). The tracking goes and the gap doubles,
-       which nets out one pixel narrower, so the bar still holds one row
-       at 360px. */
+       ("PORTFOLIO NOTES DOTFILES"). The tracking goes and the gap doubles. */
     .op-app-nav {
       gap: var(--space-2);
     }
