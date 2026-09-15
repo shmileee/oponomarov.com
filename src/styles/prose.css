@@ -588,6 +588,19 @@
     inset-inline-end: var(--space-2);
   }
 
+  /* "Copied!" is a live region EC paints as a tooltip. Nothing reached it, so
+     it rendered in the browser UI font at body size - 19px of Arial-stack
+     sans sitting on a mono toolbar. It is a toolbar label, like the frame
+     title above it, and takes the same treatment. */
+  .prose .expressive-code .copy div[aria-live] {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    line-height: var(--leading-snug);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
   .prose .expressive-code .copy button {
     inline-size: var(--tap-size);
     block-size: var(--tap-size);

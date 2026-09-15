@@ -36,6 +36,12 @@ export default defineConfig({
       frames: {
         editorTabBarBackground: "var(--code-toolbar-bg)",
         terminalTitlebarBackground: "var(--code-toolbar-bg)",
+        /* The copy confirmation is a live region EC also paints. Left alone
+           it lands on the toolbar in EC's own green, a colour this palette
+           does not contain. The inline-code pairing is the site's code
+           accent and is already contrast-checked in both themes. */
+        tooltipSuccessBackground: "var(--color-accent-surface)",
+        tooltipSuccessForeground: "var(--code-inline-text)",
       },
     },
   })],
