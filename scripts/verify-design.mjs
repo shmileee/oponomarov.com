@@ -33,7 +33,7 @@ const pages = htmlFiles
 const named = ({ path }) => relative(dist, path);
 
 const LAYER_ORDER =
-  "@layer reset, tokens, base, expressive-code, layout, components, prose, primitives, utilities;";
+  "@layer reset, tokens, base, expressive-code, layout, components, prose, primitives, utilities, print;";
 const LAYER_NAMES = LAYER_ORDER.replace("@layer ", "").replace(";", "")
   .split(",").map((name) => name.trim());
 const BREAKPOINTS = ["40rem", "48rem", "64rem", "80rem", "96rem"];

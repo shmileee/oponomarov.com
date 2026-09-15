@@ -1,7 +1,7 @@
 /* The only CSS entry point. Order statement first, imports second, no rules.
    This statement must be byte-identical to the inline prelude in SiteLayout.astro
    (docs/design-system.md §2): first appearance establishes layer order. */
-@layer reset, tokens, base, expressive-code, layout, components, prose, primitives, utilities;
+@layer reset, tokens, base, expressive-code, layout, components, prose, primitives, utilities, print;
 
 @import "./reset.css";
 @import "./tokens.css";
@@ -16,3 +16,4 @@
 @import "./prose.css";
 @import "./primitives.css";
 @import "./utilities.css";
+@import "./print.css";

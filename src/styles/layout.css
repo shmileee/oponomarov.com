@@ -116,7 +116,7 @@
   /* minmax(0, 18rem): the grid algorithm hands free space to every track  */
   /* with room at once, so a flexible side beside a 46rem column took its  */
   /* share before the column reached its measure. Written as the           */
-  /* remainder, it can only ever hold what the column has already declined.*/
+  /* remainder, it only ever holds what the column has already declined.   */
   /* ------------------------------------------------------------------ */
 
   .article {

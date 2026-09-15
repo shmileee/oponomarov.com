@@ -113,6 +113,24 @@
       addEventListener("resize", syncDiagramRegions, { signal });
     }
 
+    /* Printing (print.css). Paper is light and shows everything: the
+       document theme goes light for the duration so Expressive Code's palette
+       follows the tokens, and every disclosure opens so no detail is left
+       folded on the page. Both are restored afterwards. */
+    let printTheme: string | undefined;
+    let printOpened: HTMLDetailsElement[] = [];
+    addEventListener("beforeprint", () => {
+      printTheme = document.documentElement.dataset.theme;
+      document.documentElement.dataset.theme = "light";
+      printOpened = [...document.querySelectorAll<HTMLDetailsElement>("details:not([open])")];
+      printOpened.forEach((details) => { details.open = true; });
+    }, { signal });
+    addEventListener("afterprint", () => {
+      if (printTheme) document.documentElement.dataset.theme = printTheme;
+      printOpened.forEach((details) => { details.open = false; });
+      printOpened = [];
+    }, { signal });
+
     /* Fenced code scrolls sideways instead of wrapping. A frame whose lines
        run past its edge is marked, and prose.css fades the last characters
        until the block is scrolled to its end, so the continuation is visible

@@ -264,6 +264,17 @@
     color-scheme: dark;
   }
 
+  /* Paper is light. The tokens resolve through the light branch under print
+     whatever theme the reader had chosen; ContentInteractions also switches
+     the document theme for the duration of printing so Expressive Code,
+     which keys its syntax palette on the attribute, follows. */
+  @media print {
+    :root,
+    [data-theme="dark"] {
+      color-scheme: light;
+    }
+  }
+
   /* Reduced motion collapses the motion tokens themselves, so every component
      that follows the contract (--dur-* with --ease-out) goes still without
      needing !important. 0.01ms rather than 0 keeps transitionend/animationend

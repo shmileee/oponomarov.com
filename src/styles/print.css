@@ -1,0 +1,131 @@
+/* Print — layer `print`, the last layer, so it wins over every screen rule
+   without !important. A case study is the page most likely to be printed or
+   saved as a PDF by the people it is written for; a manual comes second.
+   The page keeps its type and its content, and loses everything that only
+   works on a screen: the sticky chrome, the table of contents, the dialogs,
+   the adjacent-navigation cards, the comments, the filter controls.
+   Fenced code wraps here (there is no scrolling on paper) and no block is
+   split across a page where it can be helped. Colour: tokens.css forces the
+   light scheme under print, and ContentInteractions switches the document
+   theme to light for the duration of printing so Expressive Code follows. */
+@layer print {
+  @media print {
+    @page {
+      margin: 1.6cm;
+    }
+
+    /* The screen ramp is set for reading at arm's length on a backlit
+       display; on paper the same 19px body reads as large print. Every step
+       of the ramp carries a rem term, so one root size brings the whole
+       scale down to book size (body just under 17px, about 12.5pt). */
+    html {
+      font-size: 87.5%;
+    }
+
+    .skip-link,
+    .op-header,
+    .op-footer,
+    .back-to-top,
+    .toc,
+    .adjacent-nav,
+    .link-row,
+    .comments-region,
+    .reader,
+    .global-search-dialog,
+    .context-help,
+    .context-help-trigger,
+    [data-context-help-mount],
+    .page-source-actions,
+    .back-link,
+    .hero-actions,
+    .hero-cursor,
+    .topic-filters,
+    .filter-status,
+    .grid-toggle-row,
+    .expressive-code .copy {
+      display: none;
+    }
+
+    /* One column, the paper's width: the grid tracks and the reading
+       measure are screen decisions. */
+    .page,
+    .article,
+    .content-grid,
+    .prose.content-grid {
+      display: block;
+      max-inline-size: none;
+      padding: 0;
+    }
+
+    .prose.content-grid > *,
+    .prose:not(.content-grid),
+    .article-header,
+    .article .adjacent-nav,
+    .comments-region,
+    .toc {
+      max-inline-size: none;
+    }
+
+    .article-header {
+      padding-block-start: 0;
+    }
+
+    body {
+      color: var(--color-text);
+    }
+
+    /* Keep a heading with what follows it, and keep a block whole. */
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      break-after: avoid;
+    }
+
+    pre,
+    table,
+    figure,
+    aside,
+    .steps > li,
+    .surface-grid > *,
+    .case-card,
+    .contact-method {
+      break-inside: avoid;
+    }
+
+    /* Nothing scrolls on paper: long lines wrap, tables show every column
+       they can, and the overflow fade would only print as a grey smear. */
+    .prose .expressive-code .frame pre,
+    .prose pre:not(.expressive-code *),
+    .table-scroll,
+    .diagram-exhibit,
+    .media-frame-scroll {
+      overflow: visible;
+    }
+
+    .expressive-code .ec-line .code,
+    .prose pre:not(.expressive-code *) {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .prose .expressive-code .frame::after {
+      content: none;
+    }
+
+    .diagram-exhibit > svg {
+      min-inline-size: 0;
+    }
+
+    /* A printed link is only useful with its address; internal links keep
+       their text, code links keep their capsule. */
+    .prose a[href^="http"]:not(:has(> code))::after {
+      content: " (" attr(href) ")";
+      font-size: var(--code-inline-size);
+      color: var(--color-text-muted);
+      overflow-wrap: anywhere;
+    }
+  }
+}

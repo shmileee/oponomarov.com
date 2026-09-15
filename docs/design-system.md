@@ -38,7 +38,7 @@ below, not delegated to individual pages.
 The exact order string is:
 
 ```css
-@layer reset, tokens, base, expressive-code, layout, components, prose, primitives, utilities;
+@layer reset, tokens, base, expressive-code, layout, components, prose, primitives, utilities, print;
 ```
 
 Emit it twice, byte-identical:
@@ -79,6 +79,7 @@ imports only; each of the other 14 files wraps its rules in its named layer.
 | `prose.css` | `prose` | Shared prose, admonitions, EC frame adjustments, inline code, tables, native content elements |
 | `primitives.css` | `primitives` | Every selector in the content-primitive contract |
 | `utilities.css` | `utilities` | `sr-only` only |
+| `print.css` | `print` | `@media print` only: hides the screen chrome, dialogs and navigation, flattens the grids to one column, wraps code and keeps blocks whole; the last layer so it wins without `!important` |
 
 Expressive Code generates its own sheet inside `expressive-code`, above the
 reset/base layers and below our layout, component, and prose layers. It does
