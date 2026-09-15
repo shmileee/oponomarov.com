@@ -189,6 +189,22 @@
     margin: 0 0 var(--space-10);
   }
 
+  /* The dek mirrors the study page's (components/article.css): the same
+     lede paragraph under the title, then the body a section's air below.
+     With a dek the title gives up its own margin so the two sit at the
+     article header's pitch; an empty dek is hidden by the reader script. */
+  .reader-study > .reader-title:has(+ .reader-dek:not([hidden])) {
+    margin-block-end: var(--space-6);
+  }
+
+  .reader-study > .reader-dek {
+    margin: 0 0 var(--space-10);
+  }
+
+  .reader-study > .reader-dek[hidden] {
+    display: none;
+  }
+
   /* Prose composition: containment only; typography belongs to `.prose`. */
   .reader-prose {
     min-inline-size: 0;

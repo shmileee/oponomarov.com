@@ -32,11 +32,14 @@ const dateLabel = publishedTime && new Intl.DateTimeFormat("en-GB", {
 <main id="main-content" class="article content-grid" tabindex="-1">
   <header class="article-header">
     {backLink && <a class="back-link" href={backLink.href} data-pagefind-ignore>{backLink.title}</a>}
-    {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+    {/* The kicker and the metadata line are page furniture, not article
+        text: indexed, they led every search excerpt with "Case study 10."
+        or "23 December 2024 · 8 min read" ahead of the words that matched. */}
+    {eyebrow && <p class="eyebrow" data-pagefind-ignore>{eyebrow}</p>}
     <h1>{title}</h1>
     {descriptionHtml ? <p class="article-dek prose prose--lede" set:html={descriptionHtml} /> : description && <p class="article-dek prose prose--lede">{description}</p>}
     {(publishedTime || readingMinutes !== undefined) && (
-      <p class="article-meta">
+      <p class="article-meta" data-pagefind-ignore>
         {publishedTime && <time datetime={publishedTime.toISOString()}>{dateLabel}</time>}
         {publishedTime && readingMinutes !== undefined && <span aria-hidden="true">·</span>}
         {readingMinutes !== undefined && <span>{readingMinutes} min read</span>}

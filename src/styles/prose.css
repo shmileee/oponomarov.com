@@ -169,21 +169,27 @@
      attribute the shell already emits rather than a third prose modifier.
      The heading keeps the section heading's own leading and tracking: a
      second value here rendered `.prose h2` at two line-heights, and later at
-     two trackings, for one size. */
-  [data-app="portfolio"] .article .prose[data-article-body] {
+     two trackings, for one size. The homepage reader shows the same body
+     with its sections demoted to h3 under the dialog's own h2 title; those
+     h3s take the identical treatment, size included, so a study reads the
+     same in the dialog as on its page. */
+  [data-app="portfolio"] :is(.article .prose[data-article-body], .reader-prose) {
     counter-reset: prose-section;
   }
 
-  [data-app="portfolio"] .article .prose[data-article-body] > h2 {
+  [data-app="portfolio"] :is(.article .prose[data-article-body] > h2, .reader-prose > h3) {
     display: flex;
     align-items: center;
     gap: var(--space-3);
     padding-block-end: 0;
     border-block-end: 0;
+    font-size: calc((var(--text-xl) + var(--text-2xl)) / 2);
+    line-height: var(--leading-tight);
+    letter-spacing: -0.02em;
     counter-increment: prose-section;
   }
 
-  [data-app="portfolio"] .article .prose[data-article-body] > h2::before {
+  [data-app="portfolio"] :is(.article .prose[data-article-body] > h2, .reader-prose > h3)::before {
     content: counter(prose-section, decimal-leading-zero);
     flex: none;
     color: var(--color-accent-soft);
@@ -194,7 +200,7 @@
     letter-spacing: 0.08em;
   }
 
-  [data-app="portfolio"] .article .prose[data-article-body] > h2::after {
+  [data-app="portfolio"] :is(.article .prose[data-article-body] > h2, .reader-prose > h3)::after {
     content: "";
     flex: 1;
     block-size: var(--border-width);

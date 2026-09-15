@@ -171,6 +171,13 @@
     color: var(--color-text-subtle);
   }
 
+  /* The field carries its own "esc" affordance; the browser's search-clear
+     cross beside it read as a second, unexplained control. */
+  .global-search-field input::-webkit-search-decoration,
+  .global-search-field input::-webkit-search-cancel-button {
+    display: none;
+  }
+
   .global-search-field input:focus {
     outline: none;
   }
@@ -251,14 +258,31 @@
   }
 
   .global-search-results a {
+    position: relative;
     display: block;
     padding: var(--space-3);
+    /* Room at the end for the arrow, which sits in the item's top corner. */
+    padding-inline-end: calc(var(--space-3) + var(--space-8));
     border: 1px solid transparent;
     border-radius: var(--radius-md);
     color: var(--color-text-body);
     text-decoration: none;
     /* Result titles can be long slugs; wrap rather than widen the dialog. */
     overflow-wrap: anywhere;
+  }
+
+  /* The "open" arrow: a quiet glyph in the item's top corner, level with the
+     product label, rather than a block on its own line under the excerpt. */
+  .global-search-results b[aria-hidden] {
+    position: absolute;
+    inset-block-start: var(--space-3);
+    inset-inline-end: var(--space-3);
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-normal);
+    line-height: var(--leading-snug);
+    color: var(--color-text-subtle);
   }
 
   .global-search-results a:focus-visible {
@@ -315,7 +339,7 @@
 
   .global-search-hint {
     padding-inline: var(--space-5);
-    padding-block-end: var(--space-5);
+    padding-block: var(--space-1) var(--space-3);
     font-size: var(--text-sm);
     color: var(--color-text-subtle);
   }

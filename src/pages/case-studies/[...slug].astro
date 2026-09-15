@@ -78,7 +78,7 @@ const description = plainText(data.summary);
         </dl>
       )}
     </Fragment>
-    <div slot="topics" class="topic-list" aria-label="Topics">{data.topics.map((topic: string) => <span>{topic}</span>)}</div>
+    <div slot="topics" class="topic-list" aria-label="Topics" data-pagefind-ignore>{data.topics.map((topic: string) => <span>{topic}</span>)}</div>
     <PageToc slot="toc" headings={headings} />
     <Content />
     <Fragment slot="footer">

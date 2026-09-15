@@ -16,6 +16,13 @@
 
   .page {
     flex: 1 0 auto;
+    /* An explicit width, not the flex default. The body is a column flex
+       container and the auto inline margins centre the page, which also
+       switches it from stretch to fit-content; the content grid inside
+       carries inline-size containment, whose intrinsic width is zero, so a
+       fit-content page collapsed to nothing and set every line one
+       character wide. */
+    inline-size: 100%;
     min-inline-size: 0;
     max-inline-size: var(--measure-page);
     margin-inline: auto;

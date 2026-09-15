@@ -74,6 +74,12 @@
   }
 
   body {
+    /* Header, page and footer stack in a column and the page takes the
+       slack (layout.css gives `.page` flex: 1 0 auto), so on a short route
+       (a 404, a topic with three notes) the footer sits at the foot of the
+       screen rather than a third of the way down it with a blank page below. */
+    display: flex;
+    flex-direction: column;
     min-block-size: 100svh;
     color: var(--color-text-body);
     font-family: var(--font-body);

@@ -19,6 +19,7 @@ export function setupReader() {
   const manifestNode = dialog.querySelector("[data-reader-manifest]");
   const study = dialog.querySelector("[data-reader-study]");
   const title = dialog.querySelector("[data-reader-title]");
+  const dek = dialog.querySelector("[data-reader-dek]");
   const prose = dialog.querySelector("[data-reader-prose]");
   const status = dialog.querySelector("[data-reader-status]");
   const metaNumber = dialog.querySelector("[data-reader-meta-number]");
@@ -99,6 +100,13 @@ export function setupReader() {
     metaNumber.textContent = `Case study ${String(entry.number).padStart(2, "0")}`;
     metaTopics.textContent = ` · ${entry.topics.join(" · ")}`;
     title.textContent = entry.title;
+    /* The manifest's summaryHtml is the engine's own rendering of the
+       frontmatter (escaped, backticks to <code>), the same string the study
+       page prints as its dek. */
+    if (dek) {
+      dek.innerHTML = entry.summaryHtml ?? "";
+      dek.hidden = !entry.summaryHtml;
+    }
     document.title = `${portfolioDocumentTitle} - ${entry.title}`;
     prose.innerHTML = content;
     document.dispatchEvent(new CustomEvent("oponomarov:content-updated", { detail: { root: prose } }));

@@ -40,7 +40,7 @@ const readingMinutes = Math.floor((post.body || "").split(/\s+/).length / 220) +
     next={newer && { href: `/blog/posts/${slugForPost(newer)}/`, title: newer.data.title, label: "Newer →" }}
     adjacentLabel="Adjacent notes"
   >
-    <ul slot="topics" class="topic-list" aria-label="Topics">
+    <ul slot="topics" class="topic-list" aria-label="Topics" data-pagefind-ignore>
       {post.data.categories.map((category: string) => <li><a href={`/blog/categories/${category}/`}>{category}</a></li>)}
     </ul>
     <PageToc slot="toc" headings={headings} />

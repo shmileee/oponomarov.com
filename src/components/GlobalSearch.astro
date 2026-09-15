@@ -115,7 +115,10 @@
           const bestSection = item.sub_results?.[0];
           const url = bestSection?.url || item.url;
           const excerpt = safeExcerpt(bestSection?.excerpt || item.excerpt || "Open this page");
-          return `<li><a href="${escapeHtml(url)}"><span class="global-search-result-meta"><small data-product="${escapeHtml(product)}">${escapeHtml(product)}</small><i>${escapeHtml(type)}</i></span><strong>${escapeHtml(title)}</strong><p>${excerpt}</p><b aria-hidden="true">↗</b></a></li>`;
+          /* "Notes · Note" says nothing twice: the type is shown only when it
+             adds to the product name (Portfolio · Case study, Notes · Topic). */
+          const kind = type.toLowerCase() === product.toLowerCase().replace(/s$/, "") ? "" : `<i>${escapeHtml(type)}</i>`;
+          return `<li><a href="${escapeHtml(url)}"><span class="global-search-result-meta"><small data-product="${escapeHtml(product)}">${escapeHtml(product)}</small>${kind}</span><strong>${escapeHtml(title)}</strong><p>${excerpt}</p><b aria-hidden="true">↗</b></a></li>`;
         }).join("");
       } catch (error) {
         if (currentRequest !== requestId) return;
@@ -145,6 +148,14 @@
     open.addEventListener("focus", () => void getPagefind().catch(() => undefined), { once: true });
     close?.addEventListener("click", hide);
     input.addEventListener("input", () => void render());
+    /* A search input consumes Escape to clear itself, so with a query typed
+       the first Escape emptied the field and only a second one reached the
+       dialog. The field advertises "esc" as the way out, so Escape closes. */
+    input.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      hide();
+    });
     scopeButtons.forEach((button) => button.addEventListener("click", () => setProduct(button.dataset.searchProduct || "")));
     dialog.addEventListener("click", (event) => {
       if (event.target !== dialog) return;

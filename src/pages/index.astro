@@ -41,6 +41,9 @@ const readerManifest = studies.map((study) => ({
   number: study.number,
   url: study.href,
   title: study.entry.data.title,
+  /* Rendered here so the reader shows the same dek the study page does;
+     renderInline escapes the source, so this is the only HTML it carries. */
+  summaryHtml: renderInline(study.entry.data.summary),
   topics: study.entry.data.topics,
 }));
 ---
@@ -165,6 +168,7 @@ const readerManifest = studies.map((study) => ({
       <article class="reader-study" data-reader-study>
         <p class="reader-meta"><span class="reader-meta-number" data-reader-meta-number></span><span class="reader-meta-topics" data-reader-meta-topics></span></p>
         <h2 class="reader-title" id="reader-title" tabindex="-1" data-reader-title>Case study reader</h2>
+        <p class="reader-dek prose prose--lede" data-reader-dek></p>
         <p class="sr-only" role="status" aria-live="polite" data-reader-status>Choose a case study to read.</p>
         <div class="prose reader-prose" data-reader-prose></div>
         <nav class="reader-navigation" aria-label="Case study navigation">
