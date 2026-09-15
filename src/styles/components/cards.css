@@ -489,11 +489,12 @@
     min-inline-size: 0;
   }
 
+  /* Body size and leading come from `.prose`: a section intro is prose, just
+     muted, not a smaller step. This was the only `.prose > p` on the site
+     below body size. */
   .archive-intro {
     margin: var(--space-5) 0 0;
     color: var(--color-text-subtle);
-    font-size: var(--text-sm);
-    line-height: var(--leading-body);
   }
 
   .topic-directory {
