@@ -7,7 +7,10 @@ interface ArticleLink {
 
 interface Props {
   readonly title: string;
+  /** The dek as plain text; escaped on output. */
   readonly description?: string;
+  /** The dek already rendered from inline Markdown (src/lib/inline-markdown.ts); wins over `description`. */
+  readonly descriptionHtml?: string;
   readonly eyebrow?: string;
   readonly backLink?: ArticleLink;
   readonly publishedTime?: Date;
@@ -18,7 +21,7 @@ interface Props {
 }
 
 const {
-  title, description, eyebrow, backLink, publishedTime, readingMinutes,
+  title, description, descriptionHtml, eyebrow, backLink, publishedTime, readingMinutes,
   previous, next, adjacentLabel = "Adjacent articles",
 } = Astro.props;
 const dateLabel = publishedTime && new Intl.DateTimeFormat("en-GB", {
@@ -31,7 +34,7 @@ const dateLabel = publishedTime && new Intl.DateTimeFormat("en-GB", {
     {backLink && <a class="back-link" href={backLink.href} data-pagefind-ignore>{backLink.title}</a>}
     {eyebrow && <p class="eyebrow">{eyebrow}</p>}
     <h1>{title}</h1>
-    {description && <p class="article-dek prose prose--lede">{description}</p>}
+    {descriptionHtml ? <p class="article-dek prose prose--lede" set:html={descriptionHtml} /> : description && <p class="article-dek prose prose--lede">{description}</p>}
     {(publishedTime || readingMinutes !== undefined) && (
       <p class="article-meta">
         {publishedTime && <time datetime={publishedTime.toISOString()}>{dateLabel}</time>}

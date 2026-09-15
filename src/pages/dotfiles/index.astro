@@ -1,19 +1,18 @@
 ---
-import { getCollection, render } from "astro:content";
+import { render } from "astro:content";
 import SiteLayout from "../../components/SiteLayout.astro";
-import { docsNavigation as docsNav, docsHref as docsUrl, docsSlug } from "../../lib/docs";
+import { adjacentDocs, loadDocs } from "../../lib/docs";
 
-const entry = (await getCollection("docs")).find((item) => docsSlug(item) === "");
-if (!entry) throw new Error("Missing Dotfiles overview content");
-const { Content } = await render(entry);
-const currentIndex = docsNav.findIndex((item) => item.slug === docsSlug(entry));
-const next = currentIndex >= 0 && currentIndex < docsNav.length - 1 ? docsNav[currentIndex + 1] : undefined;
+const pages = await loadDocs();
+const page = pages.find((candidate) => candidate.slug === "")!;
+const { Content } = await render(page.entry);
+const { next } = adjacentDocs(pages, page);
 ---
 
 <SiteLayout
   activeApp="dotfiles"
-  title={entry.data.title}
-  description={entry.data.description}
+  title={page.entry.data.title}
+  description={page.entry.data.description}
   searchType="Documentation"
 >
   {/* The published landing page ran in the centred reading column with no
@@ -25,9 +24,9 @@ const next = currentIndex >= 0 && currentIndex < docsNav.length - 1 ? docsNav[cu
     </div>
     {next && (
       <nav class="adjacent-nav" aria-label="Adjacent documentation" data-pagefind-ignore>
-        <a class="adjacent-nav__next" href={docsUrl(next.slug)} rel="next">
+        <a class="adjacent-nav__next" href={next.href} rel="next">
           <span class="adjacent-nav__label">Next →</span>
-          <strong class="adjacent-nav__title">{next.label}</strong>
+          <strong class="adjacent-nav__title">{next.title}</strong>
         </a>
       </nav>
     )}

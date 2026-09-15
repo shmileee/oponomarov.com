@@ -1,35 +1,47 @@
 ---
 import { getCollection, render } from "astro:content";
 import SiteLayout from "../components/SiteLayout.astro";
-import { byId, caseStudyCatalog } from "../lib/catalog";
+import { collectTopics, formatCaseNumber, loadCaseStudies, requireCaseStudy } from "../lib/case-studies";
+import { renderInline } from "../lib/inline-markdown";
 
-const studies = await getCollection("caseStudies");
-const studyByFolder = new Map(studies.map((study) => [study.id.replace(/\/index$/, ""), study]));
-const orderedStudies = caseStudyCatalog.map((entry) => ({ entry, study: studyByFolder.get(entry.folder)! }));
-const spotlightItem = orderedStudies.find(({ study }) => study.data.spotlight)!;
+const studies = await loadCaseStudies();
+/* The spotlight is whichever study the content marks; with none marked the
+   section is simply absent rather than the build failing. */
+const spotlight = studies.find(({ entry }) => entry.data.spotlight);
 
 const homeEntries = await getCollection("home");
 const homeByKey = new Map(homeEntries.map((entry) => [entry.data.key, entry]));
-const hero = homeByKey.get("hero")!;
-const hiring = await render(homeByKey.get("hiring")!);
+const requireHome = (key: string) => {
+  const entry = homeByKey.get(key);
+  if (!entry) throw new Error(`content/home/ has no entry with key "${key}" (expected ${key}.md).`);
+  return entry;
+};
+const hero = requireHome("hero");
+const hiring = await render(requireHome("hiring"));
 const HiringContent = hiring.Content;
-const arcIntroEntry = homeByKey.get("arc")!;
+const arcIntroEntry = requireHome("arc");
 const arcIntro = await render(arcIntroEntry);
 const ArcIntroContent = arcIntro.Content;
 const arcEntries = (await getCollection("arc")).sort((a, b) => a.data.number - b.data.number);
-const renderedArc = await Promise.all(arcEntries.map(async (entry) => ({ entry, Content: (await render(entry)).Content })));
+const renderedArc = await Promise.all(arcEntries.map(async (entry) => ({
+  entry,
+  Content: (await render(entry)).Content,
+  links: entry.data.links.map((link) => ({ label: link.label, study: requireCaseStudy(studies, link.study, `Arc step ${entry.data.number} (${entry.id})`) })),
+})));
 const principleEntries = (await getCollection("principles")).sort((a, b) => a.data.number - b.data.number);
 const renderedPrinciples = await Promise.all(principleEntries.map(async (entry) => ({ entry, Content: (await render(entry)).Content })));
 
-const topicOrder = ["reliability", "networking", "developer experience", "security", "ai", "cost", "delivery"];
-const hrefFor = (folder: string) => `/case-studies/${folder}/`;
-const readerManifest = orderedStudies.map(({ entry, study }) => ({
-  id: entry.id,
-  legacyNumber: Number.parseInt(entry.legacyFolder, 10),
-  number: entry.number,
-  url: hrefFor(entry.folder),
-  title: study.data.title,
-  topics: study.data.topics,
+/* Filter buttons come from the studies themselves: the known topics keep
+   this order, and a topic that appears for the first time is appended. */
+const topics = collectTopics(studies, ["reliability", "networking", "developer experience", "security", "ai", "cost", "delivery"]);
+const initiallyVisible = 9;
+const readerManifest = studies.map((study) => ({
+  id: study.folder,
+  aliases: study.aliases,
+  number: study.number,
+  url: study.href,
+  title: study.entry.data.title,
+  topics: study.entry.data.topics,
 }));
 ---
 
@@ -57,16 +69,15 @@ const readerManifest = orderedStudies.map(({ entry, study }) => ({
         <h2>{arcIntroEntry.data.title}</h2>
         <div class="prose"><ArcIntroContent /></div>
         <div class="arc-list wide">
-          {renderedArc.map(({ entry, Content }, index) => (
+          {renderedArc.map(({ entry, Content, links }, index) => (
             <article class="arc-step">
               <span class="arc-number">{String(entry.data.number).padStart(2, "0")}</span>
               <div class="arc-content">
                 <div class="arc-copy prose"><Content /></div>
                 <div class="arc-links">
-                  {entry.data.links.map((link) => {
-                    const definition = byId.get(link.study)!;
-                    return <a href={hrefFor(definition.folder)} data-open-study={definition.id} data-arc-study={definition.id}>{String(definition.number).padStart(2, "0")} · {link.label}</a>;
-                  })}
+                  {links.map(({ label, study }) => (
+                    <a href={study.href} data-open-study={study.folder} data-arc-study={study.folder}>{formatCaseNumber(study.number)} · {label}</a>
+                  ))}
                 </div>
               </div>
               {index < renderedArc.length - 1 && <span class="arc-arrow" aria-hidden="true">↓</span>}
@@ -76,62 +87,64 @@ const readerManifest = orderedStudies.map(({ entry, study }) => ({
       </div>
     </section>
 
-    <section class="section" id="featured">
-      <div class="section-shell">
-        <p class="eyebrow">02</p>
-        <h2>The biggest win</h2>
-        <article class="spotlight" data-pagefind-ignore>
-          <header class="spotlight-header">
-            <p class="reader-meta">Case study {String(spotlightItem.entry.number).padStart(2, "0")} · spotlight</p>
-            <h3>{spotlightItem.study.data.title}</h3>
-            {spotlightItem.study.data.role && spotlightItem.study.data.evidence && (
-              <dl class="case-proof spotlight-proof" data-case-proof>
-                <div><dt>Impact</dt><dd>{spotlightItem.study.data.summary}</dd></div>
-                <div><dt>My role</dt><dd>{spotlightItem.study.data.role}</dd></div>
-                <div><dt>Evidence</dt><dd>{spotlightItem.study.data.evidence}</dd></div>
-              </dl>
-            )}
-            <div class="prose"><p>{spotlightItem.study.data.spotlightProof}</p></div>
-            <div class="topic-list" aria-label="Topics">{spotlightItem.study.data.topics.map((topic) => <span>{topic}</span>)}</div>
-          </header>
-          <div class="hero-actions"><a class="primary-link" href={hrefFor(spotlightItem.entry.folder)} data-open-study={spotlightItem.entry.id}>Read case study →</a></div>
-        </article>
-      </div>
-    </section>
+    {spotlight && (
+      <section class="section" id="featured">
+        <div class="section-shell">
+          <p class="eyebrow">02</p>
+          <h2>The biggest win</h2>
+          <article class="spotlight" data-pagefind-ignore>
+            <header class="spotlight-header">
+              <p class="reader-meta">Case study {formatCaseNumber(spotlight.number)} · spotlight</p>
+              <h3>{spotlight.entry.data.title}</h3>
+              {spotlight.entry.data.role && spotlight.entry.data.evidence && (
+                <dl class="case-proof spotlight-proof" data-case-proof>
+                  <div><dt>Impact</dt><dd set:html={renderInline(spotlight.entry.data.summary)} /></div>
+                  <div><dt>My role</dt><dd set:html={renderInline(spotlight.entry.data.role)} /></div>
+                  <div><dt>Evidence</dt><dd set:html={renderInline(spotlight.entry.data.evidence)} /></div>
+                </dl>
+              )}
+              {spotlight.entry.data.spotlightProof && <div class="prose"><p set:html={renderInline(spotlight.entry.data.spotlightProof)} /></div>}
+              <div class="topic-list" aria-label="Topics">{spotlight.entry.data.topics.map((topic) => <span>{topic}</span>)}</div>
+            </header>
+            <div class="hero-actions"><a class="primary-link" href={spotlight.href} data-open-study={spotlight.folder}>Read case study →</a></div>
+          </article>
+        </div>
+      </section>
+    )}
 
     <section class="section full-bleed" id="index">
       <div class="section-shell content-grid">
-        <p class="eyebrow">03</p>
+        <p class="eyebrow">{spotlight ? "03" : "02"}</p>
         <h2>All case studies</h2>
         <div class="topic-filters" role="group" aria-label="Filter case studies">
           <button type="button" data-topic-filter="all" aria-pressed="true">all</button>
-          {topicOrder.map((topic) => <button type="button" data-topic-filter={topic} aria-pressed="false">{topic}</button>)}
+          {topics.map((topic) => <button type="button" data-topic-filter={topic} aria-pressed="false">{topic}</button>)}
         </div>
         <p class="sr-only" aria-live="polite" data-filter-status></p>
         <div class="case-grid wide" data-case-grid data-pagefind-ignore>
-          {orderedStudies.map(({ entry, study }, index) => (
-            <a class:list={["case-card", { "case-card-featured": study.data.featured }]} href={hrefFor(entry.folder)} data-case-card data-open-study={entry.id} data-topics={study.data.topics.join("|")} data-initially-hidden={String(index >= 9)}>
-              <span class="case-card-number">{String(entry.number).padStart(2, "0")}{study.data.featured && " · featured"}{study.data.cardLabel && ` · ${study.data.cardLabel}`}</span>
-              <span class="case-card-title">{study.data.title}</span>
-              {study.data.role && study.data.evidence ? (
+          {studies.map((study, index) => (
+            <a class:list={["case-card", { "case-card-featured": study.entry.data.featured }]} href={study.href} data-case-card data-open-study={study.folder} data-topics={study.entry.data.topics.join("|")} data-initially-hidden={String(index >= initiallyVisible)}>
+              <span class="case-card-number">{formatCaseNumber(study.number)}{study.entry.data.featured && " · featured"}{study.entry.data.cardLabel && ` · ${study.entry.data.cardLabel}`}</span>
+              <span class="case-card-title">{study.entry.data.title}</span>
+              {study.entry.data.role && study.entry.data.evidence ? (
                 <dl class="case-proof case-card-proof" data-case-proof>
-                  <div><dt>Impact</dt><dd>{study.data.summary}</dd></div>
-                  <div><dt>My role</dt><dd>{study.data.role}</dd></div>
-                  <div><dt>Evidence</dt><dd>{study.data.evidence}</dd></div>
+                  <div><dt>Impact</dt><dd set:html={renderInline(study.entry.data.summary)} /></div>
+                  <div><dt>My role</dt><dd set:html={renderInline(study.entry.data.role)} /></div>
+                  <div><dt>Evidence</dt><dd set:html={renderInline(study.entry.data.evidence)} /></div>
                 </dl>
-              ) : <span class="case-card-summary">{study.data.summary}</span>}
-              <span class="case-card-topics">{study.data.topics.join(" · ")}</span>
-              <span class="case-card-action">{study.data.spotlight ? "full story ↑" : "read →"}</span>
+              ) : <span class="case-card-summary" set:html={renderInline(study.entry.data.summary)} />}
+              <span class="case-card-topics">{study.entry.data.topics.join(" · ")}</span>
+              <span class="case-card-action">{study.entry.data.spotlight ? "full story ↑" : "read →"}</span>
             </a>
           ))}
         </div>
-        <div class="grid-toggle-row"><button class="grid-toggle" type="button" data-grid-toggle>see more →</button></div>
+        {studies.length > initiallyVisible && <div class="grid-toggle-row"><button class="grid-toggle" type="button" data-grid-toggle>see more →</button></div>}
       </div>
     </section>
 
     <section class="section" id="how-i-work">
       <div class="section-shell" id="principles">
-        <p class="eyebrow">04</p>
+        <p class="eyebrow">{spotlight ? "04" : "03"}</p>
         <h2>How I work</h2>
         <div class="principle-list">
           {renderedPrinciples.map(({ entry, Content }) => (

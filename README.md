@@ -24,6 +24,22 @@ repo-root variables (each pointing at a **content-repo checkout root**):
 | `BLOG_DIR`      | `./content/blog`      |
 | `DOTFILES_DIR`  | `./content/dotfiles`  |
 
+Nothing about the set of pages is written down in the engine. Every route,
+count, order and redirect is derived from the content at build time, so adding
+or removing a case study, note or manual is a content commit and nothing else:
+
+| Content | Ordering | Also read by the engine |
+| --- | --- | --- |
+| `content/case-studies/<folder>/index.md` | `order` (integer, optional; unnumbered studies follow alphabetically) — the displayed case number is the position in that order | `aliases` (old slugs and reader ids that redirect here and open the reader), `featured`, `spotlight`, `spotlightProof`, `cardLabel`, `role`, `evidence` |
+| `content/arc/*.md` | `number` | `links[].study` names a case-study **folder**; an unknown folder fails the build with the offending reference |
+| `content/posts/*.md` | `date`, newest first | `categories` → `/blog/categories/<category>/` |
+| `docs/content/*.md` | `index.md` first, then `order`, then title | The adjacent Previous/Next cards follow this sequence |
+
+`summary`, `role`, `evidence`, `spotlightProof` and every `description` are
+inline Markdown: backticks and `**strong**` render, everything else is text.
+The homepage topic filters are the union of every study's `topics`; the
+spotlight section appears only when a study is marked `spotlight`.
+
 In CI, the deploy workflow (`.github/workflows/deploy.yaml`) checks the three
 public repos out tokenlessly into `content/{portfolio,blog,dotfiles}` — the
 defaults — builds, and publishes `dist/` to GitHub Pages. Content repos ping

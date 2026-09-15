@@ -1,7 +1,18 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { basename, dirname, extname, join, normalize, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import yaml from "js-yaml";
 import { readPostCategories, uniqueCategories } from "../src/lib/categories.mjs";
+
+/* Every expectation below is derived from the content roots, never typed in:
+   a new case study, note, topic or manual changes the expected counts and
+   names with it, and a build that drops one still fails. */
+const readFrontmatter = (path) => {
+  const block = readFileSync(path, "utf8").match(/^---\r?\n([\s\S]*?)\r?\n---/)?.[1];
+  if (block === undefined) throw new Error(`${path} has no leading --- frontmatter block`);
+  const data = yaml.load(block);
+  return data && typeof data === "object" ? data : {};
+};
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const dist = join(root, "dist");
@@ -83,34 +94,46 @@ const routeDirectories = (directory) => readdirSync(directory, { withFileTypes: 
   .map((entry) => entry.name);
 
 const caseStudies = routeDirectories(join(dist, "case-studies"));
-const canonicalCaseStudies = caseStudies.filter((name) => !/^\d+-/.test(name));
-const numberedRedirects = caseStudies.filter((name) => /^\d+-/.test(name));
+const isRedirectRoute = (name) => readFileSync(join(dist, "case-studies", name, "index.html"), "utf8").includes('http-equiv="refresh"');
+const canonicalCaseStudies = caseStudies.filter((name) => !isRedirectRoute(name));
 const workRedirects = routeDirectories(join(dist, "work"));
 const postPages = routeDirectories(join(dist, "blog/posts"));
 const categoryPages = routeDirectories(join(dist, "blog/categories"));
 
 const formatSet = (values) => (values.length > 0 ? values.join(", ") : "(none)");
-const expectedCaseStudies = filesBelow(join(portfolioRoot, "content/case-studies")).filter((path) => basename(path) === "index.md").length;
-const catalogSource = readFileSync(join(root, "src/lib/catalog.ts"), "utf8");
-const catalogBlock = catalogSource.match(/const definitions = \[([\s\S]*?)\] as const;/)?.[1];
-if (!catalogBlock) throw new Error("Could not locate the case-study definitions block in src/lib/catalog.ts");
-const expectedRedirects = (catalogBlock.match(/^\s*\[/gm) ?? []).length;
+const caseStudySources = filesBelow(join(portfolioRoot, "content/case-studies")).filter((path) => basename(path) === "index.md");
+const caseStudyFrontmatter = caseStudySources.map((path) => ({ folder: basename(dirname(path)), data: readFrontmatter(path) }));
+const expectedCaseStudies = caseStudyFrontmatter.map(({ folder }) => folder).sort();
+/* Every alias a study declares becomes a redirect page under /case-studies/;
+   every study also keeps its /work/ compatibility page. */
+const expectedAliases = caseStudyFrontmatter.flatMap(({ folder, data }) => (Array.isArray(data.aliases) ? data.aliases : []).filter((alias) => alias !== folder)).sort();
 const postsSourceDir = join(blogRoot, "content/posts");
 const expectedPosts = readdirSync(postsSourceDir).filter((name) => name.endsWith(".md")).length;
 const expectedCategories = uniqueCategories(readPostCategories(postsSourceDir));
 
-if (canonicalCaseStudies.length !== expectedCaseStudies) throw new Error(`Expected ${expectedCaseStudies} canonical case-study routes (index.md files under ${relative(root, join(portfolioRoot, "content/case-studies"))}), found ${canonicalCaseStudies.length}`);
-if (numberedRedirects.length !== expectedRedirects) throw new Error(`Expected ${expectedRedirects} numbered case-study redirects (catalog entries in src/lib/catalog.ts), found ${numberedRedirects.length}`);
-if (workRedirects.length !== expectedRedirects) throw new Error(`Expected ${expectedRedirects} /work compatibility redirects (catalog entries in src/lib/catalog.ts), found ${workRedirects.length}`);
+if (canonicalCaseStudies.sort().join("\n") !== expectedCaseStudies.join("\n")) throw new Error(`Canonical case-study routes diverge from the folders under ${relative(root, join(portfolioRoot, "content/case-studies"))}.\nExpected: ${formatSet(expectedCaseStudies)}\nActual:   ${formatSet(canonicalCaseStudies)}`);
+const aliasRedirects = caseStudies.filter((name) => expectedAliases.includes(name)).sort();
+if (aliasRedirects.join("\n") !== expectedAliases.join("\n")) throw new Error(`Case-study alias redirects diverge from the aliases declared in frontmatter.\nExpected: ${formatSet(expectedAliases)}\nActual:   ${formatSet(aliasRedirects)}`);
+const unexpectedRoutes = caseStudies.filter((name) => !expectedCaseStudies.includes(name) && !expectedAliases.includes(name));
+if (unexpectedRoutes.length > 0) throw new Error(`Case-study routes exist that no folder or alias declares: ${formatSet(unexpectedRoutes)}`);
+if (workRedirects.sort().join("\n") !== expectedCaseStudies.join("\n")) throw new Error(`/work compatibility redirects diverge from the case-study folders.\nExpected: ${formatSet(expectedCaseStudies)}\nActual:   ${formatSet(workRedirects)}`);
 if (postPages.length !== expectedPosts) throw new Error(`Expected ${expectedPosts} blog routes (*.md posts under ${relative(root, postsSourceDir)}), found ${postPages.length}`);
 const builtCategories = [...categoryPages].sort();
 if (builtCategories.join("\n") !== expectedCategories.join("\n")) throw new Error(`Built blog category pages diverge from post frontmatter categories.\nExpected: ${formatSet(expectedCategories)}\nActual:   ${formatSet(builtCategories)}`);
 
 const docsSourceDir = join(dotfilesRoot, "docs/content");
-const expectedAdmonitions = [postsSourceDir, docsSourceDir]
-  .flatMap((directory) => readdirSync(directory).filter((name) => name.endsWith(".md")).map((name) => join(directory, name)))
+const markdownSources = [
+  ...caseStudySources,
+  ...[postsSourceDir, docsSourceDir].flatMap((directory) => readdirSync(directory).filter((name) => name.endsWith(".md")).map((name) => join(directory, name))),
+];
+const admonitionKindOf = { note: "note", info: "note", tip: "tip", important: "important", warning: "warning", warn: "warning", caution: "caution", danger: "danger", critical: "critical" };
+const authoredAdmonitions = markdownSources
   .flatMap((path) => readFileSync(path, "utf8").match(/^> \[!(note|info|tip|important|warning|warn|caution|danger|critical)\]/gim) ?? [])
-  .length;
+  .map((marker) => admonitionKindOf[marker.slice(4, -1).toLowerCase()]);
+const expectedAdmonitions = authoredAdmonitions.length;
+const expectedAdmonitionKinds = [...new Set(authoredAdmonitions)].sort();
+/* Every titled code fence in the content becomes exactly one titled frame. */
+const expectedCodeTitles = markdownSources.flatMap((path) => [...readFileSync(path, "utf8").matchAll(/^```[^\n]*?\btitle="([^"]+)"/gm)].map((match) => match[1]));
 const expectedDocSlugs = readdirSync(docsSourceDir)
   .filter((name) => name.endsWith(".md"))
   .map((name) => name.replace(/\.md$/, ""))
@@ -134,24 +157,31 @@ const docsHtml = expectedDocSlugs
   .map((slug) => readFileSync(join(dist, "dotfiles", slug === "index" ? "index.html" : `${slug}/index.html`), "utf8"))
   .join("\n");
 
-const namedPortfolioCodeFrames = [
-  "composition.yaml",
-  "images/cloudwatch-exporter/image.yaml",
-  "mise.toml",
-  "opencode.jsonc",
-  "team.json",
-  "topics/orders-events.yaml",
-  "versions.tf",
-];
-for (const filename of namedPortfolioCodeFrames) {
+const allArticleHtml = portfolioHtml + blogHtml + docsHtml;
+for (const filename of expectedCodeTitles) {
   const title = `<span class="title">${filename}</span>`;
-  const occurrences = portfolioHtml.split(title).length - 1;
-  if (occurrences !== 1) throw new Error(`Expected one portfolio code frame titled ${filename}, found ${occurrences}`);
+  const occurrences = allArticleHtml.split(title).length - 1;
+  if (occurrences !== 1) throw new Error(`Expected one code frame titled ${filename} (one titled fence in the content), found ${occurrences}`);
 }
 if (portfolioHtml.includes('class="code-exhibit"')) throw new Error("A legacy portfolio code wrapper would create a nested code frame");
-if (!portfolioHtml.includes("diagram-exhibit") || !portfolioHtml.includes("media-exhibit")) throw new Error("Portfolio media exhibits were not fully migrated");
-if (/>THE (?:SITUATION|INTERESTING PART)<|>WHAT (?:I DID|IT CHANGED)</.test(portfolioHtml)) throw new Error("Case-study section headings were not normalized to sentence case");
 if (!portfolioHomeHtml.includes("/assets/js/study-index.js")) throw new Error("The portfolio home page does not load the case-study index and reader");
+/* The homepage lists every study, numbered in the published order, and the
+   reader manifest carries the same set. */
+const homeCards = [...portfolioHomeHtml.matchAll(/data-case-card[^>]*data-open-study="([^"]+)"/g)].map((match) => match[1]).sort();
+if (homeCards.join("\n") !== expectedCaseStudies.join("\n")) throw new Error(`Homepage case cards diverge from the case-study folders.\nExpected: ${formatSet(expectedCaseStudies)}\nActual:   ${formatSet(homeCards)}`);
+const manifest = JSON.parse(portfolioHomeHtml.match(/<script[^>]*data-reader-manifest[^>]*>([\s\S]*?)<\/script>/)?.[1] ?? "[]");
+if (manifest.map((entry) => entry.id).sort().join("\n") !== expectedCaseStudies.join("\n")) throw new Error("The reader manifest does not list every case study by folder");
+for (const entry of manifest) {
+  if (!Number.isInteger(entry.number) || entry.number < 1 || entry.number > manifest.length) throw new Error(`Reader manifest entry ${entry.id} has no valid case number`);
+}
+/* Every study's summary, role and evidence render as inline Markdown: a
+   backtick never reaches the page as a literal character. */
+for (const name of canonicalCaseStudies) {
+  const html = readFileSync(join(dist, "case-studies", name, "index.html"), "utf8");
+  const header = html.match(/<header class="article-header">([\s\S]*?)<\/header>/)?.[1] ?? "";
+  if (header.includes("`")) throw new Error(`Case study ${name} renders a literal backtick in its header; frontmatter strings must pass through renderInline`);
+}
+if (portfolioHomeHtml.match(/<main[\s\S]*<\/main>/)?.[0].includes("`")) throw new Error("The homepage renders a literal backtick; frontmatter strings must pass through renderInline");
 const readerScript = readFileSync(join(dist, "assets/js/reader.js"), "utf8");
 if (!readerScript.includes('new CustomEvent("oponomarov:content-updated"') || !readerScript.includes("closeButton.focus()")) throw new Error("The portfolio reader is missing dynamic enhancement or initial focus management");
 /* Every article route carries a table of contents, case studies included: the
@@ -172,13 +202,22 @@ if (docsHomeHtml.includes("toc__list")) throw new Error("The Dotfiles landing pa
    invariants; scripts/verify-design.mjs owns them against the real output. */
 if (/\{%|\{\{\s*['"]\//.test(blogHtml)) throw new Error("Unconverted Jekyll syntax remains in blog output");
 if (!blogHtml.includes("comments-region") || !blogHtml.includes("toc__list")) throw new Error("Blog article interactions are missing");
-if (!docsHtml.includes("data-shortcut-status") || !docsHtml.includes("context-help")) throw new Error("Dotfiles interactions are missing");
-if (!docsHtml.includes("Bootstrap before using tasks") || !docsHtml.includes("OpenCode + OmO")) throw new Error("Full Dotfiles manuals were not migrated");
-const admonitionHtml = blogHtml + docsHtml;
+/* Interactions the content authors opt into must reach the page intact. */
+const docsSource = readdirSync(docsSourceDir).filter((name) => name.endsWith(".md")).map((name) => readFileSync(join(docsSourceDir, name), "utf8")).join("\n");
+if (docsSource.includes("data-shortcut-filter") && !docsHtml.includes("data-shortcut-status")) throw new Error("A Dotfiles manual authors a shortcut filter but the built page carries no result-count region");
+if (docsSource.includes("context-help-source") && !docsHtml.includes("context-help")) throw new Error("A Dotfiles manual authors quick context but the built page carries none");
+/* Every manual's title reaches its page as the h1. */
+for (const slug of expectedDocSlugs) {
+  const { title } = readFrontmatter(join(docsSourceDir, `${slug}.md`));
+  const target = slug === "index" ? join(dist, "dotfiles/index.html") : join(dist, "dotfiles", slug, "index.html");
+  const html = readFileSync(target, "utf8");
+  if (slug !== "index" && typeof title === "string" && !html.includes(`<h1>${title.replace(/&/g, "&amp;")}</h1>`)) throw new Error(`Dotfiles manual ${slug}.md does not render its title "${title}" as the page heading`);
+}
+const admonitionHtml = allArticleHtml;
 const admonitionCount = admonitionHtml.split('class="op-admonition ').length - 1;
-if (admonitionCount !== expectedAdmonitions) throw new Error(`Expected ${expectedAdmonitions} native Astro admonitions, found ${admonitionCount}`);
-for (const variant of ["note", "tip", "important", "warning"]) {
-  if (!admonitionHtml.includes(`data-admonition="${variant}"`)) throw new Error(`Built content is missing the ${variant} admonition variant`);
+if (admonitionCount !== expectedAdmonitions) throw new Error(`Expected ${expectedAdmonitions} native Astro admonitions (the [!KIND] quotes in the content), found ${admonitionCount}`);
+for (const variant of expectedAdmonitionKinds) {
+  if (!admonitionHtml.includes(`data-admonition="${variant}"`)) throw new Error(`Built content is missing the ${variant} admonition variant the content authors`);
 }
 if (admonitionHtml.includes('class="admonition ') || /(?:ℹ️|⚠️|💡)/u.test(admonitionHtml)) throw new Error("Legacy HTML or emoji callouts remain in built content");
 
@@ -223,13 +262,20 @@ if (!existsSync(codeCssPath)) throw new Error(`Expressive Code stylesheet is mis
 const codeCss = readFileSync(codeCssPath, "utf8");
 if (!codeCss.includes("data-theme='light'") || !codeCss.includes("var(--1")) throw new Error("Shared light/dark syntax themes are incomplete");
 
+/* The sitemap is the QA harness's route list, so it must name every
+   canonical page: each study, post, topic and manual, plus the four hubs. */
 const sitemap = readFileSync(join(dist, "sitemap.xml"), "utf8");
-for (const path of ["/blog/", "/dotfiles/", "/dotfiles/setup/", "/case-studies/", "/contact/"]) {
-  if (!sitemap.includes(path)) throw new Error(`Sitemap is missing ${path}`);
-}
-const sitemapCategories = [...sitemap.matchAll(/<loc>https:\/\/oponomarov\.com\/blog\/categories\/([^<]+)\/<\/loc>/g)]
-  .map((match) => match[1])
-  .sort();
-if (sitemapCategories.join("\n") !== expectedCategories.join("\n")) throw new Error(`Sitemap /blog/categories/ URLs diverge from post frontmatter categories.\nExpected: ${formatSet(expectedCategories)}\nActual:   ${formatSet(sitemapCategories)}`);
+const sitemapPaths = [...sitemap.matchAll(/<loc>https:\/\/oponomarov\.com([^<]*)<\/loc>/g)].map((match) => match[1]);
+const expectedSitemapPaths = [
+  "/", "/blog/", "/dotfiles/", "/contact/",
+  ...expectedCaseStudies.map((folder) => `/case-studies/${folder}/`),
+  ...postPages.map((slug) => `/blog/posts/${slug}/`),
+  ...expectedCategories.map((category) => `/blog/categories/${category}/`),
+  ...expectedDocRoutes.map((slug) => `/dotfiles/${slug}/`),
+];
+const missingFromSitemap = expectedSitemapPaths.filter((path) => !sitemapPaths.includes(path));
+if (missingFromSitemap.length > 0) throw new Error(`Sitemap is missing canonical routes: ${formatSet(missingFromSitemap)}`);
+const strayInSitemap = sitemapPaths.filter((path) => !expectedSitemapPaths.includes(path));
+if (strayInSitemap.length > 0) throw new Error(`Sitemap lists routes that are not canonical pages: ${formatSet(strayInSitemap)}`);
 
-console.log(`Verified one Astro build: ${canonicalCaseStudies.length} case studies, ${numberedRedirects.length + workRedirects.length} compatibility redirects, ${postPages.length} posts, ${categoryPages.length} categories, ${expectedDocSlugs.length} Dotfiles manuals, one shared Contact page, RSS, global cross-product search, interactions, shared syntax themes, and all internal links/assets.`);
+console.log(`Verified one Astro build: ${canonicalCaseStudies.length} case studies, ${aliasRedirects.length + workRedirects.length} compatibility redirects, ${postPages.length} posts, ${categoryPages.length} categories, ${expectedDocSlugs.length} Dotfiles manuals, one shared Contact page, RSS, global cross-product search, interactions, shared syntax themes, and all internal links/assets.`);

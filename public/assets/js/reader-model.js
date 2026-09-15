@@ -1,16 +1,27 @@
 export const STUDY_HASH = /^#study-([a-z0-9-]+)$/;
 
+/* The manifest src/pages/index.astro embeds: one entry per study, `id` being
+   its content folder and `aliases` the old slugs and reader ids the content
+   still answers to. `#study-<id>`, `#study-<alias>` and the bare legacy
+   number (`#study-12`, the digits an old numbered slug started with) all
+   resolve to the same entry, so links shared before a rename keep opening
+   the study they named. */
 export function createManifestIndex(manifestNode) {
   const entries = JSON.parse(manifestNode.textContent || "[]");
+  const byId = new Map(entries.map((entry) => [entry.id, entry]));
+  const byAlias = new Map();
+  for (const entry of entries) {
+    for (const alias of entry.aliases ?? []) {
+      byAlias.set(alias, entry);
+      const legacyNumber = /^\d+-/.test(alias) ? String(Number.parseInt(alias, 10)) : undefined;
+      if (legacyNumber && !byAlias.has(legacyNumber)) byAlias.set(legacyNumber, entry);
+    }
+  }
   return {
     entries,
     ids: entries.map(({ id }) => id),
-    byId: new Map(entries.map((entry) => [entry.id, entry])),
-    byLegacyNumber: new Map(
-      entries
-        .filter(({ legacyNumber }) => Number.isInteger(legacyNumber))
-        .map((entry) => [entry.legacyNumber, entry]),
-    ),
+    byId,
+    byAlias,
     byPath: new Map(
       entries.map((entry) => [new URL(entry.url, window.location.origin).pathname, entry]),
     ),

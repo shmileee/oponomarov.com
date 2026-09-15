@@ -3,6 +3,7 @@ import { getCollection, render } from "astro:content";
 import ArticleShell from "../../../components/ArticleShell.astro";
 import PageToc from "../../../components/PageToc.astro";
 import SiteLayout from "../../../components/SiteLayout.astro";
+import { plainText, renderInline } from "../../../lib/inline-markdown";
 import { slugForPost, sortPosts } from "../../../lib/posts";
 
 export async function getStaticPaths() {
@@ -22,7 +23,7 @@ const readingMinutes = Math.floor((post.body || "").split(/\s+/).length / 220) +
   activeApp="blog"
   canonicalOrigin="https://oponomarov.com"
   title={post.data.title}
-  description={post.data.description}
+  description={plainText(post.data.description)}
   article
   searchType="Note"
   publishedTime={post.data.date}
@@ -31,7 +32,7 @@ const readingMinutes = Math.floor((post.body || "").split(/\s+/).length / 220) +
 >
   <ArticleShell
     title={post.data.title}
-    description={post.data.description}
+    descriptionHtml={renderInline(post.data.description)}
     backLink={{ href: "/blog/", title: "all notes" }}
     publishedTime={post.data.date}
     readingMinutes={readingMinutes}

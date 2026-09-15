@@ -48,7 +48,7 @@ export function setupReader() {
   const entryForHash = (hash) => {
     const match = hash.match(STUDY_HASH);
     if (!match) return undefined;
-    return manifest.byId.get(match[1]) ?? manifest.byLegacyNumber.get(Number(match[1]));
+    return manifest.byId.get(match[1]) ?? manifest.byAlias.get(match[1]) ?? manifest.byAlias.get(String(Number.parseInt(match[1], 10)));
   };
   const entryFromHash = () => entryForHash(window.location.hash);
 

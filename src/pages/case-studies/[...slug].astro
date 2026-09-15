@@ -1,82 +1,84 @@
 ---
-import { getCollection, render } from "astro:content";
+import { render } from "astro:content";
 import ArticleShell from "../../components/ArticleShell.astro";
 import PageToc from "../../components/PageToc.astro";
 import SiteLayout from "../../components/SiteLayout.astro";
-import { caseStudyCatalog } from "../../lib/catalog";
+import { adjacentCaseStudies, formatCaseNumber, loadCaseStudies, type CaseStudy } from "../../lib/case-studies";
+import { plainText, renderInline } from "../../lib/inline-markdown";
 
 export async function getStaticPaths() {
-  const studies = await getCollection("caseStudies");
-  const studyByFolder = new Map(studies.map((study) => [study.id.replace(/\/index$/, ""), study]));
-  return caseStudyCatalog.flatMap((entry, index) => {
-    const props = {
-      entry,
-      study: studyByFolder.get(entry.folder)!,
-      previous: caseStudyCatalog[(index - 1 + caseStudyCatalog.length) % caseStudyCatalog.length],
-      next: caseStudyCatalog[(index + 1) % caseStudyCatalog.length],
-      previousStudy: studyByFolder.get(caseStudyCatalog[(index - 1 + caseStudyCatalog.length) % caseStudyCatalog.length].folder)!,
-      nextStudy: studyByFolder.get(caseStudyCatalog[(index + 1) % caseStudyCatalog.length].folder)!,
-    };
-    return [
-      { params: { slug: entry.folder }, props: { ...props, redirect: false } },
-      { params: { slug: entry.legacyFolder }, props: { ...props, redirect: true } },
-    ];
-  });
+  const studies = await loadCaseStudies();
+  return studies.flatMap((study) => [
+    { params: { slug: study.folder }, props: { study, redirect: false } },
+    /* Every alias a study declares (its old numbered slug, an old reader id)
+       is a redirect page to the canonical folder. */
+    ...study.aliases.map((alias) => ({ params: { slug: alias }, props: { study, redirect: true } })),
+  ]);
 }
 
-const { entry, study, previous, next, previousStudy, nextStudy, redirect } = Astro.props;
+interface Props {
+  study: CaseStudy;
+  redirect: boolean;
+}
+
+const { study, redirect } = Astro.props;
+const studies = await loadCaseStudies();
+const { previous, next } = adjacentCaseStudies(studies, study);
 /* A case study is a sectioned document like a manual or a note, so it takes the
    same table of contents they do: the rule is "every article rendered through
    ArticleShell gets one", not "whichever routes happened to pass headings". */
-const { Content, headings } = await render(study);
-const target = `/case-studies/${entry.folder}/`;
+const { Content, headings } = await render(study.entry);
+const { data } = study.entry;
+const description = plainText(data.summary);
 ---
 
 {redirect ? (
   <SiteLayout
     activeApp="portfolio"
     canonicalOrigin="https://oponomarov.com"
-    canonicalPath={target}
+    canonicalPath={study.href}
     title="Case study moved"
-    description={study.data.summary}
+    description={description}
     robots="noindex,follow"
     indexable={false}
     ogImage="https://oponomarov.com/assets/og-image.png"
   >
     <Fragment slot="head">
-      <meta http-equiv="refresh" content={`0; url=${target}`} />
-      <script is:inline define:vars={{ target }}>location.replace(target + location.search + location.hash);</script>
+      <meta http-equiv="refresh" content={`0; url=${study.href}`} />
+      <script is:inline define:vars={{ target: study.href }}>location.replace(target + location.search + location.hash);</script>
     </Fragment>
     <main id="main-content" class="content-grid" tabindex="-1">
-      <div class="prose"><p>Moved to <a href={target}>{study.data.title}</a>.</p></div>
+      <div class="prose"><p>Moved to <a href={study.href}>{data.title}</a>.</p></div>
     </main>
   </SiteLayout>
 ) : <SiteLayout
   activeApp="portfolio"
   canonicalOrigin="https://oponomarov.com"
-  title={study.data.title}
-  description={study.data.summary}
+  title={data.title}
+  description={description}
   article
   searchType="Case study"
-  tags={study.data.topics}
+  tags={data.topics}
   ogImage="https://oponomarov.com/assets/og-image.png"
 >
   <ArticleShell
-    title={study.data.title}
-    description={study.data.summary}
-    eyebrow={`Case study ${String(entry.number).padStart(2, "0")}${study.data.featured ? " · featured" : ""}`}
+    title={data.title}
+    descriptionHtml={renderInline(data.summary)}
+    eyebrow={`Case study ${formatCaseNumber(study.number)}${data.featured ? " · featured" : ""}`}
     backLink={{ href: "/#index", title: "all case studies" }}
   >
     <Fragment slot="proof">
-      {study.data.role && study.data.evidence && (
+      {/* The dek above is the study's impact line, so the proof list carries
+          the other two facts; repeating the summary as "Impact" printed the
+          same sentence twice within sixty pixels. */}
+      {data.role && data.evidence && (
         <dl class="case-proof" data-case-proof>
-          <div><dt>Impact</dt><dd>{study.data.summary}</dd></div>
-          <div><dt>My role</dt><dd>{study.data.role}</dd></div>
-          <div><dt>Evidence</dt><dd>{study.data.evidence}</dd></div>
+          <div><dt>My role</dt><dd set:html={renderInline(data.role)} /></div>
+          <div><dt>Evidence</dt><dd set:html={renderInline(data.evidence)} /></div>
         </dl>
       )}
     </Fragment>
-    <div slot="topics" class="topic-list" aria-label="Topics">{study.data.topics.map((topic: string) => <span>{topic}</span>)}</div>
+    <div slot="topics" class="topic-list" aria-label="Topics">{data.topics.map((topic: string) => <span>{topic}</span>)}</div>
     <PageToc slot="toc" headings={headings} />
     <Content />
     <Fragment slot="footer">
@@ -84,15 +86,15 @@ const target = `/case-studies/${entry.folder}/`;
           three lines; the shared shell renders a single label, so the case
           study composes the nav itself from the same primitives. */}
       <nav class="adjacent-nav" aria-label="Adjacent case studies" data-pagefind-ignore>
-        <a href={`/case-studies/${previous.folder}/`} rel="prev" data-study-direction="previous">
+        <a href={previous.href} rel="prev" data-study-direction="previous">
           <span class="adjacent-nav__label">Previous</span>
-          <span class="adjacent-nav__number">Case {String(previous.number).padStart(2, "0")}</span>
-          <strong class="adjacent-nav__title">{previousStudy.data.title}</strong>
+          <span class="adjacent-nav__number">Case {formatCaseNumber(previous.number)}</span>
+          <strong class="adjacent-nav__title">{previous.entry.data.title}</strong>
         </a>
-        <a class="adjacent-nav__next" href={`/case-studies/${next.folder}/`} rel="next" data-study-direction="next">
+        <a class="adjacent-nav__next" href={next.href} rel="next" data-study-direction="next">
           <span class="adjacent-nav__label">Next</span>
-          <span class="adjacent-nav__number">Case {String(next.number).padStart(2, "0")}</span>
-          <strong class="adjacent-nav__title">{nextStudy.data.title}</strong>
+          <span class="adjacent-nav__number">Case {formatCaseNumber(next.number)}</span>
+          <strong class="adjacent-nav__title">{next.entry.data.title}</strong>
         </a>
       </nav>
       <nav class="link-row" aria-label="Portfolio navigation" data-pagefind-ignore>
