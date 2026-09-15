@@ -113,6 +113,27 @@
       addEventListener("resize", syncDiagramRegions, { signal });
     }
 
+    /* Fenced code scrolls sideways instead of wrapping. A frame whose lines
+       run past its edge is marked, and prose.css fades the last characters
+       until the block is scrolled to its end, so the continuation is visible
+       before the scrollbar is noticed. */
+    const frames = [...document.querySelectorAll<HTMLElement>(".expressive-code .frame")];
+    const syncCodeOverflow = () => {
+      frames.forEach((frame) => {
+        const pre = frame.querySelector("pre");
+        if (!pre) return;
+        const overflows = pre.scrollWidth > pre.clientWidth + 1;
+        frame.toggleAttribute("data-overflows", overflows);
+        frame.toggleAttribute("data-scrolled-end", overflows && pre.scrollLeft + pre.clientWidth >= pre.scrollWidth - 1);
+      });
+    };
+    if (frames.length > 0) {
+      syncCodeOverflow();
+      addEventListener("resize", syncCodeOverflow, { signal });
+      frames.forEach((frame) => frame.querySelector("pre")?.addEventListener("scroll", syncCodeOverflow, { passive: true, signal }));
+      document.fonts?.ready.then(syncCodeOverflow);
+    }
+
     const filter = document.querySelector<HTMLElement>("[data-shortcut-filter]");
     const input = filter?.querySelector<HTMLInputElement>("[data-shortcut-query]");
     const sections = [...document.querySelectorAll<HTMLElement>("[data-shortcut-section]")];

@@ -173,9 +173,13 @@ export function evaluateContract(raw) {
     }
   }
 
+  /* S4 - fenced code does not wrap; a block wider than its column scrolls
+     inside its own frame. A <pre> whose lines overflow must be the scroll
+     container itself (overflow-x auto or scroll), never a wrapped line and
+     never overflow the page: the page-level guarantee is S5. */
   for (const r of [...good, ...zoomResults.filter((r) => r.code)]) {
     for (const pre of r.code?.pres ?? []) {
-      if (pre.scrollWidth > pre.clientWidth + 1) fail(4, r, `${pre.path} pre[${pre.index}] scrollWidth`, pre.scrollWidth, `<= ${pre.clientWidth + 1}px (clientWidth + 1)`);
+      if (pre.scrollWidth > pre.clientWidth + 1 && !['auto', 'scroll'].includes(pre.overflowX)) fail(4, r, `${pre.path} pre[${pre.index}] overflow-x`, { overflowX: pre.overflowX, scrollWidth: pre.scrollWidth, clientWidth: pre.clientWidth }, 'an overflowing <pre> is its own scroll container (overflow-x auto|scroll)');
     }
   }
   for (const r of good) {

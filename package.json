@@ -7,7 +7,7 @@
     "predev": "node scripts/sync-content.mjs",
     "dev": "astro dev --port 4321",
     "prebuild": "node scripts/sync-content.mjs",
-    "build": "astro build && pagefind --site dist",
+    "build": "astro build --force && pagefind --site dist",
     "check": "astro check",
     "preview": "astro preview --port 4325",
     "verify": "node scripts/verify-build.mjs && node scripts/verify-design.mjs",

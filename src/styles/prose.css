@@ -9,17 +9,11 @@
    A new content type never gets a new prose class. */
 
 @layer prose {
-  /* Expressive Code's `wrap` uses pre-wrap, which only breaks at whitespace, so
-     a long unbreakable token - a hash, a URL, a generated identifier - still
-     forces the block to scroll sideways on a phone. Allow those to break; the
-     indent guides and line numbers are unaffected because they are separate
-     boxes. */
-  .expressive-code pre.wrap .ec-line .code {
-    overflow-wrap: anywhere;
-    /* Expressive Code floors each line at 20ch, which is wider than the
-       readable column on a 320px phone and makes the block scroll sideways
-       even with wrapping on. The content grid already guarantees a sane
-       measure, so the floor is redundant here and only causes overflow. */
+  /* Fenced code does not wrap (astro.config.mjs sets wrap: false): a line is
+     a line, and a block wider than its column scrolls inside its own frame.
+     Expressive Code floors each line at 20ch, wider than a 320px column, so
+     the floor goes; the <pre> below owns the horizontal scroll. */
+  .expressive-code .ec-line .code {
     min-inline-size: 0;
   }
 
@@ -511,13 +505,18 @@
   }
 
   .prose .expressive-code .frame {
+    /* Positioned for the overflow fade drawn on it below. */
+    position: relative;
     border: var(--border-width) solid var(--code-border);
     border-radius: var(--radius-md);
     background: var(--code-bg);
     box-shadow: none;
   }
 
-  /* Every frame gets the toolbar: titled or not, terminal or editor. */
+  /* A titled frame gets the toolbar, terminal or editor. An untitled block
+     gets none: the 44px bar with three decorative dots sat on every fenced
+     block, nine of them on one note, and carried nothing but the copy
+     control, which floats over the corner of the block instead (below). */
   .prose .expressive-code .frame .header {
     display: flex;
     align-items: center;
@@ -530,6 +529,10 @@
     border-radius: var(--radius-md) var(--radius-md) 0 0;
     background: var(--code-toolbar-bg);
     color: var(--code-muted);
+  }
+
+  .prose .expressive-code .frame:not(.has-title) .header {
+    display: none;
   }
 
   /* The window dots, drawn in flow on every frame (EC only draws them on
@@ -596,20 +599,95 @@
     background: var(--code-bg);
     font-size: var(--code-font-size);
     line-height: var(--leading-code);
+    /* The block is its own horizontal scroll container (QA S4). */
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+  }
+
+  /* An untitled block has no toolbar, so its <pre> keeps all four corners. */
+  .prose .expressive-code .frame:not(.has-title) pre {
+    border-radius: var(--radius-md);
   }
 
   .prose .expressive-code pre > code {
     padding-block: var(--space-3);
   }
 
-  /* The copy control lives in the toolbar and is always visible. The 44px
-     hit area stays; EC's own background, border and icon layers are pulled
-     in from the edges to draw the 32px control the toolbar was designed
-     around. */
+  /* The scrollbar is the affordance that a line continues, so it is always
+     drawn when the block overflows: a thin bar in the border tone on the
+     block's own background. WebKit and Blink switch from their auto-hiding
+     overlay bar to this classic one as soon as the pseudo-element is styled;
+     Firefox takes the standard properties (the @supports guard keeps Chrome,
+     which honours both, on the pseudo-element rules, since setting the
+     standard ones would make it ignore them). */
+  .prose .expressive-code pre::-webkit-scrollbar {
+    block-size: calc(var(--space-2) + var(--space-1));
+  }
+
+  .prose .expressive-code pre::-webkit-scrollbar-track {
+    background: var(--code-bg);
+  }
+
+  .prose .expressive-code pre::-webkit-scrollbar-thumb {
+    border: calc(var(--space-1) / 2) solid var(--code-bg);
+    border-radius: var(--radius-pill);
+    background: var(--color-border);
+  }
+
+  .prose .expressive-code pre::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-subtle);
+  }
+
+  @supports not selector(::-webkit-scrollbar) {
+    .prose .expressive-code pre {
+      scrollbar-width: thin;
+      scrollbar-color: var(--color-border) var(--code-bg);
+    }
+  }
+
+  /* ContentInteractions marks a block whose lines run past its edge; a
+     fade over the last few characters says the line continues even before
+     the reader notices the bar. It lifts once the block is scrolled to the
+     end. Drawn on the frame so it never scrolls with the content. */
+  .prose .expressive-code .frame[data-overflows]:not([data-scrolled-end])::after {
+    content: "";
+    position: absolute;
+    inset-block: 0 calc(var(--space-2) + var(--space-1));
+    inset-inline-end: 0;
+    inline-size: var(--space-10);
+    border-end-end-radius: var(--radius-md);
+    background: linear-gradient(to right, transparent, var(--code-bg));
+    pointer-events: none;
+  }
+
+  .prose .expressive-code .frame.has-title[data-overflows]:not([data-scrolled-end])::after {
+    inset-block-start: var(--tap-size);
+  }
+
+  /* The copy control: in the toolbar on a titled frame, floating over the
+     block's top corner on an untitled one, always visible either way. The
+     44px hit area stays; EC's own background, border and icon layers are
+     pulled in from the edges to draw the 32px control the toolbar was
+     designed around. */
   .prose .expressive-code .copy {
     display: flex;
     inset-block-start: 0;
     inset-inline-end: var(--space-2);
+  }
+
+  .prose .expressive-code .frame:not(.has-title) .copy {
+    inset-block-start: var(--space-1);
+    inset-inline-end: var(--space-1);
+  }
+
+  /* Floating over code it must not let a line show through. */
+  .prose .expressive-code .frame:not(.has-title) .copy button > div {
+    background: var(--code-bg);
+  }
+
+  .prose .expressive-code .frame:not(.has-title) .copy button:hover > div,
+  .prose .expressive-code .frame:not(.has-title) .copy button:focus-visible > div {
+    background: var(--color-accent-surface);
   }
 
   /* "Copied!" is a live region EC paints as a tooltip. Nothing reached it, so
@@ -676,7 +754,7 @@
   }
 
   /* Raw <pre> that did not pass through Expressive Code (authored HTML,
-     fetched reader content) gets the same tokens and never scrolls. */
+     fetched reader content) gets the same tokens and scrolls the same way. */
   .prose pre:not(.expressive-code *) {
     padding: var(--space-4) var(--space-5);
     border: var(--border-width) solid var(--code-border);
@@ -686,8 +764,9 @@
     font-family: var(--font-mono);
     font-size: var(--code-font-size);
     line-height: var(--leading-code);
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
+    white-space: pre;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
   }
 
   /* ------------------------------------------------------------------ */

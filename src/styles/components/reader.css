@@ -238,19 +238,14 @@
     block-size: auto;
   }
 
-  /* Fenced code: Expressive Code owns the frame, colours, and wrapping in
-     the `expressive-code` layer. Keep the frame shrinkable so it renders
-     inside the dialog once its stylesheet is loaded, and wrap as a fallback
-     so an unstyled `pre` never scrolls the dialog sideways. */
+  /* Fenced code: Expressive Code owns the frame and colours in the
+     `expressive-code` layer and prose.css owns the horizontal scroll. Keep
+     the frame shrinkable so the block scrolls inside itself and never the
+     dialog. */
   .reader-prose .expressive-code,
   .reader-prose pre {
     min-inline-size: 0;
     max-inline-size: 100%;
-  }
-
-  .reader-prose pre {
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
   }
 
   /* ------------------------------------------------------------------ */

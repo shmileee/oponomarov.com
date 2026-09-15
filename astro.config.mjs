@@ -22,7 +22,12 @@ export default defineConfig({
     customizeTheme: (t) => { t.name = t.type; },
     useDarkModeMediaQuery: false,
     cascadeLayer: "expressive-code",
-    defaultProps: { wrap: true, preserveIndent: true },
+    /* Long lines scroll inside the frame rather than wrapping: a wrapped
+       command reads as two commands, a wrapped YAML key as a broken document.
+       prose.css draws the always-visible thin scrollbar and the edge fade
+       that say "more to the right"; QA S4 requires every overflowing block to
+       be its own scroll container. */
+    defaultProps: { wrap: false, preserveIndent: true },
     useThemedScrollbars: false,
     styleOverrides: {
       codeFontFamily: "var(--font-mono)",

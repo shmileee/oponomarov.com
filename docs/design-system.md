@@ -685,7 +685,7 @@ The agreed Astro integration settings are:
 | EC `customizeTheme` | `(t) => { t.name = t.type; }` |
 | EC `useDarkModeMediaQuery` | `false` |
 | EC `cascadeLayer` | `"expressive-code"` |
-| EC `defaultProps` | `{ wrap: true, preserveIndent: true }` |
+| EC `defaultProps` | `{ wrap: false, preserveIndent: true }` — lines never wrap; a block wider than its column scrolls inside its own frame |
 | EC `useThemedScrollbars` | `false` |
 
 Use the plan's `styleOverrides` mapping:
@@ -715,10 +715,16 @@ build warnings rather than assume every computed key accepts `var()`.
 See [configuration](https://expressive-code.com/reference/configuration/) and
 [style overrides](https://expressive-code.com/reference/style-overrides/).
 
-Wrapping changes display, not the copied source. Reflow long authored commands
-with valid language continuations when practical. Although EC supports
-`wrap=false`, the current site contract S4 allows no horizontally scrolling
-`pre`; an opt-out must not be used to evade that gate.
+Fenced code does not wrap. A wrapped command reads as two commands and a
+wrapped YAML key as a broken document, so a block wider than its column
+scrolls horizontally inside its own frame: the `<pre>` is the scroll container
+(S4 requires exactly that of any overflowing block; V13 checks the shipped
+stylesheet), prose.css draws an always-visible thin scrollbar in the border
+tone on the block's own background, and ContentInteractions marks overflowing
+frames so the last characters fade until the block is scrolled to its end.
+Only a titled frame carries the toolbar; on an untitled block the copy control
+floats over the top corner. Authors may still reflow long commands with valid
+continuations for readability, but never to avoid a scroll.
 
 Inline code uses `--font-mono`, `--code-inline-size`, `--code-inline-bg`,
 `--code-inline-text`, `--radius-sm`, and small token padding. It remains inline
@@ -966,7 +972,7 @@ current route set from the build rather than freezing that count forever.
 | S1 | One exact body-paragraph `(font-family, font-size, line-height, color)` tuple per theme at each viewport across families | Divergent Markdown typography |
 | S2 | Readable prose measure ≤704px at 2560px with a 16px root; page ≤`--measure-page` | Unbounded prose and competing content widths |
 | S3 | One exact normal-prose inline-code `(font, size, background, color, radius, padding)` tuple per theme at each viewport | Multiple inline-code treatments |
-| S4 | Zero `pre` with `scrollWidth > clientWidth` at all tested viewports | Horizontally scrolling fenced code |
+| S4 | Every `pre` whose lines overflow is its own scroll container (`overflow-x: auto`); none wraps or overflows the page | Wrapped commands, and code widening the page |
 | S5 | Zero non-fixed elements painting outside the viewport at 320px | Hidden grid or media blowouts |
 | S6 | 100% of tables inside regions with `tabindex="0"`, `role="region"`, and an accessible name | Keyboard-inaccessible columns |
 | S7 | Zero standalone controls below 44×44px at 375px; inline prose links exempt | Undersized targets |

@@ -244,7 +244,10 @@ for (const page of pages) {
   }
 }
 
-// V13 - expressive-code is layered and wrapping, not scrolling.
+// V13 - expressive-code is layered and scrolls rather than wraps: a line is a
+//       line, and a block wider than its column scrolls inside its own frame
+//       (astro.config.mjs wrap: false; prose.css draws the scrollbar). QA S4
+//       checks the rendered blocks; this checks the shipped stylesheet.
 {
   const ec = filesBelow(join(dist, "_astro")).find((p) => /\/ec\.[^/]+\.css$/.test(p));
   if (!ec) throw new Error("No expressive-code stylesheet in dist/_astro/.");
@@ -252,8 +255,12 @@ for (const page of pages) {
   if (!css.includes("@layer expressive-code")) {
     throw new Error("The expressive-code stylesheet is not in its cascade layer; our code styling would need !important to win.");
   }
-  if (!/white-space:\s*pre-wrap/.test(css)) {
-    throw new Error("Expressive-code is not wrapping long lines; long code will scroll horizontally on phones.");
+  if (!/\.expressive-code pre\{[^}]*overflow-x:\s*auto/.test(css)) {
+    throw new Error("Expressive-code blocks are not their own horizontal scroll containers; a long line would widen the page.");
+  }
+  const built = pages.map(({ html }) => html).join("\n");
+  if (/<pre[^>]*class="[^"]*\bwrap\b/.test(built)) {
+    throw new Error("A fenced block still renders with Expressive Code's wrap class; long lines must scroll, not wrap (astro.config.mjs defaultProps.wrap).");
   }
 }
 
@@ -280,5 +287,5 @@ for (const page of pages) {
 console.log(
   `Verified the design system: ${pages.length} pages on one stylesheet set and one theme script, ` +
   `${cssSources.length} fully layered stylesheets with no !important and no stray colours, ` +
-  `every table a reachable scroll region, every image sized, expressive-code layered and wrapping, and keycaps sized like inline code.`,
+  `every table a reachable scroll region, every image sized, expressive-code layered and scrolling in its own frame, and keycaps sized like inline code.`,
 );

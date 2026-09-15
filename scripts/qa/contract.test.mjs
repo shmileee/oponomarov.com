@@ -75,7 +75,8 @@ const violations = [
   (raw) => { raw.results[0].typography.bodyProse.fontSize = '17px'; },
   (raw) => { raw.measureResults[0].proseContainers[0].width = 736.01; },
   (raw) => { raw.results[0].code.inlines.push({ ...raw.results[0].code.inlines[0], padding: '3px' }); },
-  (raw) => { raw.results[0].code.pres.push({ path: 'pre', index: 1, scrollWidth: 102, clientWidth: 100 }); },
+  /* An overflowing block that is not its own scroll container (a wrapped or clipped <pre>). */
+  (raw) => { raw.results[0].code.pres.push({ path: 'pre', index: 1, scrollWidth: 102, clientWidth: 100, overflowX: 'visible' }); },
   (raw) => { raw.results[0].escapers.push({ path: 'div', left: 0, right: 322 }); },
   (raw) => { raw.results[0].tables.push({ wrapperOverflowX: 'auto', wrapperTabIndex: '-1', wrapperRole: 'region', wrapperLabel: 'Data' }); },
   (raw) => { raw.results[1].smallTargets.push({ path: 'a', w: 43, h: 44, inlineProseLink: false }); },
@@ -203,7 +204,9 @@ test('only the specified target, clipping and inline-style exceptions pass', () 
   raw.results[0].selfScrollers.push({ overflowX: 'hidden', srOnly: true });
   raw.results[0].inlineStyleAttrs.push({ value: '--0:#fff;--1:#000' });
   raw.results[0].tables.push({ wrapperOverflowX: 'scroll', wrapperTabIndex: '0', wrapperRole: 'region', wrapperLabel: 'Data' });
-  raw.results[0].code.pres.push({ scrollWidth: 101, clientWidth: 100 });
+  /* A block that overflows by more than the tolerance is fine when it scrolls inside itself. */
+  raw.results[0].code.pres.push({ scrollWidth: 340, clientWidth: 100, overflowX: 'auto' });
+  raw.results[0].code.pres.push({ scrollWidth: 101, clientWidth: 100, overflowX: 'visible' });
   assert.ok(evaluateContract(raw).every((s) => !s.failures.length));
 });
 
