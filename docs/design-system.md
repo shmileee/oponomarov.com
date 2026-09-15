@@ -387,6 +387,16 @@ The enclosing `.page` is centered and bounded by `--measure-page`, so
 full-bleed means the page grid, not an unbounded `100vw` viewport breakout.
 Below 40rem both opt-ins return to the content track.
 
+**One left axis.** As shipped (layout.css), the hub grid's content track is a
+single flexible track starting at the gutter, and the article grid is the
+reading measure starting at that same gutter with a `wide` track that adds
+room only to its right (`--wide-extra`, up to the 64rem measure; beside the
+TOC rail, whatever the rail leaves). Every page's text therefore starts on the
+header's text edge at every width — S21 measures exactly that — so moving
+between a hub and an article never shifts the column. The article column is
+not centred in the page; the symmetric side tracks in the copy above are the
+original plan, kept for the track names.
+
 All **interior** tracks use `minmax(0, ...)`, and every direct child gets
 `min-inline-size: 0`. This removes intrinsic min-content minimums that would
 otherwise let a long path, SVG, table, or code line enlarge a track. Keep the
@@ -983,7 +993,7 @@ current route set from the build rather than freezing that count forever.
 | S12 | Homepage reader opens and fetched code has EC styling applied | Lost reader behavior or unstyled code after deleting legacy CSS |
 | S13 | Skip link is first focusable, visible on focus, and works on every route | Unreachable main-content bypass |
 | S14–S20 | Contrast, wide tracks, and the typographic parity set; see `scripts/qa/README.md` | Token-level drift between the three content families |
-| S21 | The first child of every hub section shell, article header, article body, topic page and landing body starts on the header's text edge (1px); article shells only below 40rem, where they are not centred | A region that picked up a second gutter (a `full-bleed` wrapper pulled into the content track around a nested grid) |
+| S21 | The first child of every hub section shell, article header, article body, topic page and landing body starts on the header's text edge (1px) at every width | A region that picked up a second gutter, or an article column that drifted off the site's one left axis |
 
 Probe actual body paragraphs for S1, not eyebrows or metadata; exclude the two
 documented role modifiers from the normal-body comparison. For S2 measure the

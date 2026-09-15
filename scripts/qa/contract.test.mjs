@@ -21,11 +21,12 @@ function fixture() {
     foreground: '#595959', background: '#ffffff', ratio: 7, reason: null,
   }));
   /* S15: an article body whose wide track is real. At 1440 the content track
-     (736px) sits centred in a 780px wide track beside a rail at 1018; below
-     that the three tracks coincide. The one scrolling table took every pixel
-     its 780px wrapper offered. */
+     (736px) starts on the wide track's left edge and the wide track runs 44px
+     further right, to the gap before a rail at 1018; below that the three
+     tracks coincide. The one scrolling table took every pixel its 780px
+     wrapper offered. */
   const articleGrid = (vp) => {
-    const content = vp.width >= 1024 ? { left: 220, right: 956, width: 736 } : { left: 20, right: vp.width - 20, width: vp.width - 40 };
+    const content = vp.width >= 1024 ? { left: 198, right: 934, width: 736 } : { left: 20, right: vp.width - 20, width: vp.width - 40 };
     const wide = vp.width >= 1024 ? { left: 198, right: 978, width: 780 } : { ...content };
     return {
       content, wide, full: { ...wide }, rail: vp.width >= 1280 ? 1018 : null,
@@ -47,10 +48,10 @@ function fixture() {
     selfScrollers: [], inlineStyleAttrs: [], imagesMissingDims: [], imagesMissingAlt: [],
     contrast: contrast.map((sample) => ({ ...sample })),
     articleGrid: route === '/article/' ? articleGrid(vp) : null,
-    /* S21: every shell's first child stands on the header's text edge; the
-       article shells sit centred from 40rem, which the contract exempts. */
+    /* S21: every shell's first child stands on the header's text edge,
+       article shells included. */
     gutter: { headerEdge: 20, blocks: route === '/article/'
-      ? [{ sel: 'header.article-header', article: true, left: vp.width >= 1024 ? 220 : 20 }]
+      ? [{ sel: 'header.article-header', article: true, left: 20 }]
       : [{ sel: 'section.hero.section-shell', article: false, left: 20 }, { sel: 'div.section-shell.content-grid', article: false, left: 20 }] },
     h1Count: 1, status: 200, sheets: ['/_astro/main.ABCdef12.css'],
   }))));
@@ -268,13 +269,13 @@ test('S15 checks every track relation, the rail, child containment and scrolling
   const underRail = fixture();
   at1440(underRail).articleGrid.children.push({ sel: 'figure.media-exhibit', left: 220, right: 1030, optIn: null });
   assert.ok(evaluateContract(underRail)[15].failures.some((f) => /under the TOC rail/.test(f.field)));
-  /* A child off its track, and a wide track the content is not centred in. */
+  /* A child off its track, and a wide track that does not start on the content's left edge. */
   const offTrack = fixture();
   at1440(offTrack).articleGrid.children.push({ sel: 'div.stray', left: 100, right: 500, optIn: null });
-  at1440(offTrack).articleGrid.wide = { left: 220, right: 1000, width: 780 };
+  at1440(offTrack).articleGrid.wide = { left: 176, right: 956, width: 780 };
   const fields = evaluateContract(offTrack)[15].failures.map((f) => f.field);
   assert.ok(fields.some((f) => /div\.stray inside its content track/.test(f)));
-  assert.ok(fields.some((f) => /centred/.test(f)));
+  assert.ok(fields.some((f) => /left edge/.test(f)));
   /* A table that scrolls without first taking the room its wrapper offers. */
   const earlyScroll = fixture();
   at1440(earlyScroll).articleGrid.tables.push({ sel: 'div.table-scroll', label: 'Early', width: 736, parentWidth: 780, scrolls: true });

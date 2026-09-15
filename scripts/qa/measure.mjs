@@ -569,7 +569,12 @@ const PROBE = () => {
       .filter((el) => el.getBoundingClientRect().width > 0)
       .map((el) => {
         const r = el.getBoundingClientRect();
-        return { sel: describe(el), left: Math.round(r.left), right: Math.round(r.right), optIn: el.matches('.full-bleed') ? 'full-bleed' : el.matches('.wide') ? 'wide' : null };
+        /* The opt-in is what the grid was told, not only what the author
+           wrote: a landing page's card grids are placed on `wide` by the
+           engine (primitives.css `[data-landing]`) without the class. */
+        const placed = getComputedStyle(el).gridColumnStart;
+        const optIn = el.matches('.full-bleed') || placed === 'full' ? 'full-bleed' : el.matches('.wide') || placed === 'wide' ? 'wide' : null;
+        return { sel: describe(el), left: Math.round(r.left), right: Math.round(r.right), optIn };
       });
     const tables = [...document.querySelectorAll('.table-scroll')].map((el) => ({
       sel: describe(el), label: el.getAttribute('aria-label'),

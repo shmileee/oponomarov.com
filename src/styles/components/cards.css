@@ -802,6 +802,10 @@
     }
   }
 
+  /* The same card as a case card or a Dotfiles surface card: flat raised
+     surface, hairline, and the hairline going to the accent on hover. The
+     published contact card tinted and lifted on hover, the only card on the
+     site that moved. */
   .contact-method {
     display: flex;
     flex-direction: column;
@@ -813,15 +817,12 @@
     color: var(--color-text-body);
     text-decoration: none;
     scroll-margin-block-start: calc(var(--header-height) + var(--space-8));
-    transition: transform var(--dur-base) var(--ease-out);
+    transition: border-color var(--dur-fast) var(--ease-out);
     overflow-wrap: anywhere;
   }
 
-  .contact-method:hover,
-  .contact-method:focus-visible {
-    border-color: var(--color-accent-border);
-    background: var(--color-accent-surface);
-    transform: translateY(calc(-0.5 * var(--space-1)));
+  .contact-method:hover {
+    border-color: var(--color-accent);
   }
 
   .contact-method__number {
@@ -895,18 +896,4 @@
     line-height: var(--leading-body);
   }
 
-  /* ------------------------------------------------------------------ */
-  /* Motion                                                               */
-  /* ------------------------------------------------------------------ */
-
-  @media (prefers-reduced-motion: reduce) {
-    .contact-method {
-      transition: none;
-    }
-
-    .contact-method:hover,
-    .contact-method:focus-visible {
-      transform: none;
-    }
-  }
 }

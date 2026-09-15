@@ -306,12 +306,13 @@ export function evaluateContract(raw) {
   /* S15 - the article body's opt-in tracks are real. `wide` and `full-bleed`
      never resolve narrower than the content track, and from a laptop width
      `wide` is strictly wider than it: the escape hatch the design gives a
-     table, figure or exhibit has room in it. The content track sits centred
-     in the wide track; nothing the body holds reaches under the sticky TOC
-     rail; a child that did not opt in stays inside the content track; and a
-     table region that scrolls has first taken every pixel its container or
-     the wide track could give it. A route without an article body has no
-     sample; an article route whose probe recorded no tracks fails. */
+     table, figure or exhibit has room in it. The content track sits on the
+     wide track's left edge (the site's one axis; wide grows to the right);
+     nothing the body holds reaches under the sticky TOC rail; a child that
+     did not opt in stays inside the content track; and a table region that
+     scrolls has first taken every pixel its container or the wide track
+     could give it. A route without an article body has no sample; an
+     article route whose probe recorded no tracks fails. */
   for (const r of good) {
     if (!Object.hasOwn(r, 'articleGrid')) { fail(15, r, 'article grid probe', '(missing)', 'articleGrid measurements or null'); continue; }
     const grid = r.articleGrid;
@@ -323,7 +324,10 @@ export function evaluateContract(raw) {
     if (wide.width < content.width) fail(15, r, 'wide track width', wide.width, `>= content track ${content.width}px`);
     if (full.width < wide.width) fail(15, r, 'full track width', full.width, `>= wide track ${wide.width}px`);
     if (r.viewportWidth >= 1024 && !(wide.width > content.width)) fail(15, r, 'wide track room', { wide: wide.width, content: content.width }, 'wide strictly wider than content from 1024px');
-    if (Math.abs((content.left - wide.left) - (wide.right - content.right)) > 1) fail(15, r, 'content centred in wide', { wide, content }, 'equal side tracks (1px tolerance)');
+    /* One left axis: the reading column starts where the wide track starts, and
+       the wide track only ever adds room to its right. */
+    if (Math.abs(content.left - wide.left) > 1) fail(15, r, 'content on the wide track\'s left edge', { contentLeft: content.left, wideLeft: wide.left }, 'equal left edges (1px tolerance)');
+    if (wide.right < content.right - 1) fail(15, r, 'wide track right edge', wide.right, `>= content right edge ${content.right}px`);
     for (const child of grid.children ?? []) {
       if (rail !== null && child.right > rail + 1) fail(15, r, `${child.sel} under the TOC rail`, { right: child.right, rail }, `right edge <= ${rail}px`);
       const bounds = child.optIn === 'full-bleed' ? full : child.optIn === 'wide' ? wide : content;
@@ -338,18 +342,16 @@ export function evaluateContract(raw) {
   /* S21 - every region's text starts where the header's text starts. The
      probe records the header's content edge and the left edge of the first
      rendered child of every hub section shell, article header, article body,
-     topic page and landing body. A hub shell must sit on the header edge at
-     every width; an article shell is centred from 40rem by design and must
-     sit on it below that. A route whose probe recorded no shells fails: the
-     scenario exists to catch a shell that drifted, and a page with none to
-     measure is not evidence of anything. */
+     topic page and landing body; all of them must sit on the header edge at
+     every width, the site's one left axis. A route whose probe recorded no
+     shells fails: the scenario exists to catch a shell that drifted, and a
+     page with none to measure is not evidence of anything. */
   for (const r of good) {
     if (!Object.hasOwn(r, 'gutter')) { fail(21, r, 'gutter probe', '(missing)', 'header edge and shell left edges'); continue; }
     const gutter = r.gutter;
     if (!gutter || !Number.isFinite(gutter.headerEdge) || !Array.isArray(gutter.blocks)) { fail(21, r, 'gutter probe', gutter, 'a header edge and a block list'); continue; }
     if (gutter.blocks.length === 0) { fail(21, r, 'measured shells', 0, 'at least one section shell, article header or article body'); continue; }
     for (const block of gutter.blocks) {
-      if (block.article && r.viewportWidth >= 640) continue;
       if (Math.abs(block.left - gutter.headerEdge) > 1) fail(21, r, `${block.sel} left edge`, block.left, `${gutter.headerEdge}px, the header's text edge (1px tolerance)`);
     }
   }

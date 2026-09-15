@@ -61,8 +61,8 @@ content, `wide` and `full-bleed` tracks (with throwaway children placed in each
 and removed), the sticky TOC rail's left edge, every direct child's horizontal
 bounds, and every table region's width, its parent's width and whether it
 scrolls. The contract requires `wide >= content` and `full >= wide` everywhere,
-`wide > content` from 1024px, the content track centred in the wide track, no
-child under the rail, every child inside the track it opted into, and any
+`wide > content` from 1024px, the content track on the wide track's left edge
+(wide grows to the right), no child under the rail, every child inside the track it opted into, and any
 scrolling table region to have first taken the smaller of its parent's width
 and the wide track.
 
@@ -80,10 +80,9 @@ scenario; absent parity arrays or `code.kbds` also fail S10 hygiene.
 S21 (GUTTER PARITY) records the header's text edge (`.op-header__inner` plus
 its inline padding) and the left edge of the first rendered child of every
 hub section shell, article header, article body, topic page and landing body.
-A hub shell must sit on the header edge at every width; an article shell is
-centred from 40rem by design and is compared only below it. A route with no
-measurable shell fails. This is the double-gutter class: a `full-bleed`
-wrapper around a nested content grid was pulled into the content track on a
+Every one of them must sit on the header edge at every width: the site has one
+left axis, hubs and articles alike. A route with no measurable shell fails.
+This is the double-gutter class: a `full-bleed` wrapper around a nested content grid was pulled into the content track on a
 phone and its section started 20px in from the hero above it.
 
 The checker prints all 22 PASS/FAIL lines with actual/expected evidence for each

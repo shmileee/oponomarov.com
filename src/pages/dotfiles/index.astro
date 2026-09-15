@@ -15,11 +15,13 @@ const { next } = adjacentDocs(pages, page);
   description={page.entry.data.description}
   searchType="Documentation"
 >
-  {/* The published landing page ran in the centred reading column with no
-      table of contents; the article composition (layout.css) is that column,
-      so the landing body and its next-card sit exactly where the manuals' do. */}
+  {/* A hub, not an article: no table of contents, no header block. It runs
+      in the article composition (layout.css) so its column, hero and
+      next-card sit exactly where the manuals' do, and `data-landing` lets its
+      card grids and step lists take the wide track the way the homepage's
+      case-study index does (primitives.css). */}
   <main id="main-content" class="article content-grid" tabindex="-1">
-    <div class="prose content-grid full-bleed">
+    <div class="prose content-grid full-bleed" data-landing>
       <Content />
     </div>
     {next && (

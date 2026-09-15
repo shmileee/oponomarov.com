@@ -274,8 +274,22 @@
     }
   }
 
-  /* The card surface: a shallow diagonal wash from the raised surface to
-     the page, with a one-pixel highlight along the top edge. */
+  /* On a landing page (the engine marks the Dotfiles overview's body with
+     `data-landing`) a card grid or step list takes the wide track, as the
+     homepage's case-study index does; a hub's cards are a directory, not a
+     paragraph, and the reading measure was leaving a third of the page empty
+     beside three narrow cards. The prose grid caps ordinary children at the
+     measure, so the cap is lifted with the placement. */
+  [data-landing] > :is(.surface-grid, .steps) {
+    grid-column: wide;
+    max-inline-size: none;
+  }
+
+  /* The card surface: the site's one card, a flat raised surface inside a
+     hairline (components/cards.css draws the case and contact cards from the
+     same three values). The published docs cards carried a diagonal wash and
+     an inset top highlight, which made the Dotfiles cards the odd family out
+     beside the flat case cards one click away. */
   .surface-grid > * {
     display: flex;
     flex-direction: column;
@@ -286,8 +300,7 @@
     padding: var(--space-5);
     border: var(--border-width) solid var(--color-border);
     border-radius: var(--radius-lg);
-    background: linear-gradient(145deg, var(--color-surface), var(--color-bg));
-    box-shadow: inset 0 var(--border-width) 0 var(--color-border-subtle);
+    background: var(--color-surface);
   }
 
   /* An aside among the cards is a caution: the accent-tinted callout the
@@ -305,7 +318,6 @@
     padding: 0;
     border: 0;
     background: none;
-    box-shadow: none;
   }
 
   .surface-grid > div:has(> :is(h2, h3, h4):first-child) > p {
@@ -347,9 +359,10 @@
     line-height: 1;
   }
 
+  /* The one card hover: the hairline goes to the accent (cards.css gives the
+     case and contact cards the same). */
   .surface-grid > a:hover {
     border-color: var(--color-accent);
-    background: var(--color-accent-surface);
   }
 
   .surface-grid > * > :first-child {
@@ -594,15 +607,13 @@
     color: var(--color-accent);
   }
 
-  /* The panel is the same card surface as the grid cards: a shallow wash
-     from the raised surface to the page with a highlight along the top. */
+  /* The panel is the same card surface as the grid cards. */
   .tab {
     min-inline-size: 0;
     padding: var(--space-5);
     border: var(--border-width) solid var(--color-border);
     border-radius: var(--radius-lg);
-    background: linear-gradient(145deg, var(--color-surface), var(--color-bg));
-    box-shadow: inset 0 var(--border-width) 0 var(--color-border-subtle);
+    background: var(--color-surface);
   }
 
   .tabs:has(> [role="tablist"]) > .tab {
