@@ -6,6 +6,7 @@ import ContentInteractions from "./ContentInteractions.astro";
 import SiteFavicons from "./SiteFavicons.astro";
 import SiteFooter from "./SiteFooter.astro";
 import SiteHeader from "./SiteHeader.astro";
+import { ogImagePath } from "../lib/og-path";
 import { documentTitle as formatDocumentTitle, ownerName, type SiteSection } from "../lib/site-metadata";
 
 interface Props {
@@ -39,7 +40,9 @@ const {
   indexable = true,
   showProgress = article || activeApp === "portfolio",
   rssHref = activeApp === "blog" ? "/blog/feed.xml" : undefined,
-  ogImage = activeApp === "portfolio" ? "/assets/og-image.png" : undefined,
+  /* Every canonical page has a card of its own under /og/ (src/lib/og.ts);
+     a redirect page borrows its target's through canonicalPath. */
+  ogImage = ogImagePath(canonicalPath),
 } = Astro.props;
 const roots = { portfolio: "/", blog: "/blog/", dotfiles: "/dotfiles/", contact: "/contact/" } as const;
 const products = { portfolio: "Portfolio", blog: "Notes", dotfiles: "Dotfiles", contact: "Site" } as const;
@@ -49,7 +52,7 @@ const searchType = Astro.props.searchType ?? (article || activeApp === "dotfiles
 const documentTitle = formatDocumentTitle(activeApp, Astro.url.pathname === roots[activeApp] ? undefined : title);
 const plainTitle = title ?? products[activeApp];
 const canonical = new URL(canonicalPath, canonicalOrigin);
-const image = ogImage ? new URL(ogImage, canonicalOrigin) : undefined;
+const image = new URL(ogImage, canonicalOrigin);
 ---
 
 <!doctype html>
@@ -89,13 +92,16 @@ document.documentElement.dataset.theme = saved || preferred;
     <meta property="og:description" content={description} />
     <meta property="og:type" content={article ? "article" : "website"} />
     <meta property="og:url" content={canonical} />
-    {image && <meta property="og:image" content={image} />}
+    <meta property="og:image" content={image} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={`${plainTitle} — ${ownerName}`} />
     {publishedTime && <meta property="article:published_time" content={publishedTime.toISOString()} />}
     {tags.map((tag) => <meta property="article:tag" content={tag} data-pagefind-filter="tag[content]" />)}
-    <meta name="twitter:card" content={image ? "summary_large_image" : "summary"} />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={documentTitle} />
     <meta name="twitter:description" content={description} />
-    {image && <meta name="twitter:image" content={image} />}
+    <meta name="twitter:image" content={image} />
     {activeApp === "blog" && <meta name="twitter:creator" content="@sqrt16bit" />}
     <slot name="head" />
   </head>

@@ -279,4 +279,32 @@ if (missingFromSitemap.length > 0) throw new Error(`Sitemap is missing canonical
 const strayInSitemap = sitemapPaths.filter((path) => !expectedSitemapPaths.includes(path));
 if (strayInSitemap.length > 0) throw new Error(`Sitemap lists routes that are not canonical pages: ${formatSet(strayInSitemap)}`);
 
-console.log(`Verified one Astro build: ${canonicalCaseStudies.length} case studies, ${aliasRedirects.length + workRedirects.length} compatibility redirects, ${postPages.length} posts, ${categoryPages.length} categories, ${expectedDocSlugs.length} Dotfiles manuals, one shared Contact page, RSS, global cross-product search, interactions, shared syntax themes, and all internal links/assets.`);
+/* One Open Graph card per canonical page, at the path src/lib/og-path.ts
+   derives from the page path, and every page (redirects and 404 included)
+   points its og:image at a card that exists. */
+const ogSlug = (path) => path.replace(/^\/|\/$/g, "").replace(/\//g, "-") || "home";
+const expectedCards = expectedSitemapPaths.map((path) => `${ogSlug(path)}.png`).sort();
+const builtCards = readdirSync(join(dist, "og")).sort();
+const missingCards = expectedCards.filter((name) => !builtCards.includes(name));
+if (missingCards.length > 0) throw new Error(`Open Graph cards missing for canonical pages: ${formatSet(missingCards)}`);
+const strayCards = builtCards.filter((name) => !expectedCards.includes(name));
+if (strayCards.length > 0) throw new Error(`Open Graph cards without a canonical page: ${formatSet(strayCards)}`);
+for (const htmlPath of htmlFiles) {
+  const html = readFileSync(htmlPath, "utf8");
+  const route = relative(dist, htmlPath);
+  const image = html.match(/<meta property="og:image" content="https:\/\/oponomarov\.com(\/og\/[^"]+\.png)"/)?.[1];
+  if (!image) throw new Error(`${route} has no og:image under /og/`);
+  if (!existsSync(join(dist, image))) throw new Error(`${route} points og:image at a card that was not built: ${image}`);
+  if (!html.includes(`<meta name="twitter:image" content="https://oponomarov.com${image}"`)) throw new Error(`${route} twitter:image disagrees with og:image`);
+  const canonicalHref = html.match(/<link rel="canonical" href="https:\/\/oponomarov\.com([^"]*)"/)?.[1];
+  if (canonicalHref && sitemapPaths.includes(canonicalHref) && image !== `/og/${ogSlug(canonicalHref)}.png`) {
+    throw new Error(`${route} carries the card of another page: ${image} for ${canonicalHref}`);
+  }
+}
+for (const name of builtCards) {
+  const header = readFileSync(join(dist, "og", name)).subarray(0, 24);
+  if (header.toString("latin1", 1, 4) !== "PNG") throw new Error(`og/${name} is not a PNG`);
+  if (header.readUInt32BE(16) !== 1200 || header.readUInt32BE(20) !== 630) throw new Error(`og/${name} is not 1200×630`);
+}
+
+console.log(`Verified one Astro build: ${canonicalCaseStudies.length} case studies, ${aliasRedirects.length + workRedirects.length} compatibility redirects, ${postPages.length} posts, ${categoryPages.length} categories, ${expectedDocSlugs.length} Dotfiles manuals, one shared Contact page, ${builtCards.length} Open Graph cards, RSS, global cross-product search, interactions, shared syntax themes, and all internal links/assets.`);

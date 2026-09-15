@@ -3,6 +3,7 @@ import { getCollection, render } from "astro:content";
 import SiteLayout from "../components/SiteLayout.astro";
 import { collectTopics, formatCaseNumber, loadCaseStudies, requireCaseStudy } from "../lib/case-studies";
 import { renderInline } from "../lib/inline-markdown";
+import { pageDescriptions } from "../lib/site-metadata";
 
 const studies = await loadCaseStudies();
 /* The spotlight is whichever study the content marks; with none marked the
@@ -52,9 +53,8 @@ const readerManifest = studies.map((study) => ({
   activeApp="portfolio"
   canonicalOrigin="https://oponomarov.com"
   title="Portfolio"
-  description="Platform & Site Reliability Engineer — case studies from building the infrastructure backbone of an industrial IoT company."
+  description={pageDescriptions.home}
   searchType="Overview"
-  ogImage="https://oponomarov.com/assets/og-image.png"
 >
   <main id="main-content" class="content-grid" tabindex="-1">
     <section class="hero section-shell" id="top">

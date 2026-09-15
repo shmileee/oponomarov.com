@@ -843,6 +843,27 @@ source-only selector ban indiscriminately to EC output would contradict that
 required configuration. Keep generated EC handling explicit, as V3/V5 already
 do; do not work around it with a second theme script.
 
+### Open Graph cards
+
+Every canonical page ships a 1200×630 card at `/og/<path>.png`
+(`src/lib/og.ts`, rendered by `src/pages/og/[...slug].png.ts` through satori
+and sharp at build time). The card is the page's own header block, frozen:
+the section's `~/oleksandr-ponomarov/…` brand path and kicker in Plex Mono
+accent, the title in Bricolage Grotesque 700 with the hero cursor after the
+last word, the dek in Public Sans, and a rule with the domain and author.
+It is drawn in the light palette whatever the reader's theme, because link
+previews sit on the sharing app's own surface, and its colours are the Tier 1
+light values flattened to sRGB, the one place outside `tokens.css` a literal
+colour is allowed (satori cannot read custom properties).
+
+satori needs TrueType data, so `src/assets/og/` holds static instances of the
+three site faces (Bricolage 700 at optical size 96, Public Sans 400, Plex Mono
+500), generated once from the variable WOFF2 files. The layout imports only
+`src/lib/og-path.ts`, so a page's `og:image` is derived from its canonical
+path and a redirect page borrows its target's card. `verify-build` requires
+one card per sitemap route, no card without a route, and every page's
+`og:image` and `twitter:image` to name a card that was built.
+
 ## 13. Accessibility floor
 
 Target WCAG 2.2 AA, with a project minimum of **44×44 CSS px** for standalone

@@ -1,5 +1,6 @@
 ---
 import SiteLayout from "../components/SiteLayout.astro";
+import { ogImagePath } from "../lib/og-path";
 ---
 
 <SiteLayout
@@ -9,7 +10,7 @@ import SiteLayout from "../components/SiteLayout.astro";
   description="This page does not exist. Browse the case-study index or head back to the homepage."
   robots="noindex,follow"
   indexable={false}
-  ogImage="https://oponomarov.com/assets/og-image.png"
+  ogImage={ogImagePath("/")}
 >
   <main id="main-content" class="content-grid" tabindex="-1">
     <section class="hero section-shell">

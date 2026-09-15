@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "astro/config";
 import { unified } from "@astrojs/markdown-remark";
 import expressiveCode from "astro-expressive-code";
@@ -9,6 +10,15 @@ export default defineConfig({
   site: "https://oponomarov.com",
   output: "static",
   devToolbar: { enabled: false },
+  vite: {
+    define: {
+      /* Where the Open Graph renderer (src/lib/og.ts) reads its font files.
+         The prerender bundle runs from dist/, where import.meta.url no
+         longer points into the source tree, so the source path is fixed
+         here, relative to this config file rather than to the cwd. */
+      "import.meta.env.OG_FONTS_DIR": JSON.stringify(fileURLToPath(new URL("./src/assets/og/", import.meta.url))),
+    },
+  },
   markdown: {
     // Astro 7 moved remark/rehype configuration into the unified processor.
     // Astro already parses authored HTML, so no rehype-raw pass is needed;

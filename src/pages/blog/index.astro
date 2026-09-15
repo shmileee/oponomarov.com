@@ -2,6 +2,7 @@
 import { getCollection } from "astro:content";
 import SiteLayout from "../../components/SiteLayout.astro";
 import { formatDate, slugForPost, sortPosts } from "../../lib/posts";
+import { pageDescriptions } from "../../lib/site-metadata";
 
 const posts = sortPosts(await getCollection("posts"));
 const years = Map.groupBy(posts, (post) => String(post.data.date.getFullYear()));
@@ -14,14 +15,14 @@ const categories = [...categoryCounts].sort(([a], [b]) => a.localeCompare(b));
   activeApp="blog"
   canonicalOrigin="https://oponomarov.com"
   title="Engineering notes"
-  description="A home for poorly researched ideas that I find myself repeating a lot anyway."
+  description={pageDescriptions.blog}
   searchType="Overview"
   rssHref="/blog/feed.xml"
 >
   <main id="main-content" class="content-grid" tabindex="-1">
     <section class="hero section-shell" aria-labelledby="page-title">
       <h1 id="page-title">Engineering notes<span class="hero-cursor" aria-hidden="true"></span></h1>
-      <p class="hero-lead">A home for poorly researched ideas that I find myself repeating a lot anyway.</p>
+      <p class="hero-lead">{pageDescriptions.blog}</p>
       <div class="hero-actions">
         <a class="secondary-link" href="/blog/feed.xml">RSS feed →</a>
       </div>

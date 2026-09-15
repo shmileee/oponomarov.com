@@ -272,6 +272,11 @@
     :root,
     [data-theme="dark"] {
       color-scheme: light;
+
+      /* The root size print.css sets: every step of the type ramp carries a
+         rem term, so this one value brings the whole scale down to book
+         size (body just under 17px, about 12.5pt). */
+      --text-print-root: 87.5%;
     }
   }
 

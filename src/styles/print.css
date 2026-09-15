@@ -15,11 +15,10 @@
     }
 
     /* The screen ramp is set for reading at arm's length on a backlit
-       display; on paper the same 19px body reads as large print. Every step
-       of the ramp carries a rem term, so one root size brings the whole
-       scale down to book size (body just under 17px, about 12.5pt). */
+       display; on paper the same 19px body reads as large print. The root
+       size is a token (tokens.css) so the ramp comes down as one piece. */
     html {
-      font-size: 87.5%;
+      font-size: var(--text-print-root);
     }
 
     .skip-link,

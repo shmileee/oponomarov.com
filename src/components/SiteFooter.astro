@@ -1,22 +1,18 @@
 ---
+import { sectionNotes, sectionPath, type SiteSection } from "../lib/site-metadata";
+
 interface Props {
-  activeApp: "portfolio" | "blog" | "dotfiles" | "contact";
+  activeApp: SiteSection;
 }
 
 const { activeApp } = Astro.props;
-const descriptions = {
-  portfolio: "Case studies from building infrastructure platforms and reliable delivery systems.",
-  blog: "Field notes on infrastructure, reliability, delivery, and the tools around them.",
-  dotfiles: "A reproducible workstation and the reasoning behind it.",
-  contact: "One shared contact point for the portfolio, engineering notes, and Dotfiles.",
-};
 ---
 
 <footer class="op-footer">
   <div class="op-footer__inner">
     <div>
-      <p class="op-footer__brand">~/oleksandr-ponomarov/{activeApp === "blog" ? "notes" : activeApp}</p>
-      <p class="op-footer__note">{descriptions[activeApp]}</p>
+      <p class="op-footer__brand">{sectionPath(activeApp)}</p>
+      <p class="op-footer__note">{sectionNotes[activeApp]}</p>
     </div>
     <nav class="op-footer__links" aria-label="Contact and social profiles">
       <a href="/contact/" aria-label="Contact" title="Contact">

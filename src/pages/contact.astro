@@ -1,11 +1,12 @@
 ---
 import SiteLayout from "../components/SiteLayout.astro";
+import { pageDescriptions } from "../lib/site-metadata";
 ---
 
 <SiteLayout
   activeApp="contact"
   title="Contact"
-  description="Contact Oleksandr Ponomarov by email, LinkedIn, or GitHub."
+  description={pageDescriptions.contact}
   searchType="Contact"
 >
   <main id="main-content" class="content-grid" tabindex="-1">

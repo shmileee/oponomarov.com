@@ -40,6 +40,12 @@ inline Markdown: backticks and `**strong**` render, everything else is text.
 The homepage topic filters are the union of every study's `topics`; the
 spotlight section appears only when a study is marked `spotlight`.
 
+Every canonical page also gets its own Open Graph card (`/og/<path>.png`,
+1200×630) drawn at build time from the same frontmatter — section, kicker,
+title and dek in the site's own faces — so a shared study, note, topic or
+manual previews as itself. `src/lib/og.ts` lists the cards; `verify` fails
+when a page's `og:image` points nowhere or a card has no page.
+
 In CI, the deploy workflow (`.github/workflows/deploy.yaml`) checks the three
 public repos out tokenlessly into `content/{portfolio,blog,dotfiles}` — the
 defaults — builds, and publishes `dist/` to GitHub Pages. Content repos ping
