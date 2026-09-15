@@ -110,9 +110,10 @@
     letter-spacing: var(--tracking-heading);
   }
 
-  h2 {
+h2 {
     font-size: var(--text-2xl);
-  }
+    letter-spacing: var(--tracking-heading);
+}
 
   h3,
   h4 {
