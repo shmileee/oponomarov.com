@@ -190,9 +190,15 @@
        developer.hashicorp.com: inline code at 0.875 of its surrounding text,
        code blocks at full body size. A block is a focal element and reads at
        parity with prose; an inline span is a token inside a sentence and sits
-       just under it. The two scales differ deliberately. */
+       just under it. The two scales differ deliberately.
+
+       The ratio is theirs; the base is not. Their body text is 16px, ours is
+       19px, so copying 1.0 straight across rendered 19px code where the
+       reference shows 16px. The block scale is set so the absolute size lands
+       near the reference (0.9 x 19px = 17.1px) while still reading a step
+       above the inline capsule. */
     --code-inline-scale: 0.875;
-    --code-block-scale: 1;
+    --code-block-scale: 0.9;
     --code-font-size: calc(var(--text-base) * var(--code-block-scale));
     --code-inline-size: calc(var(--code-inline-scale) * 1em);
     /* Absolute twin of the above. Inline code is pinned to the body ramp
