@@ -46,6 +46,7 @@ const articleTypes = { portfolio: "Case study", blog: "Note", dotfiles: "Documen
 const searchProduct = Astro.props.searchProduct ?? products[activeApp];
 const searchType = Astro.props.searchType ?? (article || activeApp === "dotfiles" || activeApp === "contact" ? articleTypes[activeApp] : "Overview");
 const documentTitle = formatDocumentTitle(activeApp, Astro.url.pathname === roots[activeApp] ? undefined : title);
+const plainTitle = title ?? products[activeApp];
 const canonical = new URL(canonicalPath, canonicalOrigin);
 const image = ogImage ? new URL(ogImage, canonicalOrigin) : undefined;
 ---
@@ -67,6 +68,9 @@ document.documentElement.dataset.theme = saved || preferred;
     <meta name="description" content={description} data-pagefind-meta="description[content]" />
     <meta content={searchProduct} data-pagefind-meta="product[content]" data-pagefind-filter="product[content]" />
     <meta content={searchType} data-pagefind-meta="type[content]" />
+    {/* The result title is the page's own title, not the first h1 Pagefind
+        happens to find (a case-study h1 can carry a code capsule). */}
+    <meta content={plainTitle} data-pagefind-meta="title[content]" />
     {robots && <meta name="robots" content={robots} />}
     <link rel="preload" href="/assets/fonts/public-sans-latin.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
     <link rel="preload" href="/assets/fonts/bricolage-grotesque-latin.woff2" as="font" type="font/woff2" crossorigin="anonymous" />

@@ -35,7 +35,10 @@ function setupStudyIndex() {
     }
     toggle.hidden = activeTopic !== "all";
     toggle.textContent = expanded ? "see less ↑" : "see more →";
-    status.textContent = `${visibleCount} case ${visibleCount === 1 ? "study" : "studies"} shown`;
+    const total = cards.length;
+    status.textContent = visibleCount === total
+      ? `All ${total} case studies`
+      : `Showing ${visibleCount} of ${total} case ${total === 1 ? "study" : "studies"}${activeTopic === "all" ? "" : ` on ${activeTopic}`}`;
   };
 
   for (const filter of filters) {

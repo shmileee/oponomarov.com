@@ -2,6 +2,7 @@ import { defineConfig } from "astro/config";
 import { unified } from "@astrojs/markdown-remark";
 import expressiveCode from "astro-expressive-code";
 import remarkAdmonitions from "./src/lib/remark-admonitions.mjs";
+import rehypeImages from "./src/lib/rehype-images.mjs";
 import rehypeTableScroll from "./src/lib/rehype-table-scroll.mjs";
 
 export default defineConfig({
@@ -14,7 +15,7 @@ export default defineConfig({
     // adding one re-parses Expressive Code's output and drops code titles.
     processor: unified({
       remarkPlugins: [remarkAdmonitions],
-      rehypePlugins: [rehypeTableScroll],
+      rehypePlugins: [rehypeTableScroll, rehypeImages],
     }),
   },
   integrations: [expressiveCode({

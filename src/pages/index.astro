@@ -123,7 +123,9 @@ const readerManifest = studies.map((study) => ({
           <button type="button" data-topic-filter="all" aria-pressed="true">all</button>
           {topics.map((topic) => <button type="button" data-topic-filter={topic} aria-pressed="false">{topic}</button>)}
         </div>
-        <p class="sr-only" aria-live="polite" data-filter-status></p>
+        {/* The count was a screen-reader-only live region; sighted readers
+            had no way to tell that nine of twenty-two cards were showing. */}
+        <p class="filter-status" aria-live="polite" data-filter-status></p>
         <div class="case-grid wide" data-case-grid data-pagefind-ignore>
           {studies.map((study, index) => (
             <a class:list={["case-card", { "case-card-featured": study.entry.data.featured }]} href={study.href} data-case-card data-open-study={study.folder} data-topics={study.entry.data.topics.join("|")} data-initially-hidden={String(index >= initiallyVisible)}>

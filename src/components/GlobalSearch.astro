@@ -12,6 +12,9 @@
   <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
     <path d="m20.3 19-4.7-4.7a7.3 7.3 0 1 0-1.3 1.3l4.7 4.7a.9.9 0 0 0 1.3-1.3ZM5.5 10a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0Z"></path>
   </svg>
+  {/* The shortcut, shown beside the icon on a wide bar with a fine pointer
+      (components/search.css); the script swaps ⌘ for Ctrl off Apple platforms. */}
+  <kbd class="op-global-search-open__hint" aria-hidden="true" data-global-search-hint-key>⌘K</kbd>
 </button>
 
 <dialog class="global-search-dialog" aria-labelledby="global-search-title" data-global-search-dialog>
@@ -33,7 +36,11 @@
       <span class="sr-only">Search all sites</span>
       <input
         type="search"
+        role="combobox"
         aria-label="Search all sites"
+        aria-controls="global-search-results"
+        aria-expanded="false"
+        aria-autocomplete="list"
         placeholder="Search case studies, notes, and Dotfiles…"
         autocomplete="off"
         spellcheck="false"
@@ -50,7 +57,7 @@
     </div>
 
     <p class="global-search-hint" data-global-search-hint>Search case studies, engineering notes, and Dotfiles documentation.</p>
-    <ol class="global-search-results" data-global-search-results></ol>
+    <ol class="global-search-results" id="global-search-results" role="listbox" aria-label="Results" data-global-search-results></ol>
   </div>
 </dialog>
 
@@ -69,6 +76,29 @@
     let activeProduct = "";
     let requestId = 0;
     let pagefindPromise;
+    /* Index of the highlighted result, or -1 for none. The arrow keys move
+       it, Enter opens it, and typing resets it. */
+    let activeIndex = -1;
+
+    const hintKey = open.querySelector("[data-global-search-hint-key]");
+    if (hintKey && !/Mac|iPhone|iPad|iPod/.test(navigator.platform)) hintKey.textContent = "Ctrl K";
+
+    const options = () => [...results.querySelectorAll("[role='option']")];
+    const setActive = (index) => {
+      const items = options();
+      activeIndex = items.length ? Math.max(-1, Math.min(index, items.length - 1)) : -1;
+      items.forEach((item, candidate) => {
+        item.setAttribute("aria-selected", String(candidate === activeIndex));
+        item.toggleAttribute("data-active", candidate === activeIndex);
+      });
+      const active = items[activeIndex];
+      if (active) {
+        input.setAttribute("aria-activedescendant", active.id);
+        active.scrollIntoView({ block: "nearest" });
+      } else {
+        input.removeAttribute("aria-activedescendant");
+      }
+    };
 
     const escapeHtml = (value) => value.replace(/[&<>'"]/g, (character) => ({
       "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;",
@@ -94,6 +124,8 @@
       const currentRequest = ++requestId;
       if (!query) {
         results.innerHTML = "";
+        input.setAttribute("aria-expanded", "false");
+        setActive(-1);
         hint.textContent = "Search case studies, engineering notes, and Dotfiles documentation.";
         return;
       }
@@ -108,7 +140,7 @@
         hint.textContent = matches.length
           ? `${matches.length} result${matches.length === 1 ? "" : "s"}${activeProduct ? ` in ${activeProduct}` : " across all sites"}`
           : `No results${activeProduct ? ` in ${activeProduct}` : " across all sites"}.`;
-        results.innerHTML = matches.map((item) => {
+        results.innerHTML = matches.map((item, index) => {
           const product = item.meta?.product || "Site";
           const type = item.meta?.type || "Page";
           const title = item.meta?.title || "Untitled";
@@ -118,11 +150,15 @@
           /* "Notes · Note" says nothing twice: the type is shown only when it
              adds to the product name (Portfolio · Case study, Notes · Topic). */
           const kind = type.toLowerCase() === product.toLowerCase().replace(/s$/, "") ? "" : `<i>${escapeHtml(type)}</i>`;
-          return `<li><a href="${escapeHtml(url)}"><span class="global-search-result-meta"><small data-product="${escapeHtml(product)}">${escapeHtml(product)}</small>${kind}</span><strong>${escapeHtml(title)}</strong><p>${excerpt}</p><b aria-hidden="true">↗</b></a></li>`;
+          return `<li role="option" id="global-search-option-${index}" aria-selected="false"><a href="${escapeHtml(url)}" tabindex="-1"><span class="global-search-result-meta"><small data-product="${escapeHtml(product)}">${escapeHtml(product)}</small>${kind}</span><strong>${escapeHtml(title)}</strong><p>${excerpt}</p><b aria-hidden="true">↗</b></a></li>`;
         }).join("");
+        input.setAttribute("aria-expanded", String(matches.length > 0));
+        setActive(-1);
       } catch (error) {
         if (currentRequest !== requestId) return;
         results.innerHTML = "";
+        input.setAttribute("aria-expanded", "false");
+        setActive(-1);
         const reason = error instanceof Error ? error.message : String(error);
         hint.textContent = `Search is unavailable. ${reason}`;
       }
@@ -148,13 +184,39 @@
     open.addEventListener("focus", () => void getPagefind().catch(() => undefined), { once: true });
     close?.addEventListener("click", hide);
     input.addEventListener("input", () => void render());
-    /* A search input consumes Escape to clear itself, so with a query typed
-       the first Escape emptied the field and only a second one reached the
-       dialog. The field advertises "esc" as the way out, so Escape closes. */
+    /* The keyboard model of a combobox: the arrows walk the results while
+       the focus stays in the field, Enter opens the highlighted result (or
+       the first one), and Escape closes. A search input consumes Escape to
+       clear itself, so with a query typed the first Escape used to empty the
+       field and only a second one reached the dialog; the field advertises
+       "esc" as the way out, so it closes on the first. */
     input.addEventListener("keydown", (event) => {
-      if (event.key !== "Escape") return;
-      event.preventDefault();
-      hide();
+      if (event.key === "Escape") {
+        event.preventDefault();
+        hide();
+      } else if (event.key === "ArrowDown") {
+        event.preventDefault();
+        setActive(activeIndex + 1);
+      } else if (event.key === "ArrowUp") {
+        event.preventDefault();
+        setActive(activeIndex - 1);
+      } else if (event.key === "Home" && options().length && activeIndex >= 0) {
+        event.preventDefault();
+        setActive(0);
+      } else if (event.key === "End" && options().length && activeIndex >= 0) {
+        event.preventDefault();
+        setActive(options().length - 1);
+      } else if (event.key === "Enter") {
+        const target = options()[activeIndex] ?? options()[0];
+        const link = target?.querySelector("a");
+        if (!link) return;
+        event.preventDefault();
+        location.assign(link.href);
+      }
+    });
+    results.addEventListener("pointermove", (event) => {
+      const option = event.target.closest?.("[role='option']");
+      if (option) setActive(options().indexOf(option));
     });
     scopeButtons.forEach((button) => button.addEventListener("click", () => setProduct(button.dataset.searchProduct || "")));
     dialog.addEventListener("click", (event) => {

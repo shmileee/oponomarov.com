@@ -36,7 +36,10 @@ const dateLabel = publishedTime && new Intl.DateTimeFormat("en-GB", {
         text: indexed, they led every search excerpt with "Case study 10."
         or "23 December 2024 · 8 min read" ahead of the words that matched. */}
     {eyebrow && <p class="eyebrow" data-pagefind-ignore>{eyebrow}</p>}
-    <h1>{title}</h1>
+    {/* Indexed, and weighted: a word in a title should outrank the same
+        word in a paragraph, and a title word absent from the body must still
+        find the page. SiteLayout supplies the clean title for the result. */}
+    <h1 data-pagefind-weight="8">{title}</h1>
     {descriptionHtml ? <p class="article-dek prose prose--lede" set:html={descriptionHtml} /> : description && <p class="article-dek prose prose--lede">{description}</p>}
     {(publishedTime || readingMinutes !== undefined) && (
       <p class="article-meta" data-pagefind-ignore>

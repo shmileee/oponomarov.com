@@ -41,6 +41,33 @@
     outline-offset: var(--focus-offset);
   }
 
+  /* The shortcut keycap beside the icon: only where a keyboard is likely
+     (a fine pointer) and the bar has room for it (from 64rem). The dialog's
+     own "esc" keycap sets the tuple. */
+  .op-global-search-open__hint {
+    display: none;
+    margin-inline-start: var(--space-2);
+    padding-inline: var(--space-2);
+    padding-block: var(--space-1);
+    border: var(--border-width) solid var(--kbd-border);
+    border-radius: var(--radius-sm);
+    background: var(--kbd-bg);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    line-height: 1;
+    color: var(--color-text-subtle);
+  }
+
+  @media (width >= 64rem) and (hover: hover) and (pointer: fine) {
+    .op-global-search-open {
+      padding-inline: var(--space-2);
+    }
+
+    .op-global-search-open__hint {
+      display: inline-block;
+    }
+  }
+
   @media (hover: hover) and (pointer: fine) {
     .op-global-search-open:hover {
       color: var(--color-text);
@@ -290,11 +317,12 @@
     outline-offset: var(--focus-offset);
   }
 
-  @media (hover: hover) and (pointer: fine) {
-    .global-search-results a:hover {
-      border-color: var(--color-border-subtle);
-      background: var(--color-surface);
-    }
+  /* The highlighted result: the one the arrow keys sit on, or the one under
+     the pointer (the script keeps the two in step), drawn as the same
+     surface so the keyboard and the mouse see one state. */
+  .global-search-results [role="option"][aria-selected="true"] > a {
+    border-color: var(--color-border-subtle);
+    background: var(--color-surface);
   }
 
   .global-search-results strong,

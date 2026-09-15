@@ -219,6 +219,17 @@
     background: var(--color-accent-surface);
   }
 
+  /* "Showing 9 of 22 case studies": the live count under the filter row, in
+     the small mono label the shortcut filter's status uses. */
+  .filter-status {
+    min-block-size: var(--space-5);
+    margin: var(--space-4) 0 0;
+    color: var(--color-text-subtle);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    line-height: var(--leading-snug);
+  }
+
   .grid-toggle-row {
     display: flex;
     justify-content: center;

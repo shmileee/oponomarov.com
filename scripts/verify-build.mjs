@@ -211,7 +211,8 @@ for (const slug of expectedDocSlugs) {
   const { title } = readFrontmatter(join(docsSourceDir, `${slug}.md`));
   const target = slug === "index" ? join(dist, "dotfiles/index.html") : join(dist, "dotfiles", slug, "index.html");
   const html = readFileSync(target, "utf8");
-  if (slug !== "index" && typeof title === "string" && !html.includes(`<h1>${title.replace(/&/g, "&amp;")}</h1>`)) throw new Error(`Dotfiles manual ${slug}.md does not render its title "${title}" as the page heading`);
+  const heading = html.match(/<h1\b[^>]*>([^<]*)<\/h1>/)?.[1];
+  if (slug !== "index" && typeof title === "string" && heading !== title.replace(/&/g, "&amp;")) throw new Error(`Dotfiles manual ${slug}.md does not render its title "${title}" as the page heading (found ${heading ?? "no h1"})`);
 }
 const admonitionHtml = allArticleHtml;
 const admonitionCount = admonitionHtml.split('class="op-admonition ').length - 1;
