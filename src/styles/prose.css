@@ -599,8 +599,8 @@
   /* Every table is wrapped at build time by rehypeTableScroll in         */
   /* <div class="table-scroll wide" tabindex="0" role="region"            */
   /*      aria-label="…">. The region owns horizontal scrolling and is    */
-  /* keyboard reachable. Columns size to content; the one floor is the    */
-  /* description column beside a code-led column, declared below.         */
+  /* keyboard reachable. Columns size to content, typed by role in the    */
+  /* sizing rules at the end of this section.                             */
   /* The published table is a raised card: one frame around the region,   */
   /* a centred tracked mono header, and rows separated by air rather than  */
   /* rules (the only tables in the corpus are the dotfiles manuals, and    */
@@ -681,6 +681,10 @@
     letter-spacing: var(--tracking-label);
     text-align: center;
     text-transform: uppercase;
+    /* A column heading is a label, not a sentence: it sits on one line and
+       widens its column to hold itself if it must. "TYPICAL CHANGES" broke
+       over a column one pixel too narrow for it. */
+    white-space: nowrap;
   }
 
   .prose tbody tr:first-child > td {
@@ -690,6 +694,38 @@
   .prose tbody tr:last-child > td {
     padding-block-end: var(--space-4);
   }
+
+  /* ------------------------------------------------------------------ */
+  /* Column sizing                                                        */
+  /* Auto table layout is arithmetic. Every column has a minimum: the     */
+  /* widest thing in it that cannot break, or its own floor if larger.    */
+  /* The table is max(region, sum of minimums). When the minimums alone   */
+  /* exceed the region, every column sits at exactly its minimum and the  */
+  /* region scrolls the difference; nothing else moves a column in that   */
+  /* state - not a cell width, not a floor below what the column already  */
+  /* needs. The reported break was that state: a 460px path held atomic,  */
+  /* a description at its floor, and a label with no floor squeezed to    */
+  /* "Packages / and / applications" because it was the only column that  */
+  /* could give. So these rules do the one thing that works there: they   */
+  /* set each column's minimum from its role and let the table outgrow    */
+  /* the region when the roles cannot fit. A column is typed by position  */
+  /* and content, because CSS cannot see text nodes:                      */
+  /*   TOKEN        a cell before the last that opens with code: a        */
+  /*                command, a path, a role, `a` / `b`, a linked name     */
+  /*                with its ↗. Atomic: sizes to its widest token.       */
+  /*   DESCRIPTION  the last cell. A wrapping sentence with a floor so it */
+  /*                never collapses to a word per line.                   */
+  /*   LABEL        any cell before a token column. A short phrase with   */
+  /*                the same floor for the same reason.                   */
+  /*   KEYS         a chord (.keys). primitives.css owns the chord and    */
+  /*                the shortcut tables; no floor applies, they fit.      */
+  /* Floors are shares of the reading measure: a description holds a      */
+  /* third, a label a quarter. The shortcut reference narrows its action  */
+  /* column to a quarter in primitives.css, where the mode pill beside it */
+  /* is styled: two atomic columns already fill two thirds of the region  */
+  /* there, and a third for the action tipped a table that fits into a    */
+  /* scroll of a few pixels.                                              */
+  /* ------------------------------------------------------------------ */
 
   /* Code in a table cell never breaks. This is the deliberate opposite of
      the prose rule above, and the two must be read together:
@@ -713,38 +749,36 @@
     white-space: nowrap;
   }
 
-  /* A cell that opens with verbatim code labels its row: a command, a path,
-     a role, `<code>a</code> / <code>b</code>`, a linked name with its ↗.
-     It is not a sentence, so the whole cell sizes to its content and its
-     parts stay on one line. The rule is positional because CSS cannot see
-     text nodes: `<td>Starts <code>x</code> with…</td>` also has code as its
-     first element child. What separates the two in every reference table
-     is the column. The last column is the description and stays a wrapping
-     sentence (only its tokens are atomic, above); every column before it
-     labels the row. A cell that opens with a keycap sequence (.keys) is
-     not code and keeps wrapping between its keys. */
+  /* TOKEN. A cell that opens with verbatim code labels its row and is not
+     a sentence, so the whole cell sizes to its content and its parts stay
+     on one line. `<td>Starts <code>x</code> with…</td>` also has code as
+     its first element child; what separates the two in every reference
+     table is the column, so the last column is never a token column. A
+     cell that opens with a keycap sequence (.keys) is not code and keeps
+     wrapping between its keys. */
   .prose td:not(:last-child):has(> code:first-child),
   .prose td:not(:last-child):has(> a:first-child > code:first-child) {
     white-space: nowrap;
   }
 
-  /* The description column of a table with a code-led column keeps a floor.
-     A code column can no longer give up width by breaking its token, so a
-     table that outgrows its region could only make room by collapsing the
-     description to a word per line; with the floor, the region scrolls a
-     table of readable rows instead. The floor is on the LAST column only
-     (the description), never on a code column, and it is a share of the
-     reading measure that shrinks as columns are added: a third beside one
-     code column, a quarter when a label column precedes the code as well,
-     so a three-column table whose columns already fit is not tipped into a
-     scroll of a few pixels by a floor sized for a pair. */
-  .prose td:first-child:has(> code:first-child) + td:last-child,
-  .prose td:first-child:has(> a:first-child > code:first-child) + td:last-child {
+  /* DESCRIPTION after a token column: a third of the measure. A token
+     column can no longer give up width by breaking, so a table that
+     outgrows its region could only make room by collapsing the description
+     to a word per line; with the floor, the region scrolls a table of
+     readable rows instead. The floor is on the LAST column only, never on
+     a token column. */
+  .prose td:not(:last-child):has(> code:first-child) ~ td:last-child,
+  .prose td:not(:last-child):has(> a:first-child > code:first-child) ~ td:last-child {
     min-inline-size: calc(var(--measure-prose) / 3);
   }
 
-  .prose td:not(:first-child, :last-child):has(> code:first-child) ~ td:last-child,
-  .prose td:not(:first-child, :last-child):has(> a:first-child > code:first-child) ~ td:last-child {
+  /* LABEL before a token column: a quarter of the measure. This is what the
+     collapsed "Area" column was missing: with the path beside it atomic and
+     the description on its floor, the label was the only column that could
+     give, and gave everything. At a quarter the longest label in the corpus
+     ("Packages and applications") sits on two lines, never on three. */
+  .prose td:has(~ td:not(:last-child) > code:first-child),
+  .prose td:has(~ td:not(:last-child) > a:first-child > code:first-child) {
     min-inline-size: calc(var(--measure-prose) / 4);
   }
 
