@@ -359,14 +359,14 @@
        capsule and the block beneath it are one size. Card and step copy
        (primitives) is set a step smaller; the same capsule is proportionally
        larger there, which is the price of the one-size contract. */
-    font-size: var(--code-font-size);
+    font-size: var(--code-inline-font-size);
     font-weight: var(--weight-normal);
     /* An inline box only contributes its own line-height to the line box,
        so a snug leading keeps the capsule inside the strut of any text it
        sits in, body or small: a wrapped paragraph keeps its pitch, and a
        card line does not open up around a capsule. The painted capsule is
        the content area plus padding; leading does not change it. */
-    line-height: var(--leading-snug);
+    line-height: var(--leading-code-inline);
     white-space: normal;
     overflow-wrap: anywhere;
     box-decoration-break: clone;

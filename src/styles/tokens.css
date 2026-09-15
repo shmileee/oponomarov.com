@@ -186,9 +186,23 @@
        capsule chrome make it read larger than it measures. 0.925 is where the
        mono lowercase sits level with the body line to the eye; 0.875 reads
        short, 0.95 starts to dominate the line. */
-    --code-scale: 0.925;
-    --code-font-size: calc(var(--text-base) * var(--code-scale));
-    --code-inline-size: calc(var(--code-scale) * 1em);
+    /* Code sizing follows the HashiCorp developer docs, measured from
+       developer.hashicorp.com: inline code at 0.875 of its surrounding text,
+       code blocks at full body size. A block is a focal element and reads at
+       parity with prose; an inline span is a token inside a sentence and sits
+       just under it. The two scales differ deliberately. */
+    --code-inline-scale: 0.875;
+    --code-block-scale: 1;
+    --code-font-size: calc(var(--text-base) * var(--code-block-scale));
+    --code-inline-size: calc(var(--code-inline-scale) * 1em);
+    /* Absolute twin of the above. Inline code is pinned to the body ramp
+       rather than to its parent so S3 holds - one computed inline size on
+       every route - which an em value cannot guarantee inside card or step
+       copy that sits a step smaller. */
+    --code-inline-font-size: calc(var(--text-base) * var(--code-inline-scale));
+    /* Tight as the glyphs: an inline span must not open up the line it sits in.
+       HashiCorp sets inline line-height equal to the inline font size. */
+    --leading-code-inline: 1;
     --code-inline-bg: var(--color-accent-surface);
     --code-inline-text: light-dark(var(--p-blue-700), var(--p-blue-300));
 
