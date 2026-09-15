@@ -183,6 +183,13 @@
     outline-offset: var(--focus-offset);
   }
 
+  /* The icon is the narrow-bar rendering only (below). */
+  .op-theme-toggle__icon {
+    display: none;
+    inline-size: var(--space-4);
+    block-size: var(--space-4);
+  }
+
   @media (hover: hover) and (pointer: fine) {
     .op-theme-toggle:hover {
       border-color: var(--color-accent-border);
@@ -206,12 +213,17 @@
       gap: var(--space-2);
     }
 
+    /* The three labels need daylight between them more than they need
+       tracking: at 4px apart with 0.04em tracking they read as one word
+       ("PORTFOLIO NOTES DOTFILES"). The tracking goes and the gap doubles,
+       which nets out one pixel narrower, so the bar still holds one row
+       at 360px. */
     .op-app-nav {
-      gap: var(--space-1);
+      gap: var(--space-2);
     }
 
     .op-app-nav a {
-      letter-spacing: 0.04em;
+      letter-spacing: 0;
     }
 
     .op-theme-toggle {
@@ -220,16 +232,14 @@
       letter-spacing: 0;
     }
 
-    /* The written label (the toggle's only child, already aria-hidden)
-       collapses; a half-disc glyph stands in for it. The button keeps its
-       aria-label. */
+    /* The written label (already aria-hidden) collapses; the half-disc icon
+       in the markup stands in for it. The button keeps its aria-label. */
     .op-theme-toggle > span {
-      font-size: 0;
+      display: none;
     }
 
-    .op-theme-toggle > span::before {
-      content: "\25D0";
-      font-size: var(--text-sm);
+    .op-theme-toggle__icon {
+      display: block;
     }
   }
 

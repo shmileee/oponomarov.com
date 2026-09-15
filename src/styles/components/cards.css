@@ -14,6 +14,21 @@
 
 @layer components {
   /* ------------------------------------------------------------------ */
+  /* Section heading rhythm (homepage and contact sections)               */
+  /* Eyebrow, then the section heading, then ONE gap before whatever the  */
+  /* section opens with: a step and a half before an intro paragraph,     */
+  /* which reads as the heading's own copy, and a full 40px step before a */
+  /* block (the spotlight, the filter row, the principle list). The four  */
+  /* homepage sections used to open on four different gaps: 0px, 64px,    */
+  /* 40px and 48px, and the arc's intro paragraph sat directly on its     */
+  /* 46px heading with no air at all.                                     */
+  /* ------------------------------------------------------------------ */
+
+  .section-shell > h2 + .prose {
+    margin-block-start: var(--space-6);
+  }
+
+  /* ------------------------------------------------------------------ */
   /* Homepage: arc                                                        */
   /* ------------------------------------------------------------------ */
 
@@ -133,7 +148,8 @@
 
   .spotlight {
     min-inline-size: 0;
-    margin-block-start: var(--space-16);
+    /* The one block gap after a section heading (see the rhythm note above). */
+    margin-block-start: var(--space-10);
     scroll-margin-block-start: var(--space-section);
   }
 
@@ -305,6 +321,14 @@
     line-height: var(--leading-body);
   }
 
+  /* Emphasis inside a rendered summary or proof line: the prose strong
+     (semibold, full-strength ink), not the browser's bold. The inline-code
+     capsule for these two homes is declared with the prose rule itself. */
+  :is(.case-card, .case-proof) strong {
+    color: var(--color-text);
+    font-weight: var(--weight-semibold);
+  }
+
   .case-card-topics {
     margin-block-start: auto;
   }
@@ -354,13 +378,19 @@
     margin-block-end: var(--space-1);
   }
 
-  /* Spotlight and case-study-header proof: three columns once the page grid
-     is tablet-wide. Declared after the `.case-proof` base so the modifier
-     wins on order. */
+  /* Spotlight and case-study-header proof: one column per entry once the
+     page grid is tablet-wide. auto-fit rather than a fixed three: the
+     article header carries two entries (its dek already IS the impact line,
+     so the list holds role and evidence), the spotlight and the cards carry
+     three, and a study that gains or loses one must not leave an empty
+     track. Declared after the `.case-proof` base so the modifier wins on
+     order. */
   @container (width >= 48rem) {
     .spotlight-proof,
     .article-header > .case-proof {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      /* 12rem is the floor three entries need across the reading measure;
+         auto-fit collapses the tracks no entry fills. */
+      grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
     }
   }
 
@@ -369,7 +399,7 @@
   /* ------------------------------------------------------------------ */
 
   .principle-list {
-    margin-block-start: var(--space-12);
+    margin-block-start: var(--space-10);
   }
 
   .principle {
@@ -672,7 +702,9 @@
 
   /* The shared `.detail-header` (components/article.css) spaces its rows
      with a gap; the published category header put all of it under the
-     back link and a full 3rem step under the title. */
+     back link and a full 3rem step under the title. The header is the
+     article header's shape (back link, eyebrow, title) so a topic page and
+     the notes filed under it open the same way. */
   .category-detail .detail-header {
     gap: 0;
     margin-block-end: var(--space-12);
@@ -700,15 +732,21 @@
     text-wrap: balance;
   }
 
-  /* The category list's two-line date made its published rows 85px tall,
-     ten more than the archive's; with the title on the 44px floor the
-     date no longer sets the height, so the list keeps a step more air. */
+  /* A topic list is not grouped by year, so each row carries the full date.
+     "23 Dec 2024" in the tracked mono label needs about 7.5rem; the archive's
+     5rem column (sized for "23 Dec") broke it over two lines in every row. */
   .category-list {
     min-inline-size: 0;
   }
 
   .category-list .article-row {
     padding-block: var(--space-5);
+  }
+
+  @container (width >= 40rem) {
+    .category-list .article-row {
+      grid-template-columns: calc(var(--space-16) * 2) minmax(0, 1fr);
+    }
   }
 
   .empty-state {

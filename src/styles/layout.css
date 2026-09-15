@@ -64,9 +64,13 @@
      grid is exempt: it is structure, not content, and must keep spanning
      `full` at every width so its own gutter tracks land exactly on the
      parent's. Pulling it into the content track stacked two gutters on a
-     phone and indented the body 20px past the header. */
+     phone and indented the body 20px past the header. The same exemption
+     covers a plain wrapper whose direct child is the nested grid (the
+     homepage's `section.full-bleed > .section-shell.content-grid`): the
+     wrapper is structure too, and pulling IT into the content track put the
+     arc and the case-study index 20px further in than the hero above them. */
   @media (width < 40rem) {
-    .content-grid > :is(.wide, .full-bleed):not(.content-grid) {
+    .content-grid > :is(.wide, .full-bleed):not(.content-grid, :has(> .content-grid)) {
       grid-column: content;
     }
   }

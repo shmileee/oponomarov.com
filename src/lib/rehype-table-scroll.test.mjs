@@ -199,3 +199,30 @@ test("does not treat unmatched raw tags around a table as its wrapper", async ()
   assert.match(code, /<section class="tab" data-tab-label="x">\n<span>x<\/span>/);
   assert.match(code, /<div class="table-scroll wide" tabindex="0" role="region" aria-label="Table 1">/);
 });
+
+test("writes explicit table roles so the stacked phone rendering keeps its semantics", async () => {
+  // Given
+  const plugin = (await import("./rehype-table-scroll.mjs")).default;
+  const processor = await createMarkdownProcessor({ syntaxHighlight: false, rehypePlugins: [plugin] });
+  const markdown = "| Key | Action |\n| --- | --- |\n| a | b |";
+  // When
+  const { code } = await processor.render(markdown);
+  // Then
+  assert.match(code, /<table role="table">/);
+  assert.match(code, /<thead role="rowgroup">/);
+  assert.match(code, /<tbody role="rowgroup">/);
+  assert.equal((code.match(/<tr role="row">/g) || []).length, 2);
+  assert.equal((code.match(/<th role="columnheader">/g) || []).length, 2);
+  assert.equal((code.match(/<td role="cell">/g) || []).length, 2);
+});
+
+test("keeps a role an author already wrote on a table part", async () => {
+  // Given
+  const th = element("th", [text("Name")], { scope: "row" });
+  const table = element("table", [element("tbody", [element("tr", [th, element("td", [text("x")])])])]);
+  // When
+  await transform(root(table));
+  // Then
+  assert.equal(th.properties.role, "rowheader");
+  assert.equal(table.properties.role, "table");
+});

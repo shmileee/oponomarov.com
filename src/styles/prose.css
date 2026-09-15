@@ -302,6 +302,15 @@
     margin-block-start: var(--space-12);
   }
 
+  /* A rule written directly before a section heading (the Jekyll-era `---`
+     above every `##`) draws the break the heading already draws: every
+     prose h2 carries its own hairline, so the reader saw two lines sixty
+     pixels apart. The heading's double flow is the section break; the
+     redundant rule is dropped rather than left to double it. */
+  .prose hr:has(+ :is(h2, h3)) {
+    display: none;
+  }
+
   /* ------------------------------------------------------------------ */
   /* Media and figures                                                    */
   /* ------------------------------------------------------------------ */
@@ -352,7 +361,16 @@
   /* tables below.                                                        */
   /* ------------------------------------------------------------------ */
 
-  .prose :not(pre) > code {
+  /* The frontmatter strings (a study's summary, role and evidence) render
+     through src/lib/inline-markdown.ts into the case cards and proof lists,
+     which sit outside `.prose`; those two homes take the same capsule, so a
+     token reads identically on the card, in the header and in the body. The
+     second selector is the prose root itself as the parent: an article dek
+     is a single `.prose` paragraph, and its token has no element between
+     the root and itself for the descendant form to match. */
+  .prose :not(pre) > code,
+  .prose:not(pre) > code,
+  :is(.case-card, .case-proof) :not(pre) > code {
     padding-block: calc(var(--space-1) / 4);
     padding-inline: var(--space-1);
     border: var(--border-width) solid var(--color-accent-border);
@@ -701,7 +719,11 @@
     margin-inline: auto;
     overflow-x: auto;
     overscroll-behavior-inline: contain;
-    scrollbar-gutter: stable;
+    /* No reserved scrollbar gutter: on a table that fits, a stable gutter
+       left a 15px strip inside the frame that the header band and the row
+       rules stopped short of, so every desktop table looked one column
+       short of its own border. A table that really scrolls draws its bar
+       over the last column, which is what a scroll region does. */
     border: var(--border-width) solid var(--table-border);
     border-radius: var(--radius-md);
     background: var(--color-surface);
@@ -728,6 +750,15 @@
   }
 
   .prose table {
+    /* The column floors and the token-cell wrapping rule are declared once,
+       here, as custom properties: the sizing rules below consume them, the
+       shortcut reference (primitives.css) narrows one of them, and the
+       stacked rendering at the end of this section zeroes all three without
+       having to out-rank the :has() selectors that apply them. */
+    --table-label-floor: calc(var(--measure-prose) / 4);
+    --table-description-floor: calc(var(--measure-prose) / 3);
+    --table-token-space: nowrap;
+
     inline-size: 100%;
     border-collapse: collapse;
     border-spacing: 0;
@@ -884,7 +915,7 @@
      wrapping between its keys. */
   .prose td:not(:last-child):has(> code:first-child),
   .prose td:not(:last-child):has(> a:first-child > code:first-child) {
-    white-space: nowrap;
+    white-space: var(--table-token-space);
   }
 
   /* DESCRIPTION after a token column: a third of the measure. A token
@@ -895,7 +926,7 @@
      a token column. */
   .prose td:not(:last-child):has(> code:first-child) ~ td:last-child,
   .prose td:not(:last-child):has(> a:first-child > code:first-child) ~ td:last-child {
-    min-inline-size: calc(var(--measure-prose) / 3);
+    min-inline-size: var(--table-description-floor);
   }
 
   /* LABEL before a token column: a quarter of the measure. This is what the
@@ -905,7 +936,74 @@
      ("Packages and applications") sits on two lines, never on three. */
   .prose td:has(~ td:not(:last-child) > code:first-child),
   .prose td:has(~ td:not(:last-child) > a:first-child > code:first-child) {
-    min-inline-size: calc(var(--measure-prose) / 4);
+    min-inline-size: var(--table-label-floor);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Narrow viewports: stacked rows                                       */
+  /* Below 40rem the arithmetic above has nowhere to go. A token column   */
+  /* sized to `bootstrap_prerequisites ↗` and a description on its floor  */
+  /* add up to more than a 350px region, so every reference table on a    */
+  /* phone scrolled sideways with its descriptions cut off mid-word, and  */
+  /* iOS draws no scrollbar to say so. A two- or three-column table       */
+  /* stacks instead: each row becomes a block, the token (or chord, or    */
+  /* mode pill) on its own line and the description under it, the same    */
+  /* row hairlines between them. The header row stays visible as one      */
+  /* line of column labels above the list ("Role · Responsibility"), so   */
+  /* nothing is hidden and the pairs keep their names. rehypeTableScroll  */
+  /* writes explicit table roles on every part, so the table keeps its    */
+  /* semantics once display stops being table-*. Wider tables keep the    */
+  /* scroll region: four columns of data are a grid, not a list of pairs. */
+  /* ------------------------------------------------------------------ */
+
+  @media (width < 40rem) {
+    .prose table:not(:has(tr > :nth-child(4))) {
+      --table-label-floor: 0px;
+      --table-description-floor: 0px;
+      --table-token-space: normal;
+
+      display: block;
+    }
+
+    .prose table:not(:has(tr > :nth-child(4))) :is(thead, tbody, tr, th, td) {
+      display: block;
+    }
+
+    .prose table:not(:has(tr > :nth-child(4))) tr {
+      padding: var(--space-3);
+    }
+
+    /* The column labels on one line, a middle dot between them. */
+    .prose table:not(:has(tr > :nth-child(4))) thead tr {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0 var(--space-2);
+      border-block-end: var(--border-width) solid var(--color-border-subtle);
+    }
+
+    .prose table:not(:has(tr > :nth-child(4))) th {
+      padding: 0;
+      text-align: start;
+    }
+
+    .prose table:not(:has(tr > :nth-child(4))) th + th::before {
+      content: "\00B7";
+      margin-inline-end: var(--space-2);
+    }
+
+    .prose table:not(:has(tr > :nth-child(4))) tbody tr + tr {
+      border-block-start: var(--border-width) solid var(--color-border-subtle);
+    }
+
+    .prose table:not(:has(tr > :nth-child(4))) :is(td, tbody tr:last-child > td) {
+      padding: 0;
+      border: 0;
+      text-align: start;
+    }
+
+    .prose table:not(:has(tr > :nth-child(4))) td + td {
+      margin-block-start: var(--space-1);
+    }
   }
 
   /* ------------------------------------------------------------------ */
@@ -1012,6 +1110,46 @@
     font-size: var(--text-xs);
     font-weight: var(--weight-bold);
     line-height: 1;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Bare asides                                                          */
+  /* An <aside> with no primitive class and no admonition marker is a     */
+  /* side note the author reached for semantically. It takes the tinted   */
+  /* callout card the landing page draws beside its summary (primitives:  */
+  /* `.surface-grid > aside`), with a leading <strong> as its title, so   */
+  /* the semantic element can never produce an unstyled block: the        */
+  /* Dotfiles overview's "Supported platforms" note rendered as a bold    */
+  /* word and a paragraph floating between two card grids.                */
+  /* ------------------------------------------------------------------ */
+
+  .prose aside:not([class]) {
+    --prose-flow: var(--space-3);
+
+    padding: var(--space-4) var(--space-5);
+    border: var(--border-width) solid var(--color-accent-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-accent-surface);
+    color: var(--color-text-body);
+  }
+
+  .prose aside:not([class], :first-child),
+  .prose aside:not([class]) + * {
+    margin-block-start: var(--space-8);
+  }
+
+  .prose aside:not([class]) > strong:first-child {
+    display: block;
+    color: var(--color-text);
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-snug);
+    text-wrap: balance;
+  }
+
+  .prose aside:not([class]) > p {
+    font-size: var(--text-sm);
   }
 
   /* ------------------------------------------------------------------ */

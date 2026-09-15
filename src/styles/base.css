@@ -110,10 +110,10 @@
     letter-spacing: var(--tracking-heading);
   }
 
-h2 {
+  h2 {
     font-size: var(--text-2xl);
     letter-spacing: var(--tracking-heading);
-}
+  }
 
   h3,
   h4 {
@@ -258,7 +258,7 @@ h2 {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     font-weight: var(--weight-normal);
-    letter-spacing: 0.16em;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     color: var(--color-text-subtle);
   }

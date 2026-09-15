@@ -39,6 +39,14 @@ const apps = [
       <GlobalSearch />
       <button class="op-theme-toggle" type="button" aria-label="Switch to light theme" data-op-theme-toggle>
         <span aria-hidden="true" data-theme-label>light</span>
+        {/* Below 48rem the written label collapses and this half-disc stands
+            in for it (components/shell.css). Drawn as an SVG rather than the
+            ◐ glyph: neither site font carries that code point, and the
+            fallback rendered it as a four-pixel dot. */}
+        <svg class="op-theme-toggle__icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+          <circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" stroke-width="1.5"></circle>
+          <path d="M8 2.5a5.5 5.5 0 0 0 0 11Z" fill="currentColor"></path>
+        </svg>
       </button>
     </div>
   </div>

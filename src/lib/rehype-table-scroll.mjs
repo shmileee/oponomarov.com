@@ -66,6 +66,37 @@ const wrapperHoist = (parent, index) => {
   };
 };
 
+/* Explicit table roles. Below 40rem prose.css stacks the rows of a two- or
+   three-column table (`display: block` on table, tbody, tr and td), and a
+   table part whose display is no longer table-* loses its implicit role in
+   Chromium and WebKit. Writing the roles the parts already have keeps the
+   table a table for assistive technology in both renderings; at every other
+   width the attributes restate the default and change nothing. */
+const TABLE_ROLES = {
+  table: "table",
+  thead: "rowgroup",
+  tbody: "rowgroup",
+  tfoot: "rowgroup",
+  tr: "row",
+  th: "columnheader",
+  td: "cell",
+};
+
+/** @param {import("hast").Element} table */
+const assignTableRoles = (table) => {
+  /** @param {import("hast").Element} node */
+  const visit = (node) => {
+    const role = TABLE_ROLES[node.tagName];
+    if (role && !node.properties.role) {
+      node.properties.role = role === "columnheader" && node.properties.scope === "row" ? "rowheader" : role;
+    }
+    for (const child of node.children) {
+      if (child.type === "element" && child.tagName !== "table") visit(child);
+    }
+  };
+  visit(table);
+};
+
 /** Wrap parsed Markdown and HTML tables; register rehype-raw before this plugin. */
 export default function rehypeTableScroll() {
   /** @param {import("hast").Root} tree */
@@ -84,6 +115,7 @@ export default function rehypeTableScroll() {
         if (node.tagName === "table") {
           tableNumber += 1;
           if (!insideScroll) {
+            assignTableRoles(node);
             const caption = node.children.find((child) => child.type === "element" && child.tagName === "caption");
             const label = caption ? textContent(caption).replace(/\s+/g, " ").trim() : "";
             const hoist = wrapperHoist(parent, index);

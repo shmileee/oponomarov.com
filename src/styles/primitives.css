@@ -110,16 +110,15 @@
     margin-block-start: calc(var(--space-6) + var(--space-1));
   }
 
-  /* On a phone the published actions stacked, one per line; inside a hero
-     they were centred under the copy, elsewhere they kept the text edge. */
+  /* On a phone the actions stack, one per line, and keep the text edge. The
+     published hero centred them under left-aligned copy, which put the only
+     centred objects on the page in the middle of a left-set column; a
+     stacked pair reads as a list of two actions and sits on the same axis
+     as the heading and copy above it. */
   @media (width < 40rem) {
     .hero-actions {
       flex-direction: column;
       align-items: flex-start;
-    }
-
-    .hero > .hero-actions {
-      align-items: center;
     }
   }
 
@@ -395,26 +394,35 @@
     line-height: var(--leading-body);
   }
 
-  /* Link cards push their description to the bottom edge so a row of cards
-     shares one baseline. */
+  /* A link card's description follows its title at the card gap, like every
+     other card. It used to be pushed to the bottom edge so a row shared one
+     baseline, but titles wrap unevenly (one line beside three on the
+     landing page) and the auto margin turned that into a 60px hole under
+     the shorter titles; a compact title-then-copy stack reads as one card
+     whatever the neighbours do. */
   .surface-grid > a > p:last-child {
-    margin-block-start: auto;
     padding-block-start: var(--space-2);
   }
 
   /* Paths and path links sit on their own line inside a card. */
   .surface-grid > * > .path-token,
   .surface-grid > * > a:has(> .path-token) {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
     inline-size: fit-content;
     max-inline-size: 100%;
   }
 
   /* A card's path link is a standalone target, not a word in a sentence, so
-     it keeps the tap floor that running-text path links (below) give up. */
+     it keeps the tap floor that running-text path links (below) give up. The
+     floor is hit area, not rhythm: the capsule is about 26px tall inside a
+     44px box, so the box is pulled back by the difference on each side and
+     the capsule sits at the card gap from its neighbours, where an inline
+     path token sits. */
   .surface-grid > * > a.path-token,
   .surface-grid > * > a:has(> .path-token) {
     min-block-size: var(--tap-size);
+    margin-block: calc(-1 * var(--space-2));
   }
 
   /* Ordered process: <li><span aria-hidden>01</span><div><strong/><p/></div></li>.
@@ -1160,11 +1168,14 @@
      description gets elsewhere (prose.css). Two atomic columns already fill
      two thirds of the region in the Neovim table (a mode pill and a chord),
      and a third for the action tipped a table that fits into a 3px scroll.
-     prose.css has referred to this rule since the floors were introduced;
-     it was never written, and the 3px scroll shipped. This layer follows
-     prose, so the lower floor wins without a specificity contest. */
+     The floor is the shared table property (prose.css declares it), so the
+     stacked phone rendering there zeroes this one along with the rest. */
+  .shortcut-reference table {
+    --table-description-floor: calc(var(--measure-prose) / 4);
+  }
+
   .shortcut-reference td:last-child {
-    min-inline-size: calc(var(--measure-prose) / 4);
+    min-inline-size: var(--table-description-floor);
     line-height: var(--leading-body);
     text-wrap: pretty;
   }
@@ -1238,6 +1249,42 @@
 
   .shortcut-reference tr:has(.shortcut-mode--start) > td {
     border-block-start: calc(2 * var(--border-width)) solid var(--color-accent-border);
+  }
+
+  /* Stacked rows on a phone (prose.css, "Narrow viewports: stacked rows").
+     This layer follows prose, so everything the shortcut primitive restates
+     on a cell is restated again for the stacked shape: the floor goes to
+     zero with the others, the chord and mode pill sit at the start of their
+     line above the action rather than centred beside it, the row takes the
+     cell padding, and the mode-group rule moves from the cells to the row. */
+  @media (width < 40rem) {
+    .shortcut-reference table:not(:has(tr > :nth-child(4))) {
+      --table-description-floor: 0px;
+    }
+
+    .shortcut-reference table:not(:has(tr > :nth-child(4))) :is(th, td) {
+      padding: 0;
+      text-align: start;
+      white-space: normal;
+    }
+
+    .shortcut-reference table:not(:has(tr > :nth-child(4))) th + th {
+      border: 0;
+    }
+
+    .shortcut-reference table:not(:has(tr > :nth-child(4))) tr:has(.shortcut-mode--start) {
+      border-block-start: calc(2 * var(--border-width)) solid var(--color-accent-border);
+    }
+
+    /* With the header row out of view the first group starts at the frame's
+       own top edge; a divider there would double it. */
+    .shortcut-reference table:not(:has(tr > :nth-child(4))) tbody tr:first-child {
+      border-block-start: 0;
+    }
+
+    .shortcut-reference table:not(:has(tr > :nth-child(4))) tr:has(.shortcut-mode--start) > td {
+      border-block-start: 0;
+    }
   }
 
   /* ------------------------------------------------------------------ */

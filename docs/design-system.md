@@ -761,10 +761,28 @@ Authors never write `table-scroll`, `docs-table-scroll`, or their own table
 overflow wrapper. `setup-reference` is only a semantic grouping.
 
 The region owns horizontal scrolling, with a visible focus ring and contained
-inline overscroll. Tables retain native row/header/cell semantics. Use intrinsic
-column sizing and wrappable cells; **no `min-width` hacks**, fixed 36/42/44rem
-tables, table-to-card transforms, or clipped `thead`. A table need not scroll
-when it already fits. No table rule may change the font for one content family.
+inline overscroll. Tables retain native row/header/cell semantics; the wrapper
+also writes the explicit `role` each part already has (`table`, `rowgroup`,
+`row`, `columnheader`, `cell`) so the semantics survive the stacked rendering
+below. Use intrinsic column sizing and wrappable cells; **no `min-width`
+hacks**, fixed 36/42/44rem tables, or clipped `thead`. A table need not scroll
+when it already fits, and the region reserves no scrollbar gutter: a table
+that fits shows no strip inside its frame. No table rule may change the font
+for one content family.
+
+Column floors are three custom properties declared once on `.prose table`
+(`--table-label-floor`, `--table-description-floor`, `--table-token-space`);
+the sizing rules consume them and the shortcut reference narrows one. **Below
+40rem a two- or three-column table stacks**: every row becomes a block with
+its cells one under the other (token, then description; mode, then chord,
+then action), the row hairlines between them, and the header row stays visible
+as one line of column labels above the list. The floors go to zero there and a
+token cell may wrap between its parts (never inside a token). This is the one
+sanctioned departure from the table grid, and it exists because the token
+column's atomic width plus the description floor exceed a 350px region: the
+alternative was every reference table scrolling sideways on a phone with its
+descriptions cut mid-word. Tables of four or more columns keep the scroll
+region at every width; they are grids of data, not lists of pairs.
 
 ## 12. Theming
 
@@ -931,7 +949,7 @@ value. S20 PROSE PARAGRAPHS holds every direct `.prose > p` to one size,
 excluding only `.prose--lede`; unlike S1 it deliberately does not exclude
 `header`, because the paragraph it exists to catch sits inside one.
 
-### Browser scenarios — S0–S13
+### Browser scenarios — S0–S21
 
 Run against a production build through `scripts/qa/measure.mjs` and
 `scripts/qa/contract.mjs`. Default viewports: 320, 375, 768, and 1440px; the full
@@ -955,6 +973,8 @@ current route set from the build rather than freezing that count forever.
 | S11 | At 200% root text size: no page overflow, and body text scales with the rem-bearing ramp; verify browser zoom too | Viewport-only font clamps and zoom clipping |
 | S12 | Homepage reader opens and fetched code has EC styling applied | Lost reader behavior or unstyled code after deleting legacy CSS |
 | S13 | Skip link is first focusable, visible on focus, and works on every route | Unreachable main-content bypass |
+| S14–S20 | Contrast, wide tracks, and the typographic parity set; see `scripts/qa/README.md` | Token-level drift between the three content families |
+| S21 | The first child of every hub section shell, article header, article body, topic page and landing body starts on the header's text edge (1px); article shells only below 40rem, where they are not centred | A region that picked up a second gutter (a `full-bleed` wrapper pulled into the content track around a nested grid) |
 
 Probe actual body paragraphs for S1, not eyebrows or metadata; exclude the two
 documented role modifiers from the normal-body comparison. For S2 measure the
