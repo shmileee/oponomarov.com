@@ -898,6 +898,7 @@ verification until all four repositories adopt the contract.
 | V11 | Every image has width, height, and alt | Layout shifts and unnamed images |
 | V12 | No inline `style=` except EC-generated custom-property token spans | Content-owned presentation and sizing overrides |
 | V13 | No Astro `<style>` blocks except V1's exact layer-order-only head prelude | Scoped/page CSS outside the central entry |
+| V14 | Every `font-size` on a `kbd` rule in `prose.css`/`primitives.css` is `var(--code-inline-size)` | Keycaps pinned to a fixed step, rendering one cap at two sizes on one page |
 
 V9 reads raw content HTML, not code examples or EC-generated highlighting
 classes. At migration-audit time every old class must occur in `classes`,
@@ -911,6 +912,24 @@ V8 covers generated engine/vendor markup separately from the content allowlist.
 It must match actual class selectors, not substrings such as `.tab` inside
 `.table-scroll`. V12's EC exception must be tied to generated code spans, not
 any arbitrary authored `style="--custom: value"`.
+
+V14 encodes the section 4 rule that inline code and `kbd` share
+`--code-inline-size`. It strips comments before matching, because `prose.css`
+documents the nested-keycap case with literal `<kbd>` markup that would
+otherwise read as a selector, and it fails when it finds no keycap rule at all:
+a policy check that inspects nothing proves nothing.
+
+The browser contract adds five typographic-parity scenarios alongside these
+static checks. S16 SECTION HEADINGS holds every rendered `.prose h2` to one
+family/size/weight/leading/tracking per viewport, so a content repo cannot
+track its section headings differently from the other two. S17 COMMENTS
+HEADING pins the comments heading to that same tuple, since the region sits
+outside `.prose` and inherits nothing from it. S18 TABLE HEADERS does the same
+for every `th`. S19 KEYCAPS asserts the keycap ratio to its parent equals the
+inline-code ratio, mirroring S3 — the invariant is the ratio, never a pixel
+value. S20 PROSE PARAGRAPHS holds every direct `.prose > p` to one size,
+excluding only `.prose--lede`; unlike S1 it deliberately does not exclude
+`header`, because the paragraph it exists to catch sits inside one.
 
 ### Browser scenarios — S0–S13
 

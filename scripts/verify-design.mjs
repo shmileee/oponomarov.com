@@ -257,8 +257,28 @@ for (const page of pages) {
   }
 }
 
+// V14 - keycaps are em-relative, like inline code (docs section 4, line 291):
+//       every font-size on a rule that names `kbd` in the content layers is
+//       var(--code-inline-size). A fixed step here is the defect that rendered
+//       one keycap at two sizes on one page. A check that finds nothing to
+//       inspect proves nothing, so that is a failure too.
+{
+  let seen = 0;
+  for (const file of ["prose.css", "primitives.css"]) {
+    const css = readFileSync(join(styles, file), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+    for (const [, selector, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+      if (!/\bkbd\b/.test(selector)) continue;
+      const size = /font-size:\s*([^;]+);/.exec(body)?.[1].trim();
+      if (!size) continue;
+      seen += 1;
+      if (size !== "var(--code-inline-size)") throw new Error(`${file}: \`${selector.trim()}\` sizes a keycap with ${size}; keycaps take var(--code-inline-size) so they stay a fraction of their text.`);
+    }
+  }
+  if (!seen) throw new Error("V14 found no keycap font-size rule to check.");
+}
+
 console.log(
   `Verified the design system: ${pages.length} pages on one stylesheet set and one theme script, ` +
   `${cssSources.length} fully layered stylesheets with no !important and no stray colours, ` +
-  `every table a reachable scroll region, every image sized, and expressive-code layered and wrapping.`,
+  `every table a reachable scroll region, every image sized, expressive-code layered and wrapping, and keycaps sized like inline code.`,
 );
