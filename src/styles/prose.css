@@ -167,8 +167,9 @@
      heading and a hairline fills the rest of the line. The portfolio app is
      the only surface that renders these, so the counter keys off the app
      attribute the shell already emits rather than a third prose modifier.
-     The heading keeps the section heading's own leading: a second value
-     here rendered `.prose h2` at two line-heights for one size. */
+     The heading keeps the section heading's own leading and tracking: a
+     second value here rendered `.prose h2` at two line-heights, and later at
+     two trackings, for one size. */
   [data-app="portfolio"] .article .prose[data-article-body] {
     counter-reset: prose-section;
   }
@@ -180,7 +181,6 @@
     padding-block-end: 0;
     border-block-end: 0;
     counter-increment: prose-section;
-    letter-spacing: -0.01em;
   }
 
   [data-app="portfolio"] .article .prose[data-article-body] > h2::before {
