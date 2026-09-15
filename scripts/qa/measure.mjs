@@ -599,9 +599,32 @@ const PROBE = () => {
     proseParagraphs: rendered('.prose > p').filter((el) => !el.closest('.prose--lede')).map(typeSample),
   };
 
+  // 12. Gutter parity (S21). Where each region's text starts against where the
+  //     header's text starts. Every hub section, article header and article
+  //     body is a shell whose first rendered child stands at the page gutter;
+  //     a shell that stands anywhere else has picked up a second gutter (the
+  //     homepage's full-bleed sections did, on a phone: 40px in beside a 20px
+  //     hero and header). Article shells are centred from 40rem by design, so
+  //     the contract compares them only below it; hub shells at every width.
+  const gutter = (() => {
+    const inner = document.querySelector('.op-header__inner');
+    if (!inner) return null;
+    const headerEdge = inner.getBoundingClientRect().left + parseFloat(getComputedStyle(inner).paddingLeft);
+    const shells = [...document.querySelectorAll(
+      'main .section-shell, main .article-header, main [data-article-body], main .category-detail, main.article > .prose:not([data-article-body])',
+    )];
+    const blocks = shells.flatMap((shell) => {
+      const first = [...shell.children].find((child) => child.getBoundingClientRect().width > 0 && child.textContent.trim());
+      if (!first) return [];
+      return [{ sel: describe(shell), article: Boolean(shell.closest('main.article')), left: Math.round(first.getBoundingClientRect().left * 100) / 100 }];
+    });
+    return { headerEdge: Math.round(headerEdge * 100) / 100, blocks };
+  })();
+
   return {
     viewportWidth: vw,
     articleGrid,
+    gutter,
     parity,
     theme: docEl.dataset.theme ?? null,
     bodyBackgroundColor: getComputedStyle(document.body).backgroundColor,

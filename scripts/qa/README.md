@@ -77,7 +77,16 @@ larger type is intentional, but deliberately does **not** exclude `header`:
 the blog archive intro is prose inside one. Empty sample sets fail their
 scenario; absent parity arrays or `code.kbds` also fail S10 hygiene.
 
-The checker prints all 21 PASS/FAIL lines with actual/expected evidence for each
+S21 (GUTTER PARITY) records the header's text edge (`.op-header__inner` plus
+its inline padding) and the left edge of the first rendered child of every
+hub section shell, article header, article body, topic page and landing body.
+A hub shell must sit on the header edge at every width; an article shell is
+centred from 40rem by design and is compared only below it. A route with no
+measurable shell fails. This is the double-gutter class: a `full-bleed`
+wrapper around a nested content grid was pulled into the content track on a
+phone and its section started 20px in from the hero above it.
+
+The checker prints all 22 PASS/FAIL lines with actual/expected evidence for each
 failure and exits 1 if any scenario fails. The report is informational, supports
 the old baseline schema, and exits normally even when contracts are red. The
 current design is intentionally red; these assertions must not be relaxed to

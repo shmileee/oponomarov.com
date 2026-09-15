@@ -11,6 +11,7 @@ const NAMES = [
   'STYLESHEET PARITY', 'NO CLIPPING', 'HYGIENE', 'ZOOM', 'READER DIALOG', 'SKIP LINK',
   'CONTRAST', 'WIDE TRACKS',
   'SECTION HEADINGS', 'COMMENTS HEADING', 'TABLE HEADERS', 'KEYCAPS', 'PROSE PARAGRAPHS',
+  'GUTTER PARITY',
 ];
 const THEMES = ['light', 'dark'];
 const key = (r) => JSON.stringify([r.route, r.viewport, r.colorScheme]);
@@ -327,6 +328,25 @@ export function evaluateContract(raw) {
     for (const table of grid.tables ?? []) {
       const room = Math.min(table.parentWidth, wide.width);
       if (table.scrolls && table.width < room - 1) fail(15, r, `${table.sel} (${table.label}) scrolls before taking its room`, table.width, `>= ${room}px (min of parent and wide track)`);
+    }
+  }
+
+  /* S21 - every region's text starts where the header's text starts. The
+     probe records the header's content edge and the left edge of the first
+     rendered child of every hub section shell, article header, article body,
+     topic page and landing body. A hub shell must sit on the header edge at
+     every width; an article shell is centred from 40rem by design and must
+     sit on it below that. A route whose probe recorded no shells fails: the
+     scenario exists to catch a shell that drifted, and a page with none to
+     measure is not evidence of anything. */
+  for (const r of good) {
+    if (!Object.hasOwn(r, 'gutter')) { fail(21, r, 'gutter probe', '(missing)', 'header edge and shell left edges'); continue; }
+    const gutter = r.gutter;
+    if (!gutter || !Number.isFinite(gutter.headerEdge) || !Array.isArray(gutter.blocks)) { fail(21, r, 'gutter probe', gutter, 'a header edge and a block list'); continue; }
+    if (gutter.blocks.length === 0) { fail(21, r, 'measured shells', 0, 'at least one section shell, article header or article body'); continue; }
+    for (const block of gutter.blocks) {
+      if (block.article && r.viewportWidth >= 640) continue;
+      if (Math.abs(block.left - gutter.headerEdge) > 1) fail(21, r, `${block.sel} left edge`, block.left, `${gutter.headerEdge}px, the header's text edge (1px tolerance)`);
     }
   }
   return scenarios;

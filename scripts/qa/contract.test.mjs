@@ -47,6 +47,11 @@ function fixture() {
     selfScrollers: [], inlineStyleAttrs: [], imagesMissingDims: [], imagesMissingAlt: [],
     contrast: contrast.map((sample) => ({ ...sample })),
     articleGrid: route === '/article/' ? articleGrid(vp) : null,
+    /* S21: every shell's first child stands on the header's text edge; the
+       article shells sit centred from 40rem, which the contract exempts. */
+    gutter: { headerEdge: 20, blocks: route === '/article/'
+      ? [{ sel: 'header.article-header', article: true, left: vp.width >= 1024 ? 220 : 20 }]
+      : [{ sel: 'section.hero.section-shell', article: false, left: 20 }, { sel: 'div.section-shell.content-grid', article: false, left: 20 }] },
     h1Count: 1, status: 200, sheets: ['/_astro/main.ABCdef12.css'],
   }))));
   return {
@@ -60,8 +65,8 @@ function fixture() {
   };
 }
 
-test('complete valid evidence passes all 21 scenarios', () => {
-  assert.deepEqual(evaluateContract(fixture()).map((s) => s.failures.length), Array(21).fill(0));
+test('complete valid evidence passes all 22 scenarios', () => {
+  assert.deepEqual(evaluateContract(fixture()).map((s) => s.failures.length), Array(22).fill(0));
 });
 
 
@@ -117,8 +122,11 @@ test('S3 compares inline code as a ratio of its parent, never as an absolute siz
   assert.ok(evaluateContract(blind)[3].failures.length > 0);
 });
 
-test('S16-S20 never pass on missing evidence', async (t) => {
+test('S16-S21 never pass on missing evidence', async (t) => {
   const cases = [
+    ['the gutter probe is absent', 21, (raw) => { delete raw.results[0].gutter; }],
+    ['a hub shell sits 20px in from the header edge', 21, (raw) => { raw.results[0].gutter.blocks[1].left = 40; }],
+    ['a route recorded no shells', 21, (raw) => { raw.results[0].gutter.blocks = []; }],
     ['parity probe is absent', 10, (raw) => { delete raw.results[0].parity; }],
     ['table headers are absent everywhere', 18, (raw) => { for (const r of raw.results) r.parity.th = []; }],
     ['keycap parent size is absent', 19, (raw) => { delete raw.results[0].code.kbds[0].parentFontSize; }],
