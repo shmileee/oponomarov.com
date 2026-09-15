@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** S0–S14 are contracts, not baseline snapshots. Missing evidence is never green. */
+/** S0–S15 are contracts, not baseline snapshots. Missing evidence is never green. */
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -8,7 +8,7 @@ const NAMES = [
   'THEME PARITY', 'PROSE TYPOGRAPHY', 'PROSE MEASURE', 'INLINE CODE',
   'CODE WRAP', 'NO ESCAPERS', 'TABLE A11Y', 'TAP TARGETS',
   'STYLESHEET PARITY', 'NO CLIPPING', 'HYGIENE', 'ZOOM', 'READER DIALOG', 'SKIP LINK',
-  'CONTRAST',
+  'CONTRAST', 'WIDE TRACKS',
 ];
 const THEMES = ['light', 'dark'];
 const key = (r) => JSON.stringify([r.route, r.viewport, r.colorScheme]);
@@ -274,6 +274,38 @@ export function evaluateContract(raw) {
       if (!themed.some((r) => (r.contrast ?? []).some((sample) => sample.kind === kind))) {
         fail(14, { route: '(run)', viewport: '(matrix)', colorScheme }, `${kind} samples`, 'none', `at least one ${kind} sample in the ${colorScheme} theme`);
       }
+    }
+  }
+
+  /* S15 - the article body's opt-in tracks are real. `wide` and `full-bleed`
+     never resolve narrower than the content track, and from a laptop width
+     `wide` is strictly wider than it: the escape hatch the design gives a
+     table, figure or exhibit has room in it. The content track sits centred
+     in the wide track; nothing the body holds reaches under the sticky TOC
+     rail; a child that did not opt in stays inside the content track; and a
+     table region that scrolls has first taken every pixel its container or
+     the wide track could give it. A route without an article body has no
+     sample; an article route whose probe recorded no tracks fails. */
+  for (const r of good) {
+    if (!Object.hasOwn(r, 'articleGrid')) { fail(15, r, 'article grid probe', '(missing)', 'articleGrid measurements or null'); continue; }
+    const grid = r.articleGrid;
+    if (grid === null) continue;
+    const { content, wide, full, rail } = grid;
+    if (![content, wide, full].every((t) => t && Number.isFinite(t.width) && Number.isFinite(t.left) && Number.isFinite(t.right))) {
+      fail(15, r, 'named tracks', grid, 'content, wide and full tracks with left/right/width'); continue;
+    }
+    if (wide.width < content.width) fail(15, r, 'wide track width', wide.width, `>= content track ${content.width}px`);
+    if (full.width < wide.width) fail(15, r, 'full track width', full.width, `>= wide track ${wide.width}px`);
+    if (r.viewportWidth >= 1024 && !(wide.width > content.width)) fail(15, r, 'wide track room', { wide: wide.width, content: content.width }, 'wide strictly wider than content from 1024px');
+    if (Math.abs((content.left - wide.left) - (wide.right - content.right)) > 1) fail(15, r, 'content centred in wide', { wide, content }, 'equal side tracks (1px tolerance)');
+    for (const child of grid.children ?? []) {
+      if (rail !== null && child.right > rail + 1) fail(15, r, `${child.sel} under the TOC rail`, { right: child.right, rail }, `right edge <= ${rail}px`);
+      const bounds = child.optIn === 'full-bleed' ? full : child.optIn === 'wide' ? wide : content;
+      if (child.left < bounds.left - 1 || child.right > bounds.right + 1) fail(15, r, `${child.sel} inside its ${child.optIn ?? 'content'} track`, { left: child.left, right: child.right }, { left: bounds.left, right: bounds.right });
+    }
+    for (const table of grid.tables ?? []) {
+      const room = Math.min(table.parentWidth, wide.width);
+      if (table.scrolls && table.width < room - 1) fail(15, r, `${table.sel} (${table.label}) scrolls before taking its room`, table.width, `>= ${room}px (min of parent and wide track)`);
     }
   }
   return scenarios;

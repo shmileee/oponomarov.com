@@ -394,10 +394,17 @@
   /* ------------------------------------------------------------------ */
   /* Topic chips.                                                         */
   /* One chip serves all three renderings: a linked <li> (blog), a bare   */
-  /* <span> (case study), and a plain list item (homepage). The chip is   */
-  /* the child, so the link keeps its own 44px hit area. The published    */
+  /* <span> (case study), and a plain list item (homepage). The published */
   /* chip was the same quiet pill everywhere: a hairline, no fill, no     */
   /* tracking, a 24px box, the small mono step.                          */
+  /* Where the chip is a link, the LINK owns the box. The wrapper used to */
+  /* draw the pill around a link that base.css floors at 44px wide: the   */
+  /* link sat left-aligned inside 12px of wrapper padding, so a 24px      */
+  /* label read with 33px of dead space on its right. Now the wrapper is  */
+  /* a bare list item and the link is the whole target: 44px tall, at     */
+  /* least 44px wide, its label centred, its pill drawn by a pseudo-      */
+  /* element on the 24px band through its middle, so the pill is exactly  */
+  /* label plus 12px a side and every pixel of it is the link.            */
   /* ------------------------------------------------------------------ */
 
   .topic-list {
@@ -426,32 +433,57 @@
       background-color var(--dur-fast) var(--ease-out);
   }
 
-  /* Where the chip wraps a link, the chip still draws the pill and the link
-     keeps its 44px hit area, pulled back into the 24px pill with negative
-     margins so the row keeps the published height. */
-  .topic-list a {
-    display: inline-flex;
-    align-items: center;
-    min-block-size: var(--tap-size);
+  /* A wrapper around a link draws nothing and takes no room of its own:
+     the 44px link is pulled back to the 24px row with negative margins so
+     the chip row keeps the published height. */
+  .topic-list > :has(> a) {
+    min-block-size: 0;
     margin-block: calc((var(--space-6) - var(--tap-size)) / 2);
     padding: 0;
     border: 0;
-    background: none;
+  }
+
+  .topic-list a {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: var(--tap-size);
+    min-block-size: var(--tap-size);
+    padding-inline: var(--space-3);
     color: inherit;
     text-decoration: none;
     transition: color var(--dur-fast) var(--ease-out);
   }
 
-  .topic-list > :has(> a:hover) {
-    border-color: var(--color-accent);
-    background: var(--color-accent-surface);
+  /* The pill: the full width of the link on the 24px band through its
+     middle, so it closes exactly 12px past the label on both sides. */
+  .topic-list a::before {
+    content: "";
+    position: absolute;
+    inset: calc((var(--tap-size) - var(--space-6)) / 2) 0;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-pill);
+    transition:
+      border-color var(--dur-fast) var(--ease-out),
+      background-color var(--dur-fast) var(--ease-out);
   }
 
   .topic-list a:hover {
     color: var(--color-text);
   }
 
+  .topic-list a:hover::before {
+    border-color: var(--color-accent);
+    background: var(--color-accent-surface);
+  }
+
+  /* The ring follows the pill, not the taller hit box. */
   .topic-list a:focus-visible {
+    outline: none;
+  }
+
+  .topic-list a:focus-visible::before {
     outline: var(--focus-width) solid var(--color-focus);
     outline-offset: var(--focus-offset);
   }

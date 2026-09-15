@@ -62,7 +62,7 @@
       "element": "details"
     },
     "setup-reference": {
-      "description": "Reference-table grouping, not a scroll wrapper or column-width override; the engine wraps every nested table.",
+      "description": "Reference-table grouping, not a scroll wrapper or column-width override; the engine wraps every nested table. When the group holds nothing but one table, the engine moves the generated wide opt-in onto the group, because the grid honours wide only on its direct children.",
       "usedBy": ["dotfiles"],
       "element": "div"
     },
@@ -267,7 +267,7 @@
       "element": "div"
     },
     "wide": {
-      "description": "Opt-in to the named wide grid track on a direct content-grid child; collapses to the content track below 40rem. Also generated on table wrappers.",
+      "description": "Opt-in to the named wide grid track on a direct content-grid child; collapses to the content track below 40rem. Also generated on table wrappers, or on the authored wrapper when a table is all it holds.",
       "usedBy": ["portfolio", "blog", "dotfiles"],
       "element": "figure | div | section | pre"
     },
@@ -277,7 +277,7 @@
       "element": "figure | div | section"
     },
     "table-scroll": {
-      "description": "ENGINE-GENERATED accessible table scroll region. Authors must never write this wrapper; rehypeTableScroll supplies wide, tabindex=0, role=region, and an accessible name for every table.",
+      "description": "ENGINE-GENERATED accessible table scroll region. Authors must never write this wrapper; rehypeTableScroll supplies tabindex=0, role=region and an accessible name for every table, plus wide on the region itself or, when an authored wrapper holds nothing but the table, on that wrapper.",
       "usedBy": ["portfolio", "blog", "dotfiles"],
       "element": "div",
       "engineGenerated": true

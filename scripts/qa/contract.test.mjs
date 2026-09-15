@@ -18,6 +18,19 @@ function fixture() {
     kind, sel: kind, path: `main ${kind}`, color: 'oklch(0.44 0 0)', fontSize: 16, fontWeight: 400,
     foreground: '#595959', background: '#ffffff', ratio: 7, reason: null,
   }));
+  /* S15: an article body whose wide track is real. At 1440 the content track
+     (736px) sits centred in a 780px wide track beside a rail at 1018; below
+     that the three tracks coincide. The one scrolling table took every pixel
+     its 780px wrapper offered. */
+  const articleGrid = (vp) => {
+    const content = vp.width >= 1024 ? { left: 220, right: 956, width: 736 } : { left: 20, right: vp.width - 20, width: vp.width - 40 };
+    const wide = vp.width >= 1024 ? { left: 198, right: 978, width: 780 } : { ...content };
+    return {
+      content, wide, full: { ...wide }, rail: vp.width >= 1280 ? 1018 : null,
+      children: [{ sel: 'p', left: content.left, right: content.right, optIn: null }, { sel: 'div.setup-reference.wide', left: wide.left, right: wide.right, optIn: 'wide' }],
+      tables: [{ sel: 'div.table-scroll', label: 'Roles', width: wide.width, parentWidth: wide.width, scrolls: true }],
+    };
+  };
   const results = routes.flatMap((route) => ['light', 'dark'].flatMap((colorScheme) => viewports.map((vp) => ({
     route, colorScheme, viewport: vp.name, viewportWidth: vp.width,
     theme: colorScheme, bodyBackgroundColor: colorScheme === 'light' ? 'white' : 'black',
@@ -27,6 +40,7 @@ function fixture() {
     code: { pres: [], inlines: [{ ...inlineFp }] }, escapers: [], tables: [], smallTargets: [],
     selfScrollers: [], inlineStyleAttrs: [], imagesMissingDims: [], imagesMissingAlt: [],
     contrast: contrast.map((sample) => ({ ...sample })),
+    articleGrid: route === '/article/' ? articleGrid(vp) : null,
     h1Count: 1, status: 200, sheets: ['/_astro/main.ABCdef12.css'],
   }))));
   return {
@@ -40,8 +54,8 @@ function fixture() {
   };
 }
 
-test('complete valid evidence passes all 15 scenarios', () => {
-  assert.deepEqual(evaluateContract(fixture()).map((s) => s.failures.length), Array(15).fill(0));
+test('complete valid evidence passes all 16 scenarios', () => {
+  assert.deepEqual(evaluateContract(fixture()).map((s) => s.failures.length), Array(16).fill(0));
 });
 
 
@@ -62,6 +76,8 @@ const violations = [
   (raw) => { raw.interactions.skipLinks[0].insideViewport = false; },
   /* #949494 on white is 3.03:1: fine for large text, a failure for body text. */
   (raw) => { raw.results[0].contrast[0].foreground = '#949494'; },
+  /* A wide track that collapsed onto the content track at desktop width. */
+  (raw) => { const r = raw.results.find((r) => r.route === '/article/' && r.viewportWidth === 1440); r.articleGrid.wide = { ...r.articleGrid.content }; r.articleGrid.full = { ...r.articleGrid.content }; },
 ];
 for (const [id, mutate] of violations.entries()) {
   test(`S${id} rejects its violation with route/viewport and actual/expected evidence`, () => {
@@ -198,4 +214,33 @@ test('routes derive from sitemap or recursive HTML, excluding refresh stubs', as
   } finally {
     await rm(dist, { recursive: true, force: true });
   }
+});
+
+test('S15 checks every track relation, the rail, child containment and scrolling tables, and never passes on a missing probe', () => {
+  const at1440 = (raw) => raw.results.find((r) => r.route === '/article/' && r.viewportWidth === 1440);
+  /* Routes without an article body carry null and have no sample. */
+  assert.equal(evaluateContract(fixture())[15].failures.length, 0);
+  /* A child that reaches under the rail. */
+  const underRail = fixture();
+  at1440(underRail).articleGrid.children.push({ sel: 'figure.media-exhibit', left: 220, right: 1030, optIn: null });
+  assert.ok(evaluateContract(underRail)[15].failures.some((f) => /under the TOC rail/.test(f.field)));
+  /* A child off its track, and a wide track the content is not centred in. */
+  const offTrack = fixture();
+  at1440(offTrack).articleGrid.children.push({ sel: 'div.stray', left: 100, right: 500, optIn: null });
+  at1440(offTrack).articleGrid.wide = { left: 220, right: 1000, width: 780 };
+  const fields = evaluateContract(offTrack)[15].failures.map((f) => f.field);
+  assert.ok(fields.some((f) => /div\.stray inside its content track/.test(f)));
+  assert.ok(fields.some((f) => /centred/.test(f)));
+  /* A table that scrolls without first taking the room its wrapper offers. */
+  const earlyScroll = fixture();
+  at1440(earlyScroll).articleGrid.tables.push({ sel: 'div.table-scroll', label: 'Early', width: 736, parentWidth: 780, scrolls: true });
+  assert.ok(evaluateContract(earlyScroll)[15].failures.some((f) => /scrolls before taking its room/.test(f.field)));
+  /* The same table inside a section that is itself only 736px wide is fine. */
+  const sectioned = fixture();
+  at1440(sectioned).articleGrid.tables.push({ sel: 'div.table-scroll', label: 'Sectioned', width: 736, parentWidth: 736, scrolls: true });
+  assert.equal(evaluateContract(sectioned)[15].failures.length, 0);
+  /* A probe that recorded nothing is missing evidence, not a pass. */
+  const blind = fixture();
+  delete at1440(blind).articleGrid;
+  assert.ok(evaluateContract(blind)[15].failures.some((f) => f.field === 'article grid probe'));
 });

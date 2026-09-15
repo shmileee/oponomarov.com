@@ -545,8 +545,43 @@ const PROBE = () => {
     }
   }
 
+  // 10. Article grid tracks (S15): what the three named tracks of the body
+  //     grid actually resolve to, where every direct child of the body sits,
+  //     and whether a scrolling table region first took every pixel it could.
+  //     The tracks are measured with throwaway children placed in each one and
+  //     removed again, because a named grid line has no box of its own.
+  const articleGrid = (() => {
+    const body = document.querySelector('.article > .prose.content-grid');
+    if (!body) return null;
+    const track = (className) => {
+      const el = document.createElement('div');
+      el.className = className;
+      body.append(el);
+      const r = el.getBoundingClientRect();
+      el.remove();
+      return { left: Math.round(r.left), right: Math.round(r.right), width: Math.round(r.width) };
+    };
+    const content = track(''), wide = track('wide'), full = track('full-bleed');
+    const toc = document.querySelector('.article > .toc');
+    const rail = toc && getComputedStyle(toc).position === 'sticky' ? Math.round(toc.getBoundingClientRect().left) : null;
+    const children = [...body.children]
+      .filter((el) => el.getBoundingClientRect().width > 0)
+      .map((el) => {
+        const r = el.getBoundingClientRect();
+        return { sel: describe(el), left: Math.round(r.left), right: Math.round(r.right), optIn: el.matches('.full-bleed') ? 'full-bleed' : el.matches('.wide') ? 'wide' : null };
+      });
+    const tables = [...document.querySelectorAll('.table-scroll')].map((el) => ({
+      sel: describe(el), label: el.getAttribute('aria-label'),
+      width: Math.round(el.getBoundingClientRect().width),
+      parentWidth: Math.round(el.parentElement.getBoundingClientRect().width),
+      scrolls: el.scrollWidth > el.clientWidth + 1,
+    }));
+    return { content, wide, full, rail, children, tables };
+  })();
+
   return {
     viewportWidth: vw,
+    articleGrid,
     theme: docEl.dataset.theme ?? null,
     bodyBackgroundColor: getComputedStyle(document.body).backgroundColor,
     bodyFontSize: getComputedStyle(document.body).fontSize,

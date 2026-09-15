@@ -110,3 +110,92 @@ test("preserves an existing HTML scroll ancestor around a Markdown table", async
   assert.equal((code.match(/class="table-scroll/g) || []).length, 1);
   assert.match(code, /aria-label="Existing"/);
 });
+
+test("hoists the wide opt-in onto a wrapper that holds nothing but the table", async () => {
+  // Given
+  const table = element("table");
+  const wrapper = element("div", [text("\n\n"), table, text("\n")], { className: ["setup-reference"] });
+  const tree = root(element("h2", [text("Ansible roles")]), wrapper);
+  // When
+  await transform(tree);
+  // Then
+  assert.deepEqual(wrapper.properties.className, ["setup-reference", "wide"]);
+  assert.deepEqual(wrapper.children[1], element("div", [table], {
+    className: ["table-scroll"], tabIndex: 0, role: "region", ariaLabel: "Ansible roles",
+  }));
+});
+
+test("does not add wide twice to a wrapper that already opts in", async () => {
+  // Given
+  const wrapper = element("div", [element("table")], { className: "setup-reference wide" });
+  // When
+  await transform(root(wrapper));
+  // Then
+  assert.equal(wrapper.properties.className, "setup-reference wide");
+  assert.deepEqual(wrapper.children[0].properties.className, ["table-scroll"]);
+});
+
+test("keeps wide on the region when the wrapper holds other content too", async () => {
+  // Given
+  const table = element("table");
+  const section = element("section", [element("h3", [text("Keys")]), table, element("p", [text("Note")])], { className: ["shortcut-reference"] });
+  // When
+  await transform(root(section));
+  // Then
+  assert.deepEqual(section.properties.className, ["shortcut-reference"]);
+  assert.deepEqual(section.children[1].properties.className, ["table-scroll", "wide"]);
+});
+
+/* Astro's own pipeline runs no rehype-raw pass (astro.config.mjs): the Markdown
+   inside block HTML is parsed, but the authored tags around it stay opaque
+   `raw` nodes. Both shapes must hoist the same way. */
+for (const [pipeline, rehypePlugins] of [["a rehype-raw", (plugin) => [rehypeRaw, plugin]], ["Astro's raw-node", (plugin) => [plugin]]]) {
+  test(`hoists wide onto an authored group around a Markdown table in ${pipeline} pipeline`, async () => {
+    // Given
+    const plugin = (await import("./rehype-table-scroll.mjs")).default;
+    const processor = await createMarkdownProcessor({ syntaxHighlight: false, rehypePlugins: rehypePlugins(plugin) });
+    const markdown = '## Roles\n\n<div class="setup-reference">\n\n| Role | Purpose |\n| --- | --- |\n| a | b |\n\n</div>';
+    // When
+    const { code } = await processor.render(markdown);
+    // Then
+    assert.match(code, /<div class="setup-reference wide">\s*<div class="table-scroll" tabindex="0" role="region" aria-label="Roles">/);
+    assert.equal((code.match(/wide/g) || []).length, 1);
+  });
+
+  test(`leaves wide on the region when the group holds more than the table in ${pipeline} pipeline`, async () => {
+    // Given
+    const plugin = (await import("./rehype-table-scroll.mjs")).default;
+    const processor = await createMarkdownProcessor({ syntaxHighlight: false, rehypePlugins: rehypePlugins(plugin) });
+    const markdown = '<section class="shortcut-reference">\n\n## Keys\n\n| Key | Action |\n| --- | --- |\n| a | b |\n\nA note.\n\n</section>';
+    // When
+    const { code } = await processor.render(markdown);
+    // Then
+    assert.match(code, /<section class="shortcut-reference">/);
+    assert.match(code, /<div class="table-scroll wide" tabindex="0" role="region" aria-label="Keys">/);
+  });
+}
+
+test("adds a class attribute to a raw wrapper that has none and respects one that already opts in", async () => {
+  // Given
+  const plugin = (await import("./rehype-table-scroll.mjs")).default;
+  const processor = await createMarkdownProcessor({ syntaxHighlight: false, rehypePlugins: [plugin] });
+  const markdown = "<div>\n\n| A |\n| --- |\n| 1 |\n\n</div>\n\n<div class='setup-reference wide'>\n\n| B |\n| --- |\n| 2 |\n\n</div>";
+  // When
+  const { code } = await processor.render(markdown);
+  // Then (Astro serialises the authored tag afterwards, so quotes normalise; the class list is what matters)
+  assert.match(code, /<div class="wide">\s*<div class="table-scroll" tabindex="0" role="region" aria-label="Table 1">/);
+  assert.match(code, /<div class=["']setup-reference wide["']>\s*<div class="table-scroll" tabindex="0" role="region" aria-label="Table 2">/);
+  assert.equal((code.match(/\bwide\b/g) || []).length, 2);
+});
+
+test("does not treat unmatched raw tags around a table as its wrapper", async () => {
+  // Given
+  const plugin = (await import("./rehype-table-scroll.mjs")).default;
+  const processor = await createMarkdownProcessor({ syntaxHighlight: false, rehypePlugins: [plugin] });
+  const markdown = '<div class="tabs">\n<section class="tab" data-tab-label="x">\n<span>x</span>\n\n| A |\n| --- |\n| 1 |\n\n</section>\n</div>';
+  // When
+  const { code } = await processor.render(markdown);
+  // Then
+  assert.match(code, /<section class="tab" data-tab-label="x">\n<span>x<\/span>/);
+  assert.match(code, /<div class="table-scroll wide" tabindex="0" role="region" aria-label="Table 1">/);
+});

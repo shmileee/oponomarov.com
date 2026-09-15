@@ -477,13 +477,23 @@
     margin: 0;
   }
 
-  /* The published step: a 1rem display title beside 15px muted copy. */
+  /* Step copy is body copy. The published step set a 1rem display title
+     beside 15px muted copy, a step under its paragraphs, and this primitive
+     shipped that way. It is the wrong step for this system: a step is a
+     numbered paragraph in the reading column, not a card aside, and the
+     reference tables beside it set every cell at --text-base (design-system
+     §4: paragraph, list item and normal table cell share the body size). At
+     --text-sm the same `mise run reconcile` token rendered 13.5px in a step
+     and 16.6px in the table one heading later, because inline code is em-
+     sized on purpose. Copy and title both take the body step; the title
+     keeps its display face and weight, which is what carries the hierarchy
+     (the published title was only 1px larger than its copy). */
   .steps > li strong {
     display: block;
     margin: 0;
     color: var(--color-text);
     font-family: var(--font-display);
-    font-size: var(--text-sm);
+    font-size: var(--text-base);
     font-weight: var(--weight-semibold);
     line-height: var(--leading-snug);
   }
@@ -491,7 +501,7 @@
   .steps > li p {
     margin: 0;
     color: var(--color-text-muted);
-    font-size: var(--text-sm);
+    font-size: var(--text-base);
     line-height: var(--leading-body);
   }
 
@@ -1079,8 +1089,11 @@
   /* Reference section with headings and ordinary tables. Tables keep native
      layout inside the engine's scroll region; nothing here fixes a column.
      The published shortcut tables drew a toolbar-tinted header row, a
-     hairline between rows, a divider between the header cells, and centred
-     the key column against a left-aligned action column. */
+     divider between the header cells, a taller row, and centred the key
+     column against a left-aligned action column. The hairline between rows
+     and the centring of the key cell on the row are no longer this
+     primitive's: prose.css gives every table on the site both, and the
+     chord and mode-pill cells join its atomic set below (.keys). */
   .shortcut-reference {
     min-inline-size: 0;
     scroll-margin-block-start: calc(var(--header-height) + var(--space-4));
@@ -1107,7 +1120,20 @@
 
   .shortcut-reference tbody td {
     padding-block: var(--space-4);
-    border-block-start: var(--border-width) solid var(--color-border-subtle);
+  }
+
+  /* The action column centres too. prose.css keeps a prose cell on top so
+     that two multi-line blocks never centre against each other; here the
+     action is never beside another prose cell, only beside a chord, and
+     below 48rem a chord may wrap to two or three lines while the action is
+     one. Top-aligned, "Toggle pane zoom" sat on the Ctrl+A line with
+     "then +" orphaned beneath it, as if it named the prefix alone; centred,
+     it names the whole chord, which is how the published table read. This
+     is scoped rather than general because "a row whose other cells are all
+     atomic" cannot be written in CSS (:has() does not nest), and a
+     positional stand-in would misfire on a code / label / description
+     table. */
+  .shortcut-reference tbody td:last-child {
     vertical-align: middle;
   }
 
@@ -1130,7 +1156,15 @@
     }
   }
 
+  /* The action column's floor is a quarter of the measure, not the third a
+     description gets elsewhere (prose.css). Two atomic columns already fill
+     two thirds of the region in the Neovim table (a mode pill and a chord),
+     and a third for the action tipped a table that fits into a 3px scroll.
+     prose.css has referred to this rule since the floors were introduced;
+     it was never written, and the 3px scroll shipped. This layer follows
+     prose, so the lower floor wins without a specificity contest. */
   .shortcut-reference td:last-child {
+    min-inline-size: calc(var(--measure-prose) / 4);
     line-height: var(--leading-body);
     text-wrap: pretty;
   }
@@ -1222,6 +1256,16 @@
     white-space: nowrap;
   }
 
+  /* A cell that opens with a chord or a mode pill is an atomic cell, like
+     one that opens with a code token: it sits on the row's centre line
+     beside the action it labels (prose.css centres the native tokens and
+     explains the judgement; these two content wrappers join that set here,
+     where they are defined). Never the last column, which is always the
+     wrapping description. */
+  td:not(:last-child):has(> :is(.keys, .shortcut-mode):first-child) {
+    vertical-align: middle;
+  }
+
   .keys > span {
     color: var(--color-text-subtle);
     font-family: var(--font-mono);
@@ -1252,31 +1296,18 @@
     white-space: nowrap;
   }
 
-  /* Inline path or path link. The inline-code treatment comes from prose;
-     path-token only adds break behaviour and the link state. Authored wbr
-     marks are preferred break points, anywhere-wrapping is the fallback. */
-  .path-token {
-    hyphens: none;
-    overflow-wrap: anywhere;
-  }
-
-  /* In running text the path link is an ordinary inline link. S7 exempts
+  /* Inline path or path link. The inline-code treatment comes from prose,
+     and so does the link state: a path link is a code link like any other
+     (`.prose a:has(> code)`), so it draws the same solid-edged capsule and
+     lights the same way. path-token only adds break behaviour. Authored wbr
+     marks are preferred break points, anywhere-wrapping is the fallback.
+     In running text the path link stays an ordinary inline link: S7 exempts
      inline prose links from the tap floor, and an inline-flex box with a
      44px minimum inflated its line and pushed the surrounding copy out of
      rhythm; card links keep the floor in the surface-grid rules above. */
-  a.path-token,
-  a:has(> .path-token) {
-    text-decoration: none;
-  }
-
-  a.path-token:hover > code,
-  a.path-token:focus-visible > code,
-  a:hover > .path-token,
-  a:focus-visible > .path-token {
-    color: var(--color-text);
-    text-decoration: underline;
-    text-decoration-color: var(--color-accent);
-    text-underline-offset: var(--space-1);
+  .path-token {
+    hyphens: none;
+    overflow-wrap: anywhere;
   }
 
   /* ------------------------------------------------------------------ */
@@ -1287,27 +1318,19 @@
      style="--media-exhibit-width: 840px"; the primitive now owns the measure.
      Block rhythm belongs to the prose flow (a lower layer, so it is not
      restated here): the body grid does not collapse margins, and a bottom
-     margin of its own would double the gap below the exhibit. */
+     margin of its own would double the gap below the exhibit.
+     The exhibit fills whatever track it is given. The published exhibit
+     stood a gutter proud of the reading column, and this rule used to fake
+     that with a translated 100%-plus-gutters box, which is exactly the
+     breakout hack the grid exists to replace and which ran 8px under the TOC
+     rail on every laptop. The room now comes from the grid: the content
+     carries `wide` on the figure, as the primitive contract documents
+     (`<figure class="media-exhibit wide">`), and layout.css places it in the
+     wide track beside every other wide element. */
   .media-exhibit {
     inline-size: 100%;
     min-inline-size: 0;
     margin-inline: 0;
-  }
-
-  /* In an article body the published exhibit stood a gutter proud of the
-     reading column on each side (840px against a 736px column), centred on
-     it, and shrank back to the column once the viewport could not spare the
-     gutters. The grid body is where that column exists; the reader dialog's
-     prose is a plain block, so the exhibit simply fills it there. */
-  .content-grid > .media-exhibit {
-    position: relative;
-    inset-inline-start: 50%;
-    inline-size: min(
-      calc(100% + 2 * var(--space-gutter)),
-      calc(100vw - 2 * var(--space-gutter))
-    );
-    max-inline-size: none;
-    transform: translateX(-50%);
   }
 
   /* Frame and stage share the fenced-code window language so screenshots,
@@ -1400,20 +1423,15 @@
     white-space: nowrap;
   }
 
-  /* The published caption: a quiet mono line at the small step, its
-     "Exhibit 01" lead in the accent. */
+  /* The exhibit caption is the site's one figure caption (prose.css sets
+     the tuple: small mono step, medium, subtle, centred) with its "Exhibit
+     01" lead in the accent. The published portfolio set it a step smaller
+     than the blog's captions; one size now. */
   .exhibit-caption {
     min-inline-size: 0;
     margin: var(--space-3) 0 0;
     padding-inline: var(--space-1);
-    color: var(--color-text-muted);
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    font-weight: var(--weight-normal);
-    line-height: var(--leading-snug);
     overflow-wrap: anywhere;
-    text-align: center;
-    text-wrap: pretty;
   }
 
   .exhibit-caption > span:first-child {
@@ -1506,21 +1524,20 @@
 
   /* Rhythm comes from the prose flow's figure rule, the same as the
      portfolio exhibits: an own 40px margin here gave blog figures a
-     different pitch from every other figure on the site. */
+     different pitch from every other figure on the site. The figure fills
+     its track by default: with auto inline margins and no size of its own, a
+     grid item shrinks to fit its content, and an image bounded by a
+     percentage of that shrinking box collapsed the whole figure to its
+     frame padding. The two modifiers below restate the size they want. */
   .media-figure {
+    inline-size: 100%;
     min-inline-size: 0;
     margin-inline: auto;
   }
 
+  /* The caption itself is the shared figure caption from prose.css. */
   .media-figure > figcaption {
     margin-block-start: var(--space-3);
-    color: var(--color-text-subtle);
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-    font-weight: var(--weight-medium);
-    line-height: var(--leading-snug);
-    text-align: center;
-    text-wrap: pretty;
   }
 
   /* Large screenshot: fills its track; the author adds wide for the wider

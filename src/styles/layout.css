@@ -91,22 +91,37 @@
   /* footer navigation. The content track is the reading measure, centred */
   /* in the page at every width — the published docs, case-study and      */
   /* landing columns all sit there — so on a phone it is simply the width  */
-  /* between the gutters. Below 80rem everything stacks in that track, the */
-  /* TOC is a disclosure, and the body grid spans `full` so its gutters    */
-  /* align with the page grid. From 80rem the article becomes the          */
-  /* published two-column composition: the reading column with a sticky   */
-  /* TOC rail beside it. The rail fits inside --measure-page because the   */
-  /* column is the prose measure, not the `wide` track; inside the column  */
-  /* `wide` and `full-bleed` resolve to the column edges, which is what    */
-  /* the original docs shell did too.                                      */
+  /* between the gutters. Either side of it is a `wide` track that takes   */
+  /* whatever the page has left once the reading measure and the gutter    */
+  /* minimums are paid, up to --measure-wide in all: nothing at phone and  */
+  /* tablet widths, the spec's 64rem on a laptop, a slim margin beside the */
+  /* TOC rail. Below 80rem everything stacks in the content track and the  */
+  /* TOC is a disclosure. From 80rem the article becomes the published     */
+  /* two-column composition: the reading column with a sticky TOC rail     */
+  /* beside it, and the rail is what bounds `wide` there.                  */
+  /* ...................................................................  */
+  /* The side tracks are sized from the leftover explicitly rather than as */
+  /* minmax(0, 9rem): the grid algorithm hands free space to every track   */
+  /* with room at once, so two 9rem sides beside a 46rem column took their */
+  /* share before the column reached its measure (492px of reading column  */
+  /* beside the rail, 640px at 1024px). Written as the remainder, the side */
+  /* can only ever hold what the column has already declined.              */
   /* ------------------------------------------------------------------ */
 
   .article {
-    grid-template-columns:
+    --wide-side: min(
+      calc((var(--measure-wide) - var(--measure-prose)) / 2),
+      calc((100% - var(--measure-prose) - 2 * var(--space-gutter)) / 2)
+    );
+    --article-columns:
       [full-start] minmax(var(--space-gutter), 1fr)
-      [wide-start content-start] minmax(0, var(--measure-prose))
-      [content-end wide-end] minmax(var(--space-gutter), 1fr)
+      [wide-start] var(--wide-side)
+      [content-start] minmax(0, var(--measure-prose))
+      [content-end] var(--wide-side)
+      [wide-end] minmax(var(--space-gutter), 1fr)
       [full-end];
+
+    grid-template-columns: var(--article-columns);
     row-gap: var(--space-10);
     /* The published shell breathes before the footer; the header carries
        the air above the title (components/article.css). */
@@ -119,15 +134,19 @@
     display: none;
   }
 
-  /* Inside the reading column the body grid owns no gutters of its own: the
-     column is the measure, so its single track is every named track and the
-     body text starts exactly where the header does. (Three class terms
-     outrank the `full-bleed` opt-in the markup carries.) */
+  /* The body is a nested grid spanning `full` (the opt-in the markup
+     carries) and it lays the SAME track list over the same width, so its
+     content track lands exactly on the article's: the body text starts where
+     the header does, and a `wide` or `full-bleed` child reaches the real
+     side tracks instead of a collapsed copy of the column. Placing the body
+     in the content column and collapsing every named line onto that one
+     track, as this rule used to, left every wide table, figure and exhibit
+     on every article page with nowhere to go. The track list travels as a
+     custom property so the two grids cannot drift apart; the percentage in
+     --wide-side resolves against each grid, and both are the same width. */
   .article.content-grid > .content-grid {
-    grid-column: content;
-    grid-template-columns:
-      [full-start wide-start content-start] minmax(0, 1fr)
-      [content-end wide-end full-end];
+    grid-column: full;
+    grid-template-columns: var(--article-columns);
   }
 
   /* The rail's sticky offset, named once. components/navigation.css bounds the
@@ -140,30 +159,38 @@
   }
 
   @media (width >= 80rem) {
-    /* Reading column plus rail: any content grid that carries a TOC. Every
+    /* Reading column plus rail: any article that carries a TOC. Every
        article route does — manuals, notes and case studies all render one
        through ArticleShell. The Dotfiles landing page (/dotfiles/) is the one
        deliberate exemption: it is an overview with no sections of its own to
        navigate, so it keeps the single reading column and this rule does not
-       match it. */
-    .content-grid:has(> .toc) {
-      grid-template-columns:
+       match it. The side tracks now also pay for the rail and its gap, which
+       leaves them 22px each at the page maximum: `wide` is a slim margin
+       beside the rail, never a second column under it. */
+    .article:has(> .toc) {
+      --wide-side: min(
+        calc((var(--measure-wide) - var(--measure-prose)) / 2),
+        calc((100% - var(--measure-prose) - 2 * var(--space-gutter) - var(--space-10) - var(--toc-width)) / 2)
+      );
+      --article-columns:
         [full-start] minmax(var(--space-gutter), 1fr)
-        [wide-start content-start] minmax(0, var(--measure-prose))
-        [content-end wide-end] var(--space-10)
+        [wide-start] var(--wide-side)
+        [content-start] minmax(0, var(--measure-prose))
+        [content-end] var(--wide-side)
+        [wide-end] var(--space-10)
         [toc-start] var(--toc-width)
         [toc-end] minmax(var(--space-gutter), 1fr)
         [full-end];
     }
 
-    /* The rail runs beside the first two rows — header and body in the
-       article shell, body and adjacent navigation on the landing page — and
-       sticks below the site header while they scroll past. Its width is the
-       fixed --toc-width at every width above the breakpoint: the reference
-       rail (HashiCorp's docs sidecar) is likewise a constant 312px from 1280
-       to 2560px, because a table of contents is a list of short labels, not a
-       reading column, and widening it only pushes it away from the text. */
-    .content-grid:has(> .toc) > .toc {
+    /* The rail runs beside the first two rows — the header and the body —
+       and sticks below the site header while they scroll past. Its width is
+       the fixed --toc-width at every width above the breakpoint: the
+       reference rail (HashiCorp's docs sidecar) is likewise a constant 312px
+       from 1280 to 2560px, because a table of contents is a list of short
+       labels, not a reading column, and widening it only pushes it away from
+       the text. */
+    .article:has(> .toc) > .toc {
       position: sticky;
       inset-block-start: var(--toc-rail-inset);
       grid-column: toc;
@@ -171,13 +198,18 @@
       align-self: start;
     }
 
-    /* The landing page's body joins the column the same way once the rail
-       takes the space beside it. */
-    .content-grid:has(> .toc) > .content-grid {
-      grid-column: content;
-      grid-template-columns:
-        [full-start wide-start content-start] minmax(0, 1fr)
-        [content-end wide-end full-end];
+    /* The body spans `full`, which includes the rail's column, so it is
+       placed in the second row explicitly: auto-placement would otherwise
+       step past the rail and leave an empty row (and a row gap) between the
+       header and the text. The two overlap only on paper: the body's own
+       track list keeps everything it holds out of the rail's tracks, and
+       `full-bleed` inside it stops at the wide track for the same reason. */
+    .article:has(> .toc) > .content-grid {
+      grid-row: 2;
+    }
+
+    .article:has(> .toc) > .content-grid > .full-bleed {
+      grid-column: wide;
     }
   }
 }

@@ -6,6 +6,66 @@ const textContent = (node) => {
   return "children" in node ? node.children.map(textContent).join("") : "";
 };
 
+/** @param {import("hast").Element} node @returns {string[]} */
+const classList = (node) => {
+  const classes = node.properties.className;
+  return Array.isArray(classes) ? classes.map(String) : String(classes || "").split(/\s+/).filter(Boolean);
+};
+
+/** @param {import("hast").Nodes} node */
+const isBlank = (node) => node.type === "text" && !node.value.trim();
+
+/* A single authored opening or closing tag, as Astro leaves it: the pipeline
+   parses Markdown inside block HTML but keeps the surrounding tags as opaque
+   `raw` nodes, so `<div class="setup-reference">` and its `</div>` arrive as
+   two strings either side of the table element. */
+const OPEN_TAG = /^\s*<(div|section)(\s[^<>]*)?>\s*$/i;
+const CLOSE_TAG = /^\s*<\/(div|section)\s*>\s*$/i;
+const CLASS_ATTR = /\sclass=(["'])(.*?)\1/i;
+
+/** @param {string} tag @returns {string} The same opening tag with `wide` in its class list. */
+const withWide = (tag) => {
+  const match = CLASS_ATTR.exec(tag);
+  if (!match) return tag.replace(/\s*>\s*$/, ' class="wide">');
+  const classes = match[2].split(/\s+/).filter(Boolean);
+  if (classes.includes("wide")) return tag;
+  return tag.replace(CLASS_ATTR, ` class=${match[1]}${[...classes, "wide"].join(" ")}${match[1]}`);
+};
+
+/**
+ * The authored wrapper that holds nothing but this table, if there is one: a
+ * `setup-reference` group, or any div or section with no other content. The
+ * grid honours `wide` only on its direct children, so a region created inside
+ * such a wrapper would carry an opt-in nothing can see; the wrapper is what
+ * stands in the grid, so the wrapper takes it. Two shapes occur: a real
+ * element (a pipeline that ran rehype-raw) and Astro's raw open/close pair.
+ * @param {import("hast").Parents} parent @param {number} index
+ * @returns {(() => void) | null} The hoist to apply, or null when the table stands alone or shares its wrapper.
+ */
+const wrapperHoist = (parent, index) => {
+  const table = parent.children[index];
+  if (parent.type === "element") {
+    const alone = parent.children.every((child) => child === table || isBlank(child));
+    if (!alone) return null;
+    return () => {
+      if (!classList(parent).includes("wide")) parent.properties.className = [...classList(parent), "wide"];
+    };
+  }
+  let before = index - 1;
+  while (before >= 0 && isBlank(parent.children[before])) before -= 1;
+  let after = index + 1;
+  while (after < parent.children.length && isBlank(parent.children[after])) after += 1;
+  const open = parent.children[before];
+  const close = parent.children[after];
+  if (open?.type !== "raw" || close?.type !== "raw") return null;
+  const opened = OPEN_TAG.exec(open.value);
+  const closed = CLOSE_TAG.exec(close.value);
+  if (!opened || !closed || opened[1].toLowerCase() !== closed[1].toLowerCase()) return null;
+  return () => {
+    open.value = withWide(open.value);
+  };
+};
+
 /** Wrap parsed Markdown and HTML tables; register rehype-raw before this plugin. */
 export default function rehypeTableScroll() {
   /** @param {import("hast").Root} tree */
@@ -17,8 +77,7 @@ export default function rehypeTableScroll() {
     const walk = (parent, insideScroll) => {
       for (const [index, node] of parent.children.entries()) {
         if (node.type !== "element") continue;
-        const classes = node.properties.className;
-        const isScroll = (Array.isArray(classes) ? classes : String(classes || "").split(/\s+/)).includes("table-scroll");
+        const isScroll = classList(node).includes("table-scroll");
         if (/^h[1-6]$/.test(node.tagName)) {
           heading = textContent(node).replace(/\s+/g, " ").trim();
         }
@@ -27,11 +86,13 @@ export default function rehypeTableScroll() {
           if (!insideScroll) {
             const caption = node.children.find((child) => child.type === "element" && child.tagName === "caption");
             const label = caption ? textContent(caption).replace(/\s+/g, " ").trim() : "";
+            const hoist = wrapperHoist(parent, index);
+            hoist?.();
             parent.children[index] = {
               type: "element",
               tagName: "div",
               properties: {
-                className: ["table-scroll", "wide"],
+                className: hoist ? ["table-scroll"] : ["table-scroll", "wide"],
                 tabIndex: 0,
                 role: "region",
                 ariaLabel: label || heading || `Table ${tableNumber}`,

@@ -56,7 +56,17 @@ contract recomputes WCAG contrast from that pair: 4.5:1 under 24px (or under
 18.66px bold), 3:1 at or above. A background the probe could not resolve
 fails, and each of the seven kinds must appear in both themes.
 
-The checker prints all 15 PASS/FAIL lines with actual/expected evidence for each
+S15 (WIDE TRACKS) measures the article body grid on every article route: the
+content, `wide` and `full-bleed` tracks (with throwaway children placed in each
+and removed), the sticky TOC rail's left edge, every direct child's horizontal
+bounds, and every table region's width, its parent's width and whether it
+scrolls. The contract requires `wide >= content` and `full >= wide` everywhere,
+`wide > content` from 1024px, the content track centred in the wide track, no
+child under the rail, every child inside the track it opted into, and any
+scrolling table region to have first taken the smaller of its parent's width
+and the wide track.
+
+The checker prints all 16 PASS/FAIL lines with actual/expected evidence for each
 failure and exits 1 if any scenario fails. The report is informational, supports
 the old baseline schema, and exits normally even when contracts are red. The
 current design is intentionally red; these assertions must not be relaxed to
