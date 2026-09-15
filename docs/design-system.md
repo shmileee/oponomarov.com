@@ -391,12 +391,17 @@ Below 40rem both opt-ins return to the content track.
 **One left axis.** As shipped (layout.css), the hub grid's content track is a
 single flexible track starting at the gutter, and the article grid is the
 reading measure starting at that same gutter with a `wide` track that adds
-room only to its right (`--wide-extra`, up to the 64rem measure; beside the
-TOC rail, whatever the rail leaves). Every page's text therefore starts on the
-header's text edge at every width — S21 measures exactly that — so moving
-between a hub and an article never shifts the column. The article column is
-not centred in the page; the symmetric side tracks in the copy above are the
-original plan, kept for the track names.
+room only to its right (`--wide-extra`, up to the 64rem measure). The extra
+room is granted only when it clears `--wide-floor` (6rem): a wide table or
+figure is either plainly wider than the text or exactly as wide, never a
+sliver past the column's right edge. Beside the TOC rail the page maximum
+leaves 44px, so there `wide` collapses onto the reading column (S15 asserts
+both states). Everything inside a wide track starts on its left edge — a
+table region narrower than its wrapper is not centred in it (S15). Every
+page's text therefore starts on the header's text edge at every width — S21
+measures exactly that — so moving between a hub and an article never shifts
+the column. The article column is not centred in the page; the symmetric side
+tracks in the copy above are the original plan, kept for the track names.
 
 All **interior** tracks use `minmax(0, ...)`, and every direct child gets
 `min-inline-size: 0`. This removes intrinsic min-content minimums that would
@@ -434,6 +439,16 @@ Exactly two modifiers exist:
 
 Do not combine the modifiers. Apply the selected modifier with `.prose` in the
 engine render target, not as a replacement root class.
+
+**Lists sit on the axis.** An unclassed `ul`/`ol` has no native marker
+(`list-style-type: ""`, which keeps WebKit's list semantics); the marker is
+drawn on the item, absolutely positioned in the list's indent
+(`--list-indent`, 36px), so a number or bullet starts exactly where the
+paragraph text starts and the item text starts at one fixed indent whatever
+the digit count. Numbers take the capsule voice (mono, medium, subtle,
+`--code-inline-size`) with their line box set to the item's leading so they
+share the text's baseline; bullets are a 0.3em dot on the first line's
+x-height centre. Classed lists (`.steps`) are primitives and draw their own.
 
 This replaces four competing wrapper arrangements:
 
@@ -739,12 +754,32 @@ continuations for readability, but never to avoid a scroll.
 
 Inline code uses `--font-mono`, `--code-inline-size`, `--code-inline-bg`,
 `--code-inline-text`, `--radius-sm`, and small token padding. It remains inline
-with surrounding prose, uses normal white-space and `overflow-wrap: anywhere`,
-and has no `width: max-content`, nowrap, forced line break, or scroll container.
-Scope the rule to non-fenced code, for example `.prose :not(pre) > code`, with
-EC descendants excluded where needed. `path-token` adds meaningful path breaks,
-not another font, background, or code box. Long strings must remain readable at
-320px; do not restore `inline-code-unit` or `!important` fixes.
+with surrounding prose and has no `width: max-content`, forced line break, or
+scroll container. **A token is one thing:** every capsule is
+`white-space: nowrap`, so `pre-commit` never splits at its hyphen and
+`terraform apply` never leaves `apply` on the next line (S22). That is safe
+only while the token fits the narrowest line the site lays out, so the build
+works out, per span, whether it would fit the 320px column less what its
+context indents (a list item's 36px per level, an admonition's or card's
+padding, a cell's) at the capsule size of the text around it (a paragraph
+holds 30 characters, a list item 26, an h3 23, an h2 19), and marks every span
+that would not with `data-long` (`src/lib/inline-code.mjs` holds the model;
+`rehype-inline-code.mjs` marks Markdown and authored HTML, `inline-markdown.ts`
+marks frontmatter strings). A marked span wraps the way a long URL in running
+text does: at its spaces, slashes and hyphens, anywhere as the last resort,
+each fragment its own closed capsule (`box-decoration-break: clone`), so a
+60-character path still cannot escape a 320px viewport. In a table cell a
+marked span stays atomic too — the region scrolls — until the rows stack below
+40rem. Scope the rule to non-fenced code, for example `.prose :not(pre) > code`,
+with EC descendants excluded where needed. `path-token` adds nothing beyond
+`hyphens: none`: not another font, background, or code box. Do not restore
+`inline-code-unit` or `!important` fixes.
+
+Only a titled frame carries the toolbar; on an untitled block the copy
+control is centred on the first line of code, runs to the frame's edge on the
+block's own background, and appears on hover or focus where a pointer can
+hover (always on a touch screen). The toolbar's dots and the control's drawn
+box sit on the code's text edge (20px in from the frame).
 
 ## 11. Tables
 
@@ -788,7 +823,11 @@ below. Use intrinsic column sizing and wrappable cells; **no `min-width`
 hacks**, fixed 36/42/44rem tables, or clipped `thead`. A table need not scroll
 when it already fits, and the region reserves no scrollbar gutter: a table
 that fits shows no strip inside its frame. No table rule may change the font
-for one content family.
+for one content family. Everything in a table is start-aligned — column
+headings over their columns, key chords in the shortcut reference beside
+their actions — and the region itself starts on its wrapper's left edge
+(`margin-inline: 0`), so a table that fits the measure sits on the text's
+axis whatever room the wide track offers to its right.
 
 Column floors are three custom properties declared once on `.prose table`
 (`--table-label-floor`, `--table-description-floor`, `--table-token-space`);
@@ -990,7 +1029,7 @@ value. S20 PROSE PARAGRAPHS holds every direct `.prose > p` to one size,
 excluding only `.prose--lede`; unlike S1 it deliberately does not exclude
 `header`, because the paragraph it exists to catch sits inside one.
 
-### Browser scenarios — S0–S21
+### Browser scenarios — S0–S22
 
 Run against a production build through `scripts/qa/measure.mjs` and
 `scripts/qa/contract.mjs`. Default viewports: 320, 375, 768, and 1440px; the full
@@ -1016,6 +1055,7 @@ current route set from the build rather than freezing that count forever.
 | S13 | Skip link is first focusable, visible on focus, and works on every route | Unreachable main-content bypass |
 | S14–S20 | Contrast, wide tracks, and the typographic parity set; see `scripts/qa/README.md` | Token-level drift between the three content families |
 | S21 | The first child of every hub section shell, article header, article body, topic page and landing body starts on the header's text edge (1px) at every width | A region that picked up a second gutter, or an article column that drifted off the site's one left axis |
+| S22 | No inline code span paints on more than one line unless the build marked it `data-long`; samples without a fragment count fail | A token split at a hyphen, a two-word command split at its space, a capsule fragmented across lines |
 
 Probe actual body paragraphs for S1, not eyebrows or metadata; exclude the two
 documented role modifiers from the normal-body comparison. For S2 measure the

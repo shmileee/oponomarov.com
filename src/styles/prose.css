@@ -232,20 +232,58 @@
   /* Lists                                                                */
   /* ------------------------------------------------------------------ */
 
-  .prose ul {
-    list-style-type: disc;
+  /* Lists sit on the axis. The marker starts where the paragraph text
+     starts and the item text at one fixed indent, whatever the count and
+     however many digits it takes. A native outside marker is set to the
+     END of the list's padding and hangs past its start when it is wider
+     than that padding, which every numbered list in mono was: "1." began
+     14px left of the paragraph above it. So the marker is drawn on the
+     item, positioned exactly. `list-style-type: ""` removes the native
+     marker while keeping the list semantics that `none` costs in WebKit.
+     The indent holds a two-digit number in mono with a gap to spare.
+     Only unclassed (authored Markdown) lists: a classed list is a
+     primitive (.steps, .link-list) and draws its own. */
+  .prose :is(ul, ol):not([class]) {
+    --list-indent: calc(var(--space-8) + var(--space-1));
+
+    padding-inline-start: var(--list-indent);
+    list-style-type: "";
   }
 
-  .prose ol {
-    list-style-type: decimal;
+  .prose :is(ul, ol):not([class]) > li {
+    position: relative;
   }
 
-  .prose :is(ul, ol) {
-    padding-inline-start: var(--space-5);
+  .prose :is(ul, ol):not([class]) > li::before {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: calc(-1 * var(--list-indent));
+    inline-size: var(--list-indent);
+    line-height: inherit;
   }
 
-  .prose li {
-    padding-inline-start: var(--space-2);
+  /* The number: the capsule's fraction of the text, mono, medium, subtle -
+     the same voice as the section counters and the code capsules. Its line
+     box is the item's own (body leading at the ITEM's size: the inherited
+     number would multiply the smaller font and float the digits 2px above
+     the text baseline), so number and text share a baseline. */
+  .prose ol:not([class]) > li::before {
+    content: counter(list-item) ".";
+    color: var(--color-text-subtle);
+    font-family: var(--font-mono);
+    font-size: var(--code-inline-size);
+    font-weight: var(--weight-medium);
+    line-height: calc(var(--leading-body) * 1em / var(--code-inline-scale));
+  }
+
+  /* The bullet: a dot on the x-height centre of the first line. */
+  .prose ul:not([class]) > li::before {
+    content: "";
+    inset-block-start: calc((1lh - 1em) / 2 + 0.4em);
+    inline-size: 0.3em;
+    block-size: 0.3em;
+    border-radius: var(--radius-pill);
+    background: var(--color-text-subtle);
   }
 
   .prose li + li,
@@ -256,12 +294,6 @@
   /* A list closes with a little more air than a paragraph does. */
   .prose :is(ul, ol) + * {
     margin-block-start: var(--space-8);
-  }
-
-  .prose ::marker {
-    color: var(--color-text-subtle);
-    font-family: var(--font-mono);
-    font-weight: var(--weight-medium);
   }
 
   .prose dt {
@@ -355,10 +387,13 @@
   /* Inline code — the ONE rule. Expressive Code never touches inline     */
   /* code, so this is the whole implementation: paragraph, list, link,    */
   /* heading, admonition, card, step and table cell all render this one   */
-  /* capsule. It stays inline, wraps anywhere so a long path can never    */
-  /* overflow, and has no max-content width, nowrap, or scroll container. */
-  /* The single exception is code inside a table cell, declared with the  */
-  /* tables below.                                                        */
+  /* capsule. A token is one thing: it never wraps, so `pre-commit` cannot */
+  /* split at its hyphen and `terraform apply` cannot leave `apply` on    */
+  /* the next line. A span too long to hold unbroken on a phone in its    */
+  /* context is marked `data-long` at build time (src/lib/inline-code.mjs */
+  /* holds the model; rehype-inline-code and inline-markdown.ts apply it) */
+  /* and takes the second rule below. Table cells add one more rule of    */
+  /* their own, with the tables.                                          */
   /* ------------------------------------------------------------------ */
 
   /* The frontmatter strings (a study's summary, role and evidence) render
@@ -392,6 +427,20 @@
        card line does not open up around a capsule. The painted capsule is
        the content area plus padding; leading does not change it. */
     line-height: var(--leading-code-inline);
+    white-space: nowrap;
+  }
+
+  /* A long span (one that would not fit the 320px column in its context)
+     wraps the way a long URL in running text does: at its spaces, slashes and
+     hyphens when the line ends there, anywhere as the last resort, each
+     fragment its own closed capsule. So a 60-character path still cannot
+     escape a 320px viewport, and the full stop after it stays on its last
+     fragment. (An inline-block box was tried: it moves whole to the next
+     line, but then takes the whole line and orphans the punctuation after
+     it.) */
+  .prose :not(pre) > code[data-long],
+  .prose:not(pre) > code[data-long],
+  :is(.case-card, .case-proof) :not(pre) > code[data-long] {
     white-space: normal;
     overflow-wrap: anywhere;
     box-decoration-break: clone;
@@ -523,7 +572,9 @@
     justify-content: flex-start;
     gap: var(--space-3);
     min-block-size: var(--tap-size);
-    padding: 0 var(--space-3);
+    /* The first dot's edge lands on the code's text edge below it (the
+       disc sits 4px into its 16px cell; the code is 20px in). */
+    padding: 0 var(--space-4);
     border: 0;
     border-block-end: var(--border-width) solid var(--color-border-subtle);
     border-radius: var(--radius-md) var(--radius-md) 0 0;
@@ -665,19 +716,51 @@
   }
 
   /* The copy control: in the toolbar on a titled frame, floating over the
-     block's top corner on an untitled one, always visible either way. The
-     44px hit area stays; EC's own background, border and icon layers are
-     pulled in from the edges to draw the 32px control the toolbar was
-     designed around. */
+     block's top corner on an untitled one. The 44px hit area stays; EC's
+     own background, border and icon layers are pulled in from the edges to
+     draw the 32px control the toolbar was designed around, and that drawn
+     box sits 20px from the frame's edge, where the code's text edge is. */
   .prose .expressive-code .copy {
+    --copy-control-inset: calc((var(--tap-size) - var(--space-8)) / 2);
+
     display: flex;
     inset-block-start: 0;
-    inset-inline-end: var(--space-2);
+    inset-inline-end: calc(var(--space-5) - var(--copy-control-inset));
   }
 
+  /* Over an untitled block the control is centred on the first line of
+     code and runs to the frame's edge on the block's own background, so
+     the line it covers ends cleanly under it rather than peeking out on
+     both sides. It shows on hover or focus where a pointer can hover, and
+     always on a touch screen: drawn at rest it hid the end of every long
+     first line under an opaque square. */
   .prose .expressive-code .frame:not(.has-title) .copy {
-    inset-block-start: var(--space-1);
-    inset-inline-end: var(--space-1);
+    --code-line: calc(var(--leading-code) * var(--code-font-size));
+
+    isolation: isolate;
+    inset-block-start: calc(var(--space-3) + var(--code-line) / 2 - var(--tap-size) / 2);
+    inset-inline-end: 0;
+    padding-inline-end: calc(var(--space-5) - var(--copy-control-inset));
+  }
+
+  .prose .expressive-code .frame:not(.has-title) .copy::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset-block: calc((var(--tap-size) - var(--code-line)) / 2);
+    inset-inline: 0;
+    background: var(--code-bg);
+  }
+
+  @media (hover: hover) {
+    .prose .expressive-code .frame:not(.has-title) .copy {
+      opacity: 0;
+      transition: opacity var(--dur-fast) var(--ease-out);
+    }
+
+    .prose .expressive-code .frame:not(.has-title):is(:hover, :focus-within) .copy {
+      opacity: 1;
+    }
   }
 
   /* Floating over code it must not let a line show through. */
@@ -801,7 +884,11 @@
     inline-size: min-content;
     min-inline-size: min(100%, var(--measure-prose));
     max-inline-size: 100%;
-    margin-inline: auto;
+    /* On the axis: a region narrower than the wide track it was handed
+       (every table that fits the measure, on every laptop) starts where
+       the text starts and leaves its spare room on the right, like every
+       other wide element. Centred, it sat 96px into the page at 1024. */
+    margin-inline: 0;
     overflow-x: auto;
     overscroll-behavior-inline: contain;
     /* No reserved scrollbar gutter: on a table that fits, a stable gutter
@@ -891,7 +978,10 @@
     font-weight: var(--weight-medium);
     line-height: var(--leading-snug);
     letter-spacing: var(--tracking-label);
-    text-align: center;
+    /* Start-aligned over start-aligned cells: a centred label over a
+       left-set column put the heading of every table off the axis its
+       own rows sit on. */
+    text-align: start;
     text-transform: uppercase;
     /* A column heading is a label, not a sentence: it sits on one line and
        widens its column to hold itself if it must. "TYPICAL CHANGES" broke
@@ -969,26 +1059,21 @@
   /* scroll of a few pixels.                                              */
   /* ------------------------------------------------------------------ */
 
-  /* Code in a table cell never breaks. This is the deliberate opposite of
-     the prose rule above, and the two must be read together:
-
-       PROSE       a long unbreakable token WRAPS (overflow-wrap: anywhere),
-                   because a paragraph has no scroll container and a token
-                   that refuses to break escapes a 320px viewport.
-       TABLE CELL  a token NEVER wraps (white-space: nowrap), because a
-                   command or path split across lines reads as two rows,
-                   and the cell already sits inside the focusable
-                   .table-scroll region: a genuinely wide table scrolls,
-                   which is the correct escape valve there.
-
-     Every column, not only the first: the reported break was
-     `config/private_dot_config/mise/config.toml` in the second column of
-     the setup manual, and the owner wants no cell code split anywhere. A
-     long path held atomic can push a table into scrolling on a viewport
-     that otherwise held it; that is the accepted price. The sentence
-     around a token in a description cell still wraps between its words. */
-  .prose :is(td, th) code {
-    white-space: nowrap;
+  /* Code in a table cell never breaks, long or not. The prose rule above
+     lets a long span wrap inside itself because a paragraph has no scroll
+     container; a cell sits inside the focusable .table-scroll region, so a
+     command or path that would split across lines (and read as two rows)
+     instead sizes its column, and a genuinely wide table scrolls, which is
+     the correct escape valve there. Every column, not only the first: the
+     reported break was `config/private_dot_config/mise/config.toml` in the
+     second column of the setup manual. A long path held atomic can push a
+     table into scrolling on a viewport that otherwise held it; that is the
+     accepted price. The sentence around a token in a description cell
+     still wraps between its words. Below 40rem the rows stack and the
+     region no longer scrolls, so --table-token-space releases the long
+     spans there (the short ones stay atomic: they fit). */
+  .prose :is(td, th) code[data-long] {
+    white-space: var(--table-token-space);
   }
 
   /* TOKEN. A cell that opens with verbatim code labels its row and is not

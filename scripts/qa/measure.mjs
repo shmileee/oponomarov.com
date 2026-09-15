@@ -321,7 +321,11 @@ const PROBE = () => {
     if (!fp) return null;
     const parentFontSize = el.parentElement ? getComputedStyle(el.parentElement).fontSize : null;
     const ratio = parentFontSize ? Math.round((parseFloat(fp.fontSize) / parseFloat(parentFontSize)) * 1000) / 1000 : null;
-    return { ...fp, parentFontSize, ratio };
+    /* S22: the lines a span paints on (distinct fragment tops), whether the
+       build marked it as too long to hold on a phone (data-long), and its
+       text, so a failure names the token. */
+    const lines = new Set([...el.getClientRects()].filter((rect) => rect.width > 0).map((rect) => Math.round(rect.top))).size;
+    return { ...fp, parentFontSize, ratio, lines, long: el.hasAttribute('data-long'), text: (el.textContent || '').trim().slice(0, 60) };
   };
 
   // 5. Tables.
@@ -578,8 +582,10 @@ const PROBE = () => {
       });
     const tables = [...document.querySelectorAll('.table-scroll')].map((el) => ({
       sel: describe(el), label: el.getAttribute('aria-label'),
+      left: Math.round(el.getBoundingClientRect().left),
       width: Math.round(el.getBoundingClientRect().width),
       parentWidth: Math.round(el.parentElement.getBoundingClientRect().width),
+      parentLeft: Math.round(el.parentElement.getBoundingClientRect().left),
       scrolls: el.scrollWidth > el.clientWidth + 1,
     }));
     return { content, wide, full, rail, children, tables };

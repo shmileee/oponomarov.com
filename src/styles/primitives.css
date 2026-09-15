@@ -301,6 +301,11 @@
     border: var(--border-width) solid var(--color-border);
     border-radius: var(--radius-lg);
     background: var(--color-surface);
+    /* A card is set a step below body copy; every inline capsule in it -
+       a bare path, a linked path, a token in a sentence - is then the same
+       fraction of the same size. At body size a 32-character path link
+       could not fit a 360px card and folded onto two lines. */
+    font-size: var(--text-sm);
   }
 
   /* An aside among the cards is a caution: the accent-tinted callout the
@@ -318,6 +323,7 @@
     padding: 0;
     border: 0;
     background: none;
+    font-size: var(--text-base);
   }
 
   .surface-grid > div:has(> :is(h2, h3, h4):first-child) > p {
@@ -338,7 +344,14 @@
      card reads as "further down this page" rather than as another page. */
   .surface-grid > a[href^="#"] {
     position: relative;
-    padding-inline-end: calc(var(--space-5) + var(--space-8));
+  }
+
+  /* Only the lines that share the arrow's rows keep clear of it: the
+     eyebrow and the title. The copy below runs the card's full width (it
+     used to stop 52px short on every line, leaving a blank column down the
+     right of the card). */
+  .surface-grid > a[href^="#"] > :is(span:first-child, strong) {
+    padding-inline-end: var(--space-8);
   }
 
   .surface-grid > a[href^="#"]::after {
@@ -1162,7 +1175,7 @@
      gesture. Below that the cell may break between its parts, never inside
      them; the engine's scroll region owns any overflow. */
   .shortcut-reference td:not(:last-child) {
-    text-align: center;
+    text-align: start;
   }
 
   .shortcut-reference td:not(:last-child) code {

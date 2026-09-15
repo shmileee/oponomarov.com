@@ -117,12 +117,22 @@
   /* with room at once, so a flexible side beside a 46rem column took its  */
   /* share before the column reached its measure. Written as the           */
   /* remainder, it only ever holds what the column has already declined.   */
+  /* And it holds it only when there is enough to read as a wider element: */
+  /* below --wide-floor the track collapses to nothing, so a table or      */
+  /* figure is either plainly wider than the text or exactly as wide, never */
+  /* a 44px sliver past the column's right edge (which is what the page    */
+  /* maximum left beside the TOC rail). The third min() term is that       */
+  /* switch: a huge positive number when the room clears the floor, zero   */
+  /* when it does not.                                                     */
   /* ------------------------------------------------------------------ */
 
   .article {
+    --wide-floor: 6rem;
+    --wide-room: max(0px, calc(100% - var(--measure-prose) - 2 * var(--space-gutter)));
     --wide-extra: min(
       calc(var(--measure-wide) - var(--measure-prose)),
-      max(0px, calc(100% - var(--measure-prose) - 2 * var(--space-gutter)))
+      var(--wide-room),
+      max(0px, calc((var(--wide-room) - var(--wide-floor)) * 9999))
     );
     --article-columns:
       [full-start] var(--space-gutter)
@@ -175,13 +185,11 @@
        deliberate exemption: it is an overview with no sections of its own to
        navigate, so it keeps the single reading column and this rule does not
        match it. The extra track now also pays for the rail and its gap, which
-       leaves it 44px at the page maximum: `wide` is a slim margin beside the
-       rail, never a second column under it. */
+       leaves it 44px at the page maximum - under the floor, so beside the
+       rail `wide` collapses and a wide table or figure sits exactly on the
+       reading column. */
     .article:has(> .toc) {
-      --wide-extra: min(
-        calc(var(--measure-wide) - var(--measure-prose)),
-        max(0px, calc(100% - var(--measure-prose) - 2 * var(--space-gutter) - var(--space-10) - var(--toc-width)))
-      );
+      --wide-room: max(0px, calc(100% - var(--measure-prose) - 2 * var(--space-gutter) - var(--space-10) - var(--toc-width)));
       --article-columns:
         [full-start] var(--space-gutter)
         [wide-start content-start] minmax(0, var(--measure-prose))

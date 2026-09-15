@@ -4,7 +4,7 @@ import ArticleShell from "../../components/ArticleShell.astro";
 import PageToc from "../../components/PageToc.astro";
 import SiteLayout from "../../components/SiteLayout.astro";
 import { adjacentCaseStudies, formatCaseNumber, loadCaseStudies, type CaseStudy } from "../../lib/case-studies";
-import { plainText, renderInline } from "../../lib/inline-markdown";
+import { inlineContexts, plainText, renderInline } from "../../lib/inline-markdown";
 
 export async function getStaticPaths() {
   const studies = await loadCaseStudies();
@@ -61,7 +61,7 @@ const description = plainText(data.summary);
 >
   <ArticleShell
     title={data.title}
-    descriptionHtml={renderInline(data.summary)}
+    descriptionHtml={renderInline(data.summary, inlineContexts.lede)}
     eyebrow={`Case study ${formatCaseNumber(study.number)}${data.featured ? " · featured" : ""}`}
     backLink={{ href: "/#index", title: "all case studies" }}
   >
@@ -71,8 +71,8 @@ const description = plainText(data.summary);
           same sentence twice within sixty pixels. */}
       {data.role && data.evidence && (
         <dl class="case-proof" data-case-proof>
-          <div><dt>My role</dt><dd set:html={renderInline(data.role)} /></div>
-          <div><dt>Evidence</dt><dd set:html={renderInline(data.evidence)} /></div>
+          <div><dt>My role</dt><dd set:html={renderInline(data.role, inlineContexts.card)} /></div>
+          <div><dt>Evidence</dt><dd set:html={renderInline(data.evidence, inlineContexts.card)} /></div>
         </dl>
       )}
     </Fragment>

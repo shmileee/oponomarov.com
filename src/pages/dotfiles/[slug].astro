@@ -4,7 +4,7 @@ import ArticleShell from "../../components/ArticleShell.astro";
 import PageToc from "../../components/PageToc.astro";
 import SiteLayout from "../../components/SiteLayout.astro";
 import { adjacentDocs, loadDocs, type DocsPage } from "../../lib/docs";
-import { plainText, renderInline } from "../../lib/inline-markdown";
+import { inlineContexts, plainText, renderInline } from "../../lib/inline-markdown";
 
 export async function getStaticPaths() {
   const pages = await loadDocs();
@@ -31,7 +31,7 @@ const rawUrl = page.entry.data.editUrl?.replace("/edit/", "/raw/");
 >
   <ArticleShell
     title={page.entry.data.title}
-    descriptionHtml={renderInline(page.entry.data.description)}
+    descriptionHtml={renderInline(page.entry.data.description, inlineContexts.lede)}
     backLink={{ href: "/dotfiles/", title: "dotfiles overview" }}
     previous={previous && { href: previous.href, title: previous.title }}
     next={next && { href: next.href, title: next.title }}

@@ -11,7 +11,7 @@ const NAMES = [
   'STYLESHEET PARITY', 'NO CLIPPING', 'HYGIENE', 'ZOOM', 'READER DIALOG', 'SKIP LINK',
   'CONTRAST', 'WIDE TRACKS',
   'SECTION HEADINGS', 'COMMENTS HEADING', 'TABLE HEADERS', 'KEYCAPS', 'PROSE PARAGRAPHS',
-  'GUTTER PARITY',
+  'GUTTER PARITY', 'ATOMIC TOKENS',
 ];
 const THEMES = ['light', 'dark'];
 const key = (r) => JSON.stringify([r.route, r.viewport, r.colorScheme]);
@@ -323,7 +323,13 @@ export function evaluateContract(raw) {
     }
     if (wide.width < content.width) fail(15, r, 'wide track width', wide.width, `>= content track ${content.width}px`);
     if (full.width < wide.width) fail(15, r, 'full track width', full.width, `>= wide track ${wide.width}px`);
-    if (r.viewportWidth >= 1024 && !(wide.width > content.width)) fail(15, r, 'wide track room', { wide: wide.width, content: content.width }, 'wide strictly wider than content from 1024px');
+    /* From a laptop width the wide track is strictly wider than the column,
+       except beside the TOC rail, where the room left is under the floor
+       (layout.css --wide-floor) and the track collapses onto the column:
+       a wide element is plainly wider than the text or exactly as wide,
+       never a sliver past its edge. */
+    if (r.viewportWidth >= 1024 && rail === null && !(wide.width > content.width)) fail(15, r, 'wide track room', { wide: wide.width, content: content.width }, 'wide strictly wider than content from 1024px');
+    if (rail !== null && wide.width !== content.width) fail(15, r, 'wide track beside the rail', { wide: wide.width, content: content.width }, 'wide collapsed onto the content track (the room beside the rail is under the floor)');
     /* One left axis: the reading column starts where the wide track starts, and
        the wide track only ever adds room to its right. */
     if (Math.abs(content.left - wide.left) > 1) fail(15, r, 'content on the wide track\'s left edge', { contentLeft: content.left, wideLeft: wide.left }, 'equal left edges (1px tolerance)');
@@ -336,6 +342,22 @@ export function evaluateContract(raw) {
     for (const table of grid.tables ?? []) {
       const room = Math.min(table.parentWidth, wide.width);
       if (table.scrolls && table.width < room - 1) fail(15, r, `${table.sel} (${table.label}) scrolls before taking its room`, table.width, `>= ${room}px (min of parent and wide track)`);
+      /* A region narrower than its wrapper starts where the wrapper starts:
+         centred in a wide wrapper it sat 96px off the text at 1024. */
+      if (Number.isFinite(table.left) && Math.abs(table.left - table.parentLeft) > 1) fail(15, r, `${table.sel} (${table.label}) on its wrapper's left edge`, { left: table.left, parentLeft: table.parentLeft }, 'equal left edges (1px tolerance)');
+    }
+  }
+
+  /* S22 - a token is one thing. Inline code never paints on more than one
+     line: `pre-commit` does not split at its hyphen, `terraform apply` does
+     not leave `apply` on the next line. The build marks spans too long to
+     hold unbroken on a phone (data-long, src/lib/inline-code.mjs); only
+     those may wrap, and only at a width where the span is wider than its
+     line. Samples without the fragment count are missing evidence. */
+  for (const r of good) {
+    for (const sample of r.code?.inlines ?? []) {
+      if (!Number.isFinite(sample.lines)) { fail(22, r, `inline code ${sample.path ?? ''} fragment evidence`, sample.lines, 'a count of painted lines'); continue; }
+      if (sample.lines > 1 && !sample.long) fail(22, r, `inline code «${sample.text}» ${sample.path ?? ''}`, `${sample.lines} lines`, 'one line (a span under the threshold never wraps)');
     }
   }
 

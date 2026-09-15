@@ -2,7 +2,7 @@
 import { getCollection, render } from "astro:content";
 import SiteLayout from "../components/SiteLayout.astro";
 import { collectTopics, formatCaseNumber, loadCaseStudies, requireCaseStudy } from "../lib/case-studies";
-import { renderInline } from "../lib/inline-markdown";
+import { inlineContexts, renderInline } from "../lib/inline-markdown";
 import { pageDescriptions } from "../lib/site-metadata";
 
 const studies = await loadCaseStudies();
@@ -44,7 +44,7 @@ const readerManifest = studies.map((study) => ({
   title: study.entry.data.title,
   /* Rendered here so the reader shows the same dek the study page does;
      renderInline escapes the source, so this is the only HTML it carries. */
-  summaryHtml: renderInline(study.entry.data.summary),
+  summaryHtml: renderInline(study.entry.data.summary, inlineContexts.lede),
   topics: study.entry.data.topics,
 }));
 ---
@@ -101,9 +101,9 @@ const readerManifest = studies.map((study) => ({
               <h3>{spotlight.entry.data.title}</h3>
               {spotlight.entry.data.role && spotlight.entry.data.evidence && (
                 <dl class="case-proof spotlight-proof" data-case-proof>
-                  <div><dt>Impact</dt><dd set:html={renderInline(spotlight.entry.data.summary)} /></div>
-                  <div><dt>My role</dt><dd set:html={renderInline(spotlight.entry.data.role)} /></div>
-                  <div><dt>Evidence</dt><dd set:html={renderInline(spotlight.entry.data.evidence)} /></div>
+                  <div><dt>Impact</dt><dd set:html={renderInline(spotlight.entry.data.summary, inlineContexts.card)} /></div>
+                  <div><dt>My role</dt><dd set:html={renderInline(spotlight.entry.data.role, inlineContexts.card)} /></div>
+                  <div><dt>Evidence</dt><dd set:html={renderInline(spotlight.entry.data.evidence, inlineContexts.card)} /></div>
                 </dl>
               )}
               {spotlight.entry.data.spotlightProof && <div class="prose"><p set:html={renderInline(spotlight.entry.data.spotlightProof)} /></div>}
@@ -133,11 +133,11 @@ const readerManifest = studies.map((study) => ({
               <span class="case-card-title">{study.entry.data.title}</span>
               {study.entry.data.role && study.entry.data.evidence ? (
                 <dl class="case-proof case-card-proof" data-case-proof>
-                  <div><dt>Impact</dt><dd set:html={renderInline(study.entry.data.summary)} /></div>
-                  <div><dt>My role</dt><dd set:html={renderInline(study.entry.data.role)} /></div>
-                  <div><dt>Evidence</dt><dd set:html={renderInline(study.entry.data.evidence)} /></div>
+                  <div><dt>Impact</dt><dd set:html={renderInline(study.entry.data.summary, inlineContexts.card)} /></div>
+                  <div><dt>My role</dt><dd set:html={renderInline(study.entry.data.role, inlineContexts.card)} /></div>
+                  <div><dt>Evidence</dt><dd set:html={renderInline(study.entry.data.evidence, inlineContexts.card)} /></div>
                 </dl>
-              ) : <span class="case-card-summary" set:html={renderInline(study.entry.data.summary)} />}
+              ) : <span class="case-card-summary" set:html={renderInline(study.entry.data.summary, inlineContexts.card)} />}
               <span class="case-card-topics">{study.entry.data.topics.join(" · ")}</span>
               <span class="case-card-action">{study.entry.data.spotlight ? "full story ↑" : "read →"}</span>
             </a>

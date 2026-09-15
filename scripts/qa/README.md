@@ -61,8 +61,12 @@ content, `wide` and `full-bleed` tracks (with throwaway children placed in each
 and removed), the sticky TOC rail's left edge, every direct child's horizontal
 bounds, and every table region's width, its parent's width and whether it
 scrolls. The contract requires `wide >= content` and `full >= wide` everywhere,
-`wide > content` from 1024px, the content track on the wide track's left edge
-(wide grows to the right), no child under the rail, every child inside the track it opted into, and any
+`wide > content` from 1024px where no TOC rail stands beside the body and
+`wide == content` where one does (the room beside the rail is under
+layout.css's `--wide-floor`, so the track collapses rather than leave a sliver),
+the content track on the wide track's left edge (wide grows to the right), no
+child under the rail, every child inside the track it opted into, every table
+region on its wrapper's left edge (never centred in a wide wrapper), and any
 scrolling table region to have first taken the smaller of its parent's width
 and the wide track.
 
@@ -85,7 +89,15 @@ left axis, hubs and articles alike. A route with no measurable shell fails.
 This is the double-gutter class: a `full-bleed` wrapper around a nested content grid was pulled into the content track on a
 phone and its section started 20px in from the hero above it.
 
-The checker prints all 22 PASS/FAIL lines with actual/expected evidence for each
+S22 (ATOMIC TOKENS) records, for every non-fenced `code` span, the number of
+lines it paints on and whether the build marked it `data-long`
+(`src/lib/inline-code.mjs`: too long for the 320px column in its context at
+its capsule size).
+A span under the threshold that paints on two lines — `pre-commit` split at
+its hyphen, `terraform apply` split at its space — fails; only marked spans
+may wrap. A sample without the fragment count is missing evidence.
+
+The checker prints all 23 PASS/FAIL lines with actual/expected evidence for each
 failure and exits 1 if any scenario fails. The report is informational, supports
 the old baseline schema, and exits normally even when contracts are red. The
 current design is intentionally red; these assertions must not be relaxed to
