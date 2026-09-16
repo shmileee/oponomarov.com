@@ -126,6 +126,12 @@
     max-inline-size: var(--measure-prose);
   }
 
+  /* On the landing the cards close the page at the width of the grids above
+     them (layout.css places the nav on the wide track there). */
+  .article > [data-landing] ~ .adjacent-nav {
+    max-inline-size: none;
+  }
+
   .article .adjacent-nav a {
     padding: var(--space-4);
     border-color: var(--color-border);

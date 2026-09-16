@@ -303,10 +303,13 @@ export function evaluateContract(raw) {
     }
   }
 
-  /* S15 - the article body's opt-in tracks are real. `wide` and `full-bleed`
-     never resolve narrower than the content track, and from a laptop width
-     `wide` is strictly wider than it: the escape hatch the design gives a
-     table, figure or exhibit has room in it. The content track sits on the
+  /* S15 - the article body's tracks are what the design says. `wide` and
+     `full-bleed` never resolve narrower than the content track. On the
+     landing (the one body marked data-landing) `wide` is strictly wider than
+     the content track from a laptop width: its card grids, step list and
+     rules spread to it. On every other article the wide track is collapsed
+     onto the content track at every width, so a table, figure or exhibit
+     ends where the text and every rule end. The content track sits on the
      wide track's left edge (the site's one axis; wide grows to the right);
      nothing the body holds reaches under the sticky TOC rail; a child that
      did not opt in stays inside the content track; and a table region that
@@ -323,13 +326,15 @@ export function evaluateContract(raw) {
     }
     if (wide.width < content.width) fail(15, r, 'wide track width', wide.width, `>= content track ${content.width}px`);
     if (full.width < wide.width) fail(15, r, 'full track width', full.width, `>= wide track ${wide.width}px`);
-    /* From a laptop width the wide track is strictly wider than the column,
-       except beside the TOC rail, where the room left is under the floor
-       (layout.css --wide-floor) and the track collapses onto the column:
-       a wide element is plainly wider than the text or exactly as wide,
-       never a sliver past its edge. */
-    if (r.viewportWidth >= 1024 && rail === null && !(wide.width > content.width)) fail(15, r, 'wide track room', { wide: wide.width, content: content.width }, 'wide strictly wider than content from 1024px');
-    if (rail !== null && wide.width !== content.width) fail(15, r, 'wide track beside the rail', { wide: wide.width, content: content.width }, 'wide collapsed onto the content track (the room beside the rail is under the floor)');
+    /* The landing spreads from a laptop width (there is no rail on it; the
+       floor in layout.css collapses anything under 6rem). An article never
+       spreads: a wide element is exactly as wide as the text, at every
+       width, never a sliver or a window-sized band past its edge. */
+    if (grid.landing) {
+      if (r.viewportWidth >= 1024 && rail === null && !(wide.width > content.width)) fail(15, r, 'landing wide track room', { wide: wide.width, content: content.width }, 'wide strictly wider than content from 1024px on the landing');
+    } else if (wide.width !== content.width) {
+      fail(15, r, 'article wide track', { wide: wide.width, content: content.width }, 'wide collapsed onto the content track on an article (only the landing spreads)');
+    }
     /* One left axis: the reading column starts where the wide track starts, and
        the wide track only ever adds room to its right. */
     if (Math.abs(content.left - wide.left) > 1) fail(15, r, 'content on the wide track\'s left edge', { contentLeft: content.left, wideLeft: wide.left }, 'equal left edges (1px tolerance)');

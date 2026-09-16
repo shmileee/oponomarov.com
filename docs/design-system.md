@@ -392,17 +392,23 @@ Below 40rem both opt-ins return to the content track.
 **One left axis.** As shipped (layout.css), the hub grid's content track is a
 single flexible track starting at the gutter, and the article grid is the
 reading measure starting at that same gutter with a `wide` track that adds
-room only to its right (`--wide-extra`, up to the 64rem measure). The extra
-room is granted only when it clears `--wide-floor` (6rem): a wide table or
-figure is either plainly wider than the text or exactly as wide, never a
-sliver past the column's right edge. Beside the TOC rail the page maximum
-leaves 44px, so there `wide` collapses onto the reading column (S15 asserts
-both states). Everything inside a wide track starts on its left edge — a
-table region narrower than its wrapper is not centred in it (S15). Every
-page's text therefore starts on the header's text edge at every width — S21
-measures exactly that — so moving between a hub and an article never shifts
-the column. The article column is not centred in the page; the symmetric side
-tracks in the copy above are the original plan, kept for the track names.
+room only to its right (`--wide-extra`, up to the 64rem measure). Only the
+Dotfiles landing (`[data-landing]`, a hub set in the article composition)
+takes that room: its hero signal row, section headings, card grids, step
+list and adjacent navigation all spread to it, so every rule on the page
+ends where its grids end. An article reads in one column at every width —
+a table wider than the measure scrolls inside its region, an exhibit fills
+the measure — so a heading rule, the header rule and the adjacent navigation
+always end where the text ends (S15 asserts both: the landing wider from
+64rem, an article never). The extra room is granted only when it clears
+`--wide-floor` (6rem), so a wide element is plainly wider than the text or
+exactly as wide, never a sliver. Everything inside a wide track starts on its
+left edge — a table region narrower than its wrapper is not centred in it
+(S15). Every page's text therefore starts on the header's text edge at every
+width — S21 measures exactly that — so moving between a hub and an article
+never shifts the column. The article column is not centred in the page; the
+symmetric side tracks in the copy above are the original plan, kept for the
+track names.
 
 All **interior** tracks use `minmax(0, ...)`, and every direct child gets
 `min-inline-size: 0`. This removes intrinsic min-content minimums that would

@@ -588,7 +588,9 @@ const PROBE = () => {
       parentLeft: Math.round(el.parentElement.getBoundingClientRect().left),
       scrolls: el.scrollWidth > el.clientWidth + 1,
     }));
-    return { content, wide, full, rail, children, tables };
+    /* The Dotfiles landing is the one body that spreads to the wide track. */
+    const landing = body.matches('[data-landing]');
+    return { content, wide, full, rail, landing, children, tables };
   })();
 
   // 11. Typographic parity samples (S16-S20). Rendered elements only: a closed

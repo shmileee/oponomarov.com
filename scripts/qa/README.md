@@ -60,10 +60,11 @@ S15 (WIDE TRACKS) measures the article body grid on every article route: the
 content, `wide` and `full-bleed` tracks (with throwaway children placed in each
 and removed), the sticky TOC rail's left edge, every direct child's horizontal
 bounds, and every table region's width, its parent's width and whether it
-scrolls. The contract requires `wide >= content` and `full >= wide` everywhere,
-`wide > content` from 1024px where no TOC rail stands beside the body and
-`wide == content` where one does (the room beside the rail is under
-layout.css's `--wide-floor`, so the track collapses rather than leave a sliver),
+scrolls, and whether the body is the Dotfiles landing (`data-landing`). The
+contract requires `wide >= content` and `full >= wide` everywhere; on the
+landing `wide > content` from 1024px (its grids and rules spread), and on
+every article `wide == content` at every width (an article reads in one
+column; its tables scroll and its rules end where the text ends);
 the content track on the wide track's left edge (wide grows to the right), no
 child under the rail, every child inside the track it opted into, every table
 region on its wrapper's left edge (never centred in a wide wrapper), and any

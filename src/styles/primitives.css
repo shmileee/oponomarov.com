@@ -293,11 +293,12 @@
     max-inline-size: none;
   }
 
-  /* A landing section's heading rule runs to the edge of the grid or step
-     list it introduces, not to the reading measure a column of text would
-     have: a rule that stopped 300px short of the cards under it read as a
-     mistake. The text still starts on the axis. */
-  [data-landing] > h2 {
+  /* Every rule on the landing runs to the same edge as its grids: a section
+     heading's underline, and the hero's signal row with its two rules. The
+     hero's title and copy keep their own measures (18ch, the prose measure
+     less a step), so only the row spreads. A rule that stopped 300px short
+     of the cards under it read as a mistake. */
+  [data-landing] > :is(h2, .hero) {
     grid-column: wide;
     max-inline-size: none;
   }

@@ -20,18 +20,18 @@ function fixture() {
     kind, sel: kind, path: `main ${kind}`, color: 'oklch(0.44 0 0)', fontSize: 16, fontWeight: 400,
     foreground: '#595959', background: '#ffffff', ratio: 7, reason: null,
   }));
-  /* S15: an article body whose wide track is real. At 1024 the content track
-     (736px) starts on the wide track's left edge and the wide track runs
-     192px further right; at 1440 a TOC rail stands at 1018 and the room
-     beside it is under the floor, so the wide track collapses onto the
-     content track; below 1024 the three tracks coincide. The one scrolling
-     table took every pixel its wrapper offered and starts on the wrapper's
-     edge. */
+  /* S15: the fixture's article body is the landing (the one body that
+     spreads). At 1024 the content track (736px) starts on the wide track's
+     left edge and the wide track runs 192px further right; at 1440 a rail
+     stands at 1018 and the room beside it is under the floor, so the wide
+     track collapses onto the content track; below 1024 the three tracks
+     coincide. The one scrolling table took every pixel its wrapper offered
+     and starts on the wrapper's edge. */
   const articleGrid = (vp) => {
     const content = vp.width >= 1280 ? { left: 198, right: 934, width: 736 } : vp.width >= 1024 ? { left: 48, right: 784, width: 736 } : { left: 20, right: vp.width - 20, width: vp.width - 40 };
     const wide = vp.width >= 1280 || vp.width < 1024 ? { ...content } : { left: 48, right: 976, width: 928 };
     return {
-      content, wide, full: { ...wide }, rail: vp.width >= 1280 ? 1018 : null,
+      content, wide, full: { ...wide }, rail: vp.width >= 1280 ? 1018 : null, landing: true,
       children: [{ sel: 'p', left: content.left, right: content.right, optIn: null }, { sel: 'div.setup-reference.wide', left: wide.left, right: wide.right, optIn: 'wide' }],
       tables: [{ sel: 'div.table-scroll', label: 'Roles', left: wide.left, parentLeft: wide.left, width: wide.width, parentWidth: wide.width, scrolls: true }],
     };
@@ -304,10 +304,18 @@ test('S15 checks every track relation, the rail, child containment and scrolling
   const at1024 = (raw) => raw.results.find((r) => r.route === '/article/' && r.viewportWidth === 1024);
   /* Routes without an article body carry null and have no sample. */
   assert.equal(evaluateContract(fixture())[15].failures.length, 0);
-  /* Beside the rail the wide track must have collapsed: a 44px sliver past the column fails. */
-  const sliver = fixture();
-  at1440(sliver).articleGrid.wide = { left: 198, right: 978, width: 780 };
-  assert.ok(evaluateContract(sliver)[15].failures.some((f) => /beside the rail/.test(f.field)));
+  /* An article (not the landing) whose wide track kept 192px at 1024 fails: articles read in one column. */
+  const spread = fixture();
+  at1024(spread).articleGrid.landing = false;
+  assert.ok(evaluateContract(spread)[15].failures.some((f) => /article wide track/.test(f.field)));
+  /* The same article with the track collapsed passes. */
+  const oneColumn = fixture();
+  at1024(oneColumn).articleGrid.landing = false;
+  at1024(oneColumn).articleGrid.wide = { ...at1024(oneColumn).articleGrid.content };
+  at1024(oneColumn).articleGrid.full = { ...at1024(oneColumn).articleGrid.content };
+  at1024(oneColumn).articleGrid.children = at1024(oneColumn).articleGrid.children.filter((child) => child.optIn !== 'wide');
+  at1024(oneColumn).articleGrid.tables = [];
+  assert.equal(evaluateContract(oneColumn)[15].failures.length, 0);
   /* A region centred in its wide wrapper instead of starting on its edge. */
   const centred = fixture();
   at1024(centred).articleGrid.tables.push({ sel: 'div.table-scroll', label: 'Centred', left: 144, parentLeft: 48, width: 736, parentWidth: 928, scrolls: false });

@@ -106,11 +106,16 @@
   /* (It used to be centred in the page, which put an article 100px to the */
   /* right of the hub it was opened from on a tablet or a small laptop.)   */
   /* The `wide` track is the reading measure plus whatever room is free to */
-  /* its right, up to --measure-wide in all: nothing on a phone, the       */
-  /* spec's 64rem on a laptop, a slim margin beside the TOC rail. Below    */
-  /* 80rem everything stacks in the content track and the TOC is a         */
-  /* disclosure; from 80rem the reading column gets a sticky rail beside   */
-  /* it, and the rail is what bounds `wide` there.                         */
+  /* its right, up to --measure-wide in all - but only on the Dotfiles     */
+  /* landing, a hub set in this composition whose card grids, step list    */
+  /* and section rules spread to it. An article reads in one column at     */
+  /* every width: a table wider than the measure scrolls, an exhibit fills */
+  /* the measure, and every rule on the page - heading, header, adjacent   */
+  /* navigation - ends where the text ends. (Articles used to take the     */
+  /* track between 64rem and 80rem only, so a reader at 1100px saw tables  */
+  /* run past the rules that a reader at 1300px did not.) Below 80rem      */
+  /* everything stacks in the content track and the TOC is a disclosure;   */
+  /* from 80rem the reading column gets a sticky rail beside it.           */
   /* ...................................................................  */
   /* The extra track is sized from the leftover explicitly rather than as  */
   /* minmax(0, 18rem): the grid algorithm hands free space to every track  */
@@ -146,6 +151,17 @@
     /* The published shell breathes before the footer; the header carries
        the air above the title (components/article.css). */
     padding-block-end: var(--space-section);
+  }
+
+  /* One column for articles; the landing alone keeps the room. */
+  .article:not(:has(> [data-landing])) {
+    --wide-room: 0px;
+  }
+
+  /* On the landing the adjacent navigation closes the page at the width of
+     the grids above it, rule included. */
+  .article > [data-landing] ~ .adjacent-nav {
+    grid-column: wide;
   }
 
   /* Empty mount points (e.g. the context-help slot before it is used)     */
@@ -184,12 +200,9 @@
        through ArticleShell. The Dotfiles landing page (/dotfiles/) is the one
        deliberate exemption: it is an overview with no sections of its own to
        navigate, so it keeps the single reading column and this rule does not
-       match it. The extra track now also pays for the rail and its gap, which
-       leaves it 44px at the page maximum - under the floor, so beside the
-       rail `wide` collapses and a wide table or figure sits exactly on the
-       reading column. */
+       match it. The wide track is already collapsed for every article (above),
+       so the columns here are the measure, the gap, the rail and the margins. */
     .article:has(> .toc) {
-      --wide-room: max(0px, calc(100% - var(--measure-prose) - 2 * var(--space-gutter) - var(--space-10) - var(--toc-width)));
       --article-columns:
         [full-start] var(--space-gutter)
         [wide-start content-start] minmax(0, var(--measure-prose))
