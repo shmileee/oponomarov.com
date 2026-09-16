@@ -226,6 +226,14 @@ and italic, IBM Plex Mono normal. Three families are intentional: display,
 reading, and code/navigation roles already exist. Keep `font-display: swap`.
 Native modal dialogs use the top layer, not a growing set of z-index tokens.
 
+The display file is a partial instance of the variable font: Bricolage's
+`opsz` axis (12–96) is pinned at 28, the middle of the heading range, and
+`wght` clamped to 400–800, which halves the file (77KB → 40KB) with no
+change a heading between 19px and 40px shows. Regenerate from the upstream
+variable WOFF2 with fontTools: `instancer.instantiateVariableFont(font,
+{"opsz": 28, "wght": (400, 800)})`, then save as WOFF2. The Open Graph
+instances under `src/assets/og/` are separate and unaffected.
+
 ### Tier 3 — component aliases
 
 All definitions below still live in `tokens.css`. A component may consume its
@@ -456,6 +464,15 @@ the digit count. Numbers take the capsule voice (mono, medium, subtle,
 `--code-inline-size`) with their line box set to the item's leading so they
 share the text's baseline; bullets are a 0.3em dot on the first line's
 x-height centre. Classed lists (`.steps`) are primitives and draw their own.
+A GitHub-flavoured task list (`- [x]`) renders its state as a drawn mark
+(`rehype-task-lists.mjs` replaces the disabled native checkbox with a named
+`span.task-mark`), never as a control that cannot be operated.
+
+**Headings carry their own wrapper.** `rehype-heading-anchors.mjs` wraps every
+article h2–h4's content in `span.heading-text` before appending the section
+link. The portfolio's numbered headings are flex rows (counter, text, rule):
+with the words as one item, a code span or a link inside a heading wraps with
+the text instead of standing beside it as a column.
 
 This replaces four competing wrapper arrangements:
 
@@ -521,7 +538,7 @@ Markdown nested in block HTML; do not indent it into a code block.
 | Class | What it renders | Repo | Example Markdown HTML |
 | --- | --- | --- | --- |
 | `context-help-source` | Hidden source mounted by ContentInteractions | dotfiles | `<section class="context-help-source" hidden data-search-exclude data-pagefind-ignore>` around the trigger/dialog pair |
-| `context-help-trigger` | Accessible dialog opener | dotfiles | `<button class="context-help-trigger" type="button" aria-controls="context-help" aria-haspopup="dialog" aria-label="Open quick context" data-context-open data-context-ui>?</button>` |
+| `context-help-trigger` | Accessible dialog opener: a labelled pill ("? Quick context", the word is the engine's) fixed above the back-to-top control, parked inline in the article header below 40rem | dotfiles | `<button class="context-help-trigger" type="button" aria-controls="context-help" aria-haspopup="dialog" aria-label="Open quick context" data-context-open data-context-ui>?</button>` |
 | `context-help` | Native dialog with a named heading | dotfiles | `<dialog class="context-help" id="context-help" aria-labelledby="context-help-title" data-context-dialog data-context-ui>` around its panel |
 | `context-help__panel` | Dialog surface and internal scroll owner | dotfiles | `<div class="context-help__panel">` around header and terms |
 | `context-help__header` | Title and close button | dotfiles | `<header class="context-help__header"><h2 id="context-help-title">Terms used on this page</h2><button type="button" data-context-close>Close</button></header>` |
@@ -570,6 +587,19 @@ Markdown nested in block HTML; do not indent it into a code block.
 | `wide` | Direct-child opt-in to the wide track | portfolio, blog, dotfiles | `<figure class="media-exhibit wide" data-exhibit>` around an exhibit |
 | `full-bleed` | Direct-child opt-in to the full page-grid track | portfolio, blog, dotfiles | `<figure class="media-exhibit full-bleed" data-exhibit>` around an exhibit |
 | `table-scroll` | **ENGINE-GENERATED** labelled/focusable table region | portfolio, blog, dotfiles | Write a Markdown table; **never author this class or wrapper** |
+
+**Raster images are sized and served responsively by the build.** When
+`scripts/sync-content.mjs` copies the content repositories' assets into
+`public/`, it records every PNG/JPEG/WebP's dimensions and writes WebP
+renditions at 640, 960 and 1440px (never wider than the file) beside it,
+into `src/lib/generated/image-manifest.json` (gitignored). `rehype-images.mjs`
+reads the manifest and gives every `<img>` — a Markdown image or an authored
+figure — `width`, `height`, `srcset` and `sizes` (the reading measure from
+80rem, the wide track between 64 and 80rem, the column below), plus
+`decoding="async"` and `loading="lazy"` on all but the first. An attribute the
+author wrote wins; the original stays as `src`, the fallback and the
+lightbox's full-size view. Authors write `![alt](/blog-static/x.png)` and
+nothing else.
 
 Inline SVG retains meaningful `viewBox`, geometry, labels, and intrinsic media
 dimensions. Remove `style="max-width:720px"`, `style="--media-exhibit-width:
@@ -712,7 +742,7 @@ The agreed Astro integration settings are:
 | --- | --- |
 | `markdown.syntaxHighlight` | `false` — avoid a second Shiki pass |
 | `markdown.remarkPlugins` | `[remarkAdmonitions]` |
-| `markdown.rehypePlugins` | `[rehypeTableScroll]` |
+| `markdown.rehypePlugins` | `[rehypeTableScroll, rehypeImages, rehypeInlineCode, rehypeTokenLinks, rehypeTaskLists, rehypeHeadingAnchors]` — table regions, sized responsive images, long-span marks, token links, task-list marks, wrapped headings with section links, in that order |
 | EC `themes` | `["github-dark", "github-light"]` |
 | EC `customizeTheme` | `(t) => { t.name = t.type; }` |
 | EC `useDarkModeMediaQuery` | `false` |
@@ -774,7 +804,13 @@ that would not with `data-long` (`src/lib/inline-code.mjs` holds the model;
 marks frontmatter strings). A marked span wraps the way a long URL in running
 text does: at its spaces, slashes and hyphens, anywhere as the last resort,
 each fragment its own closed capsule (`box-decoration-break: clone`), so a
-60-character path still cannot escape a 320px viewport. In a table cell a
+60-character path still cannot escape a 320px viewport. A link whose whole
+content is one code span (plus the optional `↗` span) is a **token link**:
+`rehype-token-links.mjs` marks it `data-token-link` in Markdown, block HTML
+and split inline HTML alike, and prose.css keys the capsule treatment (solid
+accent edge, no underline) to the mark. A link that merely contains a code
+span among words keeps its underline, or its words would be told apart from
+the sentence by colour alone (WCAG 1.4.1). In a table cell a
 marked span stays atomic too — the region scrolls — until the rows stack below
 40rem. Scope the rule to non-fenced code, for example `.prose :not(pre) > code`,
 with EC descendants excluded where needed. `path-token` adds nothing beyond
@@ -895,6 +931,20 @@ branches or content-authored theme overrides. A verifier that applies the
 source-only selector ban indiscriminately to EC output would contradict that
 required configuration. Keep generated EC handling explicit, as V3/V5 already
 do; do not work around it with a second theme script.
+
+### Document titles, descriptions and topic names
+
+`documentTitle()` (`src/lib/site-metadata.ts`) puts the page first: "<page> -
+<Section> - Oleksandr Ponomarov"; a section's own hub keeps the name first.
+Ten tabs, a history list and a search result all show the start of a title,
+and every page used to read "Oleksandr Ponomarov - Engineering Notes - …" to
+the same cut. `verify-build` accepts either shape and nothing else. Topic and
+category slugs (`kubernetes`, `developer-tools`, `ai`) are shown through
+`topicLabel()` (`src/lib/topic-labels.ts`): a short list of proper names and
+a generic rule (hyphens to spaces, first letter raised) for everything else,
+so a new category has a readable name the day it is written. A topic page's
+description names the count and the newest notes; a study may set
+`description` when its `summary` is too short to stand as a snippet.
 
 ### Open Graph cards
 
@@ -1044,7 +1094,7 @@ value. S20 PROSE PARAGRAPHS holds every direct `.prose > p` to one size,
 excluding only `.prose--lede`; unlike S1 it deliberately does not exclude
 `header`, because the paragraph it exists to catch sits inside one.
 
-### Browser scenarios — S0–S23
+### Browser scenarios — S0–S24
 
 Run against a production build through `scripts/qa/measure.mjs` and
 `scripts/qa/contract.mjs`. Default viewports: 320, 375, 768, and 1440px; the full
@@ -1072,6 +1122,7 @@ current route set from the build rather than freezing that count forever.
 | S21 | The first child of every hub section shell, article header, article body, topic page and landing body starts on the header's text edge (1px) at every width | A region that picked up a second gutter, or an article column that drifted off the site's one left axis |
 | S22 | No inline code span paints on more than one line unless the build marked it `data-long`; samples without a fragment count fail | A token split at a hyphen, a two-word command split at its space, a capsule fragmented across lines |
 | S23 | Every block a prose body holds (code frame, table region, admonition, quote, figure, disclosure, tab group) starts on the paragraph text edge (1px) and, unless it opted into a wider track, ends on it; inside a list item, on the item's content edges | A table region centred in its wide wrapper, a frame with padding of its own, a block that slipped off the axis |
+| S24 | The summed layout-shift score from navigation to settle is at or under 0.01 on every route, width and theme | A disclosure rendered open and closed by script after paint, an unsized image, a late font swap moving the column |
 
 Probe actual body paragraphs for S1, not eyebrows or metadata; exclude the two
 documented role modifiers from the normal-body comparison. For S2 measure the

@@ -11,3 +11,6 @@ public/blog-static/
 
 # agent workspace: audit notes, plans, QA measurements and screenshots
 .omo/
+
+# Built by scripts/sync-content.mjs: image dimensions and WebP renditions
+src/lib/generated/

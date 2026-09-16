@@ -3,6 +3,7 @@ import { getCollection, render } from "astro:content";
 import SiteLayout from "../components/SiteLayout.astro";
 import { collectTopics, formatCaseNumber, loadCaseStudies, requireCaseStudy } from "../lib/case-studies";
 import { inlineContexts, renderInline } from "../lib/inline-markdown";
+import { topicLabel } from "../lib/topic-labels";
 import { pageDescriptions } from "../lib/site-metadata";
 
 const studies = await loadCaseStudies();
@@ -45,7 +46,8 @@ const readerManifest = studies.map((study) => ({
   /* Rendered here so the reader shows the same dek the study page does;
      renderInline escapes the source, so this is the only HTML it carries. */
   summaryHtml: renderInline(study.entry.data.summary, inlineContexts.lede),
-  topics: study.entry.data.topics,
+  /* Display names, so the dialog reads as the page does. */
+  topics: study.entry.data.topics.map(topicLabel),
 }));
 ---
 
@@ -107,7 +109,7 @@ const readerManifest = studies.map((study) => ({
                 </dl>
               )}
               {spotlight.entry.data.spotlightProof && <div class="prose"><p set:html={renderInline(spotlight.entry.data.spotlightProof)} /></div>}
-              <div class="topic-list" aria-label="Topics">{spotlight.entry.data.topics.map((topic) => <span>{topic}</span>)}</div>
+              <div class="topic-list" aria-label="Topics">{spotlight.entry.data.topics.map((topic) => <span>{topicLabel(topic)}</span>)}</div>
             </header>
             <div class="hero-actions"><a class="primary-link" href={spotlight.href} data-open-study={spotlight.folder}>Read case study →</a></div>
           </article>
@@ -119,10 +121,13 @@ const readerManifest = studies.map((study) => ({
       <div class="section-shell content-grid">
         <p class="eyebrow">{spotlight ? "03" : "02"}</p>
         <h2>All case studies</h2>
-        <div class="topic-filters" role="group" aria-label="Filter case studies">
-          <button type="button" data-topic-filter="all" aria-pressed="true">all</button>
-          {topics.map((topic) => <button type="button" data-topic-filter={topic} aria-pressed="false">{topic}</button>)}
-        </div>
+        {studies.length === 0 && <div class="empty-state"><p>No case studies published yet.</p><a href="/blog/">Read the engineering notes →</a></div>}
+        {studies.length > 0 && (
+          <div class="topic-filters" role="group" aria-label="Filter case studies">
+            <button type="button" data-topic-filter="all" aria-pressed="true">all</button>
+            {topics.map((topic) => <button type="button" data-topic-filter={topic} aria-pressed="false">{topicLabel(topic)}</button>)}
+          </div>
+        )}
         {/* The count was a screen-reader-only live region; sighted readers
             had no way to tell that nine of twenty-two cards were showing. */}
         <p class="filter-status" aria-live="polite" data-filter-status></p>
@@ -138,7 +143,7 @@ const readerManifest = studies.map((study) => ({
                   <div><dt>Evidence</dt><dd set:html={renderInline(study.entry.data.evidence, inlineContexts.card)} /></div>
                 </dl>
               ) : <span class="case-card-summary" set:html={renderInline(study.entry.data.summary, inlineContexts.card)} />}
-              <span class="case-card-topics">{study.entry.data.topics.join(" · ")}</span>
+              <span class="case-card-topics">{study.entry.data.topics.map(topicLabel).join(" · ")}</span>
               <span class="case-card-action">{study.entry.data.spotlight ? "full story ↑" : "read →"}</span>
             </a>
           ))}
@@ -163,6 +168,10 @@ const readerManifest = studies.map((study) => ({
   <dialog class="reader" id="case-study-reader" aria-labelledby="reader-title" data-reader>
     <div class="reader-shell">
       <div class="reader-toolbar">
+        {/* The study's own address: the dialog is a reading view over the
+            homepage, and a reader who wants the page (to share it, to keep
+            it in a tab, to print it) had no way there but the URL bar. */}
+        <a class="reader-permalink" href="/" data-reader-permalink>Open as page →</a>
         <button class="reader-close" type="button" aria-label="Close case study" title="Close case study" data-reader-close>
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 4 8 8m0-8-8 8"></path></svg>
         </button>
@@ -184,5 +193,5 @@ const readerManifest = studies.map((study) => ({
 
   <!-- Homepage-only: topic filtering, the see-more toggle, and the reader.
        Site-wide behaviour lives in SiteHeader. -->
-  <script is:inline type="module" src="/assets/js/study-index.js"></script>
+  <script>import "../scripts/study-index.js";</script>
 </SiteLayout>

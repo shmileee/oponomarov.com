@@ -293,6 +293,15 @@
     max-inline-size: none;
   }
 
+  /* A callout between two of those blocks (the landing's "Supported
+     platforms" aside under its steps) ends where they end: at the reading
+     measure it stopped 200px short of the grids above and below it, the one
+     block on the page whose right edge disagreed with its neighbours. */
+  [data-landing] > aside:not([class]) {
+    grid-column: wide;
+    max-inline-size: none;
+  }
+
   /* Every rule on the landing runs to the same edge as its grids: a section
      heading's underline, and the hero's signal row with its two rules. The
      hero's title and copy keep their own measures (18ch, the prose measure
@@ -324,6 +333,10 @@
        fraction of the same size. At body size a 32-character path link
        could not fit a 360px card and folded onto two lines. */
     font-size: var(--text-sm);
+    /* A card is a grid cell: an unbroken word in its copy must break
+       anywhere rather than size the column (prose's break-word does not
+       reach a track's minimum). */
+    overflow-wrap: anywhere;
   }
 
   /* An aside among the cards is a caution: the accent-tinted callout the
@@ -792,24 +805,34 @@
     );
     inset-inline-end: max(clamp(var(--space-4), 3vw, var(--space-8)), env(safe-area-inset-right, 0));
     z-index: var(--z-back-to-top);
-    display: grid;
-    place-items: center;
-    inline-size: var(--tap-size);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-inline-size: var(--tap-size);
     block-size: var(--tap-size);
-    padding: 0;
+    padding: 0 var(--space-3);
     border: var(--border-width) solid var(--color-border);
     border-radius: var(--radius-pill);
     background: var(--color-surface-raised);
     color: var(--color-text);
     box-shadow: var(--shadow-raised);
     cursor: pointer;
-    font-family: var(--font-display);
-    font-size: var(--text-base);
-    font-weight: var(--weight-semibold);
+    /* The back-to-top pill's voice ("↑ top"): the two stack as a pair. A
+       bare "?" in a circle said nothing about what it opened. */
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    letter-spacing: 0.04em;
     line-height: 1;
     transition:
       border-color var(--dur-fast) var(--ease-out),
       background-color var(--dur-fast) var(--ease-out);
+  }
+
+  /* The glyph the content writes stays as the pill's mark; the word is the
+     engine's, so every manual says the same thing. */
+  .context-help-trigger::after {
+    content: "Quick context";
   }
 
   .context-help-trigger:hover {
@@ -829,19 +852,7 @@
 
   [data-context-help-mount] > .context-help-trigger {
     position: static;
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    inline-size: auto;
-    padding: 0 var(--space-3);
     box-shadow: none;
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    letter-spacing: 0.04em;
-  }
-
-  [data-context-help-mount] > .context-help-trigger::after {
-    content: "Quick context";
   }
 
   /* Native modal dialog. Closed dialogs keep the UA display: none; the open
@@ -1388,7 +1399,7 @@
 
   /* Inline path or path link. The inline-code treatment comes from prose,
      and so does the link state: a path link is a code link like any other
-     (`.prose a:has(> code)`), so it draws the same solid-edged capsule and
+     (`.prose a[data-token-link]`), so it draws the same solid-edged capsule and
      lights the same way. path-token only adds break behaviour. Authored wbr
      marks are preferred break points, anywhere-wrapping is the fallback.
      In running text the path link stays an ordinary inline link: S7 exempts

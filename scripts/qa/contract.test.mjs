@@ -48,6 +48,8 @@ function fixture() {
       proseParagraphs: [{ fontFamily: 'sans-serif', fontSize: '19px', lineHeight: '30.4px' }],
     },
     selfScrollers: [], inlineStyleAttrs: [], imagesMissingDims: [], imagesMissingAlt: [],
+    /* S24: nothing moved after the first paint. */
+    layoutShift: { total: 0, sources: [] },
     contrast: contrast.map((sample) => ({ ...sample })),
     articleGrid: route === '/article/' ? articleGrid(vp) : null,
     /* S21: every shell's first child stands on the header's text edge,
@@ -76,8 +78,8 @@ function fixture() {
   };
 }
 
-test('complete valid evidence passes all 24 scenarios', () => {
-  assert.deepEqual(evaluateContract(fixture()).map((s) => s.failures.length), Array(24).fill(0));
+test('complete valid evidence passes all 25 scenarios', () => {
+  assert.deepEqual(evaluateContract(fixture()).map((s) => s.failures.length), Array(25).fill(0));
 });
 
 
@@ -288,6 +290,18 @@ test('S23 holds every block to the text edge, lets a wide block run right, and n
   const blind = fixture();
   delete article(blind).blockEdges;
   assert.ok(evaluateContract(blind)[23].failures.some((f) => f.field === 'block edges probe'));
+});
+
+test('S24 fails a page that shifts after first paint and never passes on a missing score', () => {
+  const raw = fixture();
+  raw.results[0].layoutShift = { total: 0.094, sources: ['article.prose.content-grid 910->629'] };
+  const failures = evaluateContract(raw)[24].failures;
+  assert.equal(failures.length, 1);
+  assert.match(failures[0].field, /article\.prose/);
+  assert.equal(evaluateContract(fixture())[24].failures.length, 0);
+  const blind = fixture();
+  delete blind.results[0].layoutShift;
+  assert.ok(evaluateContract(blind)[24].failures.some((f) => f.field === 'layout shift probe'));
 });
 
 test('S22 lets only a build-marked long span wrap, and never passes on a missing fragment count', () => {

@@ -1,5 +1,6 @@
 ---
 import GlobalSearch from "./GlobalSearch.astro";
+import { ownerName } from "../lib/site-metadata";
 
 interface Props {
   activeApp: "portfolio" | "blog" | "dotfiles" | "contact";
@@ -18,8 +19,11 @@ const apps = [
 <header class="op-header" data-site-header>
   {showProgress && <div class="op-reading-progress" aria-hidden="true"><span data-reading-progress></span></div>}
   <div class="op-header__inner">
-    <a class="op-brand" href="/">
-      <span class="op-brand__full">~/oleksandr-ponomarov</span>
+    {/* Two spellings share the box (shell.css shows one per width); the
+        short one is a glyph, not a name, and the long one is display:none
+        on a phone, so the link carries its own accessible name. */}
+    <a class="op-brand" href="/" aria-label={`${ownerName} — home`}>
+      <span class="op-brand__full" aria-hidden="true">~/oleksandr-ponomarov</span>
       <span class="op-brand__short" aria-hidden="true">~/op</span>
     </a>
 

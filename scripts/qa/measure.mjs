@@ -811,7 +811,7 @@ async function interactionPass(browser, base, routes, consoleErrors) {
     if (route === '/') {
       try {
         await page.waitForFunction(() => performance.getEntriesByType('resource')
-          .some((entry) => new URL(entry.name).pathname === '/assets/js/reader.js' && entry.responseEnd > 0));
+          .some((entry) => /\/_astro\/reader\.[\w-]+\.js$/.test(new URL(entry.name).pathname) && entry.responseEnd > 0));
         await settle(page);
         const card = page.locator('[data-case-grid] [data-case-card]').first();
         const href = await card.getAttribute('href');
@@ -871,6 +871,24 @@ async function main() {
         viewport: { width: vp.width, height: vp.height }, deviceScaleFactor: vp.dpr,
         hasTouch: vp.touch, isMobile: vp.touch, reducedMotion: 'reduce', colorScheme,
       });
+      /* S24: layout shifts are observed from the first script tick, before any
+         of the page's own scripts run, so a shift caused by one of them (a
+         disclosure closed after paint) is on the record. */
+      await ctx.addInitScript(() => {
+        window.__qaShifts = { total: 0, sources: [] };
+        try {
+          new PerformanceObserver((list) => {
+            for (const entry of list.getEntries()) {
+              if (entry.hadRecentInput) continue;
+              window.__qaShifts.total += entry.value;
+              for (const source of entry.sources ?? []) {
+                const node = source.node;
+                if (node?.nodeType === 1 && window.__qaShifts.sources.length < 6) window.__qaShifts.sources.push(`${node.tagName.toLowerCase()}${node.className && typeof node.className === 'string' ? '.' + node.className.split(' ').slice(0, 2).join('.') : ''} ${Math.round(source.previousRect.y)}->${Math.round(source.currentRect.y)}`);
+              }
+            }
+          }).observe({ type: 'layout-shift', buffered: true });
+        } catch {}
+      });
       const page = await ctx.newPage();
       const cdp = await ctx.newCDPSession(page);
       const identity = { route, viewport: vp.name, viewportLabel: vp.label, colorScheme, pass: 'normal' };
@@ -881,6 +899,7 @@ async function main() {
         await settle(page);
         record = { ...identity, ...await page.evaluate(PROBE), status: response?.status() ?? 0 };
         record.measure = await page.evaluate(MEASURE);
+        record.layoutShift = await page.evaluate(() => ({ total: Math.round((window.__qaShifts?.total ?? NaN) * 10000) / 10000, sources: window.__qaShifts?.sources ?? [] }));
         if (args.shots) {
           const dir = path.join(outDir, 'shots', colorScheme, vp.name);
           await mkdir(dir, { recursive: true });

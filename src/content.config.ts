@@ -14,6 +14,10 @@ const caseStudies = defineCollection({
   schema: z.object({
     title: z.string(),
     summary: z.string(),
+    /* The meta and Open Graph description when the one-line summary is too
+       short to stand as a snippet (under 50 characters says nothing a search
+       result can use). Falls back to the summary. */
+    description: z.string().optional(),
     role: z.string().optional(),
     evidence: z.string().optional(),
     topics: z.array(z.string()).min(1),

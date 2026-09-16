@@ -11,7 +11,7 @@ const NAMES = [
   'STYLESHEET PARITY', 'NO CLIPPING', 'HYGIENE', 'ZOOM', 'READER DIALOG', 'SKIP LINK',
   'CONTRAST', 'WIDE TRACKS',
   'SECTION HEADINGS', 'COMMENTS HEADING', 'TABLE HEADERS', 'KEYCAPS', 'PROSE PARAGRAPHS',
-  'GUTTER PARITY', 'ATOMIC TOKENS', 'BLOCK EDGES',
+  'GUTTER PARITY', 'ATOMIC TOKENS', 'BLOCK EDGES', 'LAYOUT SHIFT',
 ];
 const THEMES = ['light', 'dark'];
 const key = (r) => JSON.stringify([r.route, r.viewport, r.colorScheme]);
@@ -401,6 +401,16 @@ export function evaluateContract(raw) {
     for (const block of gutter.blocks) {
       if (Math.abs(block.left - gutter.headerEdge) > 1) fail(21, r, `${block.sel} left edge`, block.left, `${gutter.headerEdge}px, the header's text edge (1px tolerance)`);
     }
+  }
+  /* S24 - the first paint is the layout that stays. The probe sums every
+     layout-shift entry the page reports from navigation to settle (fonts
+     ready, two frames), without input. Anything above 0.01 is a visible jump:
+     the table of contents rendered open and folded by script after paint
+     moved every article body 280px on a phone (CLS 0.02-0.11) and this is
+     what would have caught it. A missing sum is missing evidence. */
+  for (const r of good) {
+    if (!Number.isFinite(r.layoutShift?.total)) { fail(24, r, 'layout shift probe', r.layoutShift, 'a summed layout-shift score'); continue; }
+    if (r.layoutShift.total > 0.01) fail(24, r, `cumulative layout shift${r.layoutShift.sources?.length ? ` (${r.layoutShift.sources.slice(0, 3).join('; ')})` : ''}`, r.layoutShift.total, '<= 0.01 (nothing moves after the first paint)');
   }
   return scenarios;
 }

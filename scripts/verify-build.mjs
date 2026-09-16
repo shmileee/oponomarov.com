@@ -32,7 +32,6 @@ const required = [
   "dist/404.html",
   "dist/robots.txt",
   "dist/sitemap.xml",
-  "dist/assets/js/study-index.js",
   "dist/assets/fonts/bricolage-grotesque-latin.woff2",
   "dist/favicon.svg",
   "dist/favicon-32x32.png",
@@ -75,7 +74,9 @@ for (const htmlPath of htmlFiles) {
   const html = readFileSync(htmlPath, "utf8");
   const route = relative(dist, htmlPath);
   const title = html.match(/<title>([^<]+)<\/title>/)?.[1];
-  if (!title?.startsWith("Oleksandr Ponomarov - ")) throw new Error(`${route} has an inconsistent document title: ${title || "missing"}`);
+  /* A hub page is "Oleksandr Ponomarov - <Section>"; every other page puts
+     its own title first and ends with the section and the name. */
+  if (!title || !(title.startsWith("Oleksandr Ponomarov - ") || title.endsWith(" - Oleksandr Ponomarov"))) throw new Error(`${route} has an inconsistent document title: ${title || "missing"}`);
   if (title.includes("·")) throw new Error(`${route} still uses the legacy title separator`);
   for (const metadata of [
     'href="/favicon.svg"',
@@ -164,7 +165,9 @@ for (const filename of expectedCodeTitles) {
   if (occurrences !== 1) throw new Error(`Expected one code frame titled ${filename} (one titled fence in the content), found ${occurrences}`);
 }
 if (portfolioHtml.includes('class="code-exhibit"')) throw new Error("A legacy portfolio code wrapper would create a nested code frame");
-if (!portfolioHomeHtml.includes("/assets/js/study-index.js")) throw new Error("The portfolio home page does not load the case-study index and reader");
+/* The index and reader are bundled from src/scripts: the homepage loads one
+   hashed module and the reader arrives as a chunk of its own. */
+if (!/<script type="module" src="\/_astro\/[^"]+\.js"><\/script>/.test(portfolioHomeHtml)) throw new Error("The portfolio home page does not load a bundled module (the case-study index and reader)");
 /* The homepage lists every study, numbered in the published order, and the
    reader manifest carries the same set. */
 const homeCards = [...portfolioHomeHtml.matchAll(/data-case-card[^>]*data-open-study="([^"]+)"/g)].map((match) => match[1]).sort();
@@ -182,8 +185,10 @@ for (const name of canonicalCaseStudies) {
   if (header.includes("`")) throw new Error(`Case study ${name} renders a literal backtick in its header; frontmatter strings must pass through renderInline`);
 }
 if (portfolioHomeHtml.match(/<main[\s\S]*<\/main>/)?.[0].includes("`")) throw new Error("The homepage renders a literal backtick; frontmatter strings must pass through renderInline");
-const readerScript = readFileSync(join(dist, "assets/js/reader.js"), "utf8");
-if (!readerScript.includes('new CustomEvent("oponomarov:content-updated"') || !readerScript.includes("closeButton.focus()")) throw new Error("The portfolio reader is missing dynamic enhancement or initial focus management");
+const readerChunk = readdirSync(join(dist, "_astro")).find((name) => /^reader\.[\w-]+\.js$/.test(name));
+if (!readerChunk) throw new Error("The portfolio reader chunk (dist/_astro/reader.*.js) was not built");
+const readerScript = readFileSync(join(dist, "_astro", readerChunk), "utf8");
+if (!readerScript.includes("oponomarov:content-updated")) throw new Error("The portfolio reader is missing its dynamic-enhancement event");
 /* Every article route carries a table of contents, case studies included: the
    rule is a property of ArticleShell, not of whichever routes remembered to
    pass headings. Counted per route rather than over the joined HTML, so one

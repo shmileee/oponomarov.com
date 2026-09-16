@@ -40,6 +40,26 @@ export const pageDescriptions = {
   contact: "Contact Oleksandr Ponomarov by email, LinkedIn, or GitHub.",
 } as const;
 
+/** A topic page's description: what is filed there and the newest notes,
+    so the snippet says something ("Notes filed under argocd." was 25
+    characters and said nothing a search result could use). */
+export function categoryDescription(label: string, titles: readonly string[]): string {
+  const count = titles.length;
+  const lead = `${count} engineering ${count === 1 ? "note" : "notes"} on ${label} by ${ownerName}`;
+  /* Two newest titles when they fit a 160-character snippet, else one. */
+  for (const take of [2, 1]) {
+    const newest = titles.slice(0, take).map((title) => `“${title}”`).join(" and ");
+    const text = `${lead}, newest: ${newest}.`;
+    if (newest && text.length <= 160) return text;
+  }
+  return `${lead}.`;
+}
+
+/** The document title: the page first, then its section, then the site.
+    Ten open tabs, a history list and a search result all show the start of
+    the title, and with the site name first they all read "Oleksandr
+    Ponomarov - Engineering Notes - ..." to the same cut. A hub page (a
+    section's own root) has no page title and keeps the name first. */
 export function documentTitle(section: SiteSection, pageTitle?: string) {
-  return [ownerName, sectionNames[section], pageTitle].filter(Boolean).join(" - ");
+  return pageTitle ? [pageTitle, sectionNames[section], ownerName].join(" - ") : `${ownerName} - ${sectionNames[section]}`;
 }

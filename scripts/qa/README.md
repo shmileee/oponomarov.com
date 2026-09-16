@@ -106,7 +106,14 @@ must start on the text edge; one that did not opt in must end on it too, and
 one that did may only run further right. A route with a prose body and no
 blocks has no sample; an absent probe is missing evidence.
 
-The checker prints all 24 PASS/FAIL lines with actual/expected evidence for each
+S24 (LAYOUT SHIFT) sums every `layout-shift` entry a page reports between
+navigation and settle (fonts ready, two frames; no input), observed from an
+init script that runs before any page script. The sum must stay at or under
+0.01: the table of contents rendered open and folded by script after paint
+moved every article body about 280px on a phone (0.02–0.11) and is the defect
+this exists for. A missing sum is missing evidence.
+
+The checker prints all 25 PASS/FAIL lines with actual/expected evidence for each
 failure and exits 1 if any scenario fails. The report is informational, supports
 the old baseline schema, and exits normally even when contracts are red. The
 current design is intentionally red; these assertions must not be relaxed to

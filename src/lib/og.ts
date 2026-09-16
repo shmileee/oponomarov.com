@@ -9,7 +9,8 @@ import { loadDocs } from "./docs";
 import { plainText } from "./inline-markdown";
 import { ogSlug } from "./og-path";
 import { formatDate, slugForPost, sortPosts } from "./posts";
-import { ownerName, pageDescriptions, sectionPath, siteHost, type SiteSection } from "./site-metadata";
+import { categoryDescription, ownerName, pageDescriptions, sectionPath, siteHost, type SiteSection } from "./site-metadata";
+import { topicLabel } from "./topic-labels";
 
 /**
  * Open Graph cards, one per canonical page, rendered at build time by
@@ -55,7 +56,7 @@ export function ogCards(): Promise<Map<string, OgCard>> {
       add(study.href, {
         section: "portfolio",
         title: study.entry.data.title,
-        description: plainText(study.entry.data.summary),
+        description: plainText(study.entry.data.description ?? study.entry.data.summary),
         kicker: `Case study ${formatCaseNumber(study.number)}`,
       });
     }
@@ -70,12 +71,13 @@ export function ogCards(): Promise<Map<string, OgCard>> {
       });
     }
     for (const category of uniqueCategories(posts.map((post) => post.data.categories))) {
-      const count = posts.filter((post) => post.data.categories.includes(category)).length;
+      const filed = posts.filter((post) => post.data.categories.includes(category));
+      const label = topicLabel(category);
       add(`/blog/categories/${category}/`, {
         section: "blog",
-        title: category,
-        description: `Notes filed under ${category}.`,
-        kicker: `Topic · ${count} ${count === 1 ? "note" : "notes"}`,
+        title: label,
+        description: categoryDescription(label, filed.map((post) => post.data.title)),
+        kicker: `Topic · ${filed.length} ${filed.length === 1 ? "note" : "notes"}`,
       });
     }
 

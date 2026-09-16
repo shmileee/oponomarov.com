@@ -1,17 +1,12 @@
 /* Homepage case-study index: topic filtering, the see-more toggle, and the
-   reader bootstrap.
-   Formerly public/assets/js/site.js, which also carried a theme toggle and a
-   scroll-progress handler. SiteHeader owns both of those now, so this module
-   is homepage-only and is loaded only by src/pages/index.astro.
+   reader bootstrap. Loaded only by src/pages/index.astro and bundled with
+   the page (Vite minifies and hashes it; the reader below is a separate
+   chunk fetched on demand, so a visit that opens no study never loads it).
 
    The module runs once per tab; the client router swaps the document under
    it. Every navigation onto the homepage (including the first) re-runs the
    setup against the fresh DOM, and the previous run's listeners are dropped
    through an AbortController before the swap. */
-
-const readerUrl = new URL("./reader.js", import.meta.url);
-const assetVersion = new URL(import.meta.url).searchParams.get("v");
-if (assetVersion) readerUrl.searchParams.set("v", assetVersion);
 
 function setupStudyIndex(signal) {
   const grid = document.querySelector("[data-case-grid]");
@@ -43,9 +38,11 @@ function setupStudyIndex(signal) {
       toggle.textContent = expanded ? "see less ↑" : "see more →";
     }
     const total = cards.length;
+    /* The pressed chip's label, not its filter key: "on AI", not "on ai". */
+    const activeLabel = filters.find((filter) => filter.dataset.topicFilter === activeTopic)?.textContent?.trim() ?? activeTopic;
     status.textContent = visibleCount === total
       ? `All ${total} case studies`
-      : `Showing ${visibleCount} of ${total} case ${total === 1 ? "study" : "studies"}${activeTopic === "all" ? "" : ` on ${activeTopic}`}`;
+      : `Showing ${visibleCount} of ${total} case ${total === 1 ? "study" : "studies"}${activeTopic === "all" ? "" : ` on ${activeLabel}`}`;
   };
 
   for (const filter of filters) {
@@ -62,7 +59,7 @@ function setupStudyIndex(signal) {
   render();
 }
 
-const { setupReader } = await import(readerUrl);
+const { setupReader } = await import("./reader.js");
 
 let controller;
 let boundBody;

@@ -4,6 +4,7 @@ import ArticleShell from "../../components/ArticleShell.astro";
 import PageToc from "../../components/PageToc.astro";
 import SiteLayout from "../../components/SiteLayout.astro";
 import { adjacentCaseStudies, formatCaseNumber, loadCaseStudies, type CaseStudy } from "../../lib/case-studies";
+import { topicLabel } from "../../lib/topic-labels";
 import { inlineContexts, plainText, renderInline } from "../../lib/inline-markdown";
 import { readingMinutes } from "../../lib/reading-time";
 
@@ -30,7 +31,7 @@ const { previous, next } = adjacentCaseStudies(studies, study);
    ArticleShell gets one", not "whichever routes happened to pass headings". */
 const { Content, headings } = await render(study.entry);
 const { data } = study.entry;
-const description = plainText(data.summary);
+const description = plainText(data.description ?? data.summary);
 ---
 
 {redirect ? (
@@ -78,7 +79,7 @@ const description = plainText(data.summary);
         </dl>
       )}
     </Fragment>
-    <div slot="topics" class="topic-list" aria-label="Topics" data-pagefind-ignore>{data.topics.map((topic: string) => <span>{topic}</span>)}</div>
+    <div slot="topics" class="topic-list" aria-label="Topics" data-pagefind-ignore>{data.topics.map((topic: string) => <span>{topicLabel(topic)}</span>)}</div>
     <PageToc slot="toc" headings={headings} />
     <Content />
     <Fragment slot="footer">

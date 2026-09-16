@@ -103,6 +103,16 @@ export default function rehypeTableScroll() {
   return (tree) => {
     let heading = "";
     let tableNumber = 0;
+    /* Two tables under one heading would be two regions with one name, and
+       a screen reader's landmark list cannot tell them apart (axe
+       landmark-unique): the second and later tables of a heading count
+       themselves. */
+    const used = new Map();
+    const uniqueLabel = (label) => {
+      const seen = (used.get(label) ?? 0) + 1;
+      used.set(label, seen);
+      return seen === 1 ? label : `${label} (table ${seen})`;
+    };
 
     /** @param {import("hast").Parents} parent @param {boolean} insideScroll */
     const walk = (parent, insideScroll) => {
@@ -127,7 +137,7 @@ export default function rehypeTableScroll() {
                 className: hoist ? ["table-scroll"] : ["table-scroll", "wide"],
                 tabIndex: 0,
                 role: "region",
-                ariaLabel: label || heading || `Table ${tableNumber}`,
+                ariaLabel: uniqueLabel(label || heading || `Table ${tableNumber}`),
               },
               children: [node],
             };

@@ -2,6 +2,7 @@
 import { getCollection } from "astro:content";
 import SiteLayout from "../../components/SiteLayout.astro";
 import { formatDate, slugForPost, sortPosts } from "../../lib/posts";
+import { topicLabel } from "../../lib/topic-labels";
 import { pageDescriptions } from "../../lib/site-metadata";
 
 const posts = sortPosts(await getCollection("posts"));
@@ -32,17 +33,22 @@ const categories = [...categoryCounts].sort(([a], [b]) => a.localeCompare(b));
       <div class="section-shell archive-shell">
         <header class="section-heading archive-heading">
           <h2 id="notes-title">All notes</h2>
-          <div class="prose"><p class="archive-intro">Browse chronologically, or jump straight to the systems and tools you care about.</p></div>
-          <nav class="topic-directory" aria-labelledby="topic-directory-title">
-            <p class="topic-directory-label" id="topic-directory-title">Browse by topic</p>
-            <ul>
-              {categories.map(([category, count]) => (
-                <li><a href={`/blog/categories/${category}/`}><span>{category}</span><span class="topic-directory-count" aria-label={`${count} posts`}>{count}</span></a></li>
-              ))}
-            </ul>
-          </nav>
+          {/* The intro and the topic directory describe a list that exists; with
+              no notes yet the heading stands alone over one honest line. */}
+          {posts.length > 0 && <div class="prose"><p class="archive-intro">Browse chronologically, or jump straight to the systems and tools you care about.</p></div>}
+          {categories.length > 0 && (
+            <nav class="topic-directory" aria-labelledby="topic-directory-title">
+              <p class="topic-directory-label" id="topic-directory-title">Browse by topic</p>
+              <ul>
+                {categories.map(([category, count]) => (
+                  <li><a href={`/blog/categories/${category}/`}><span>{topicLabel(category)}</span><span class="topic-directory-count" aria-label={`${count} posts`}>{count}</span></a></li>
+                ))}
+              </ul>
+            </nav>
+          )}
         </header>
         <div class="archive-years">
+          {posts.length === 0 && <div class="empty-state"><p>No notes yet.</p><a href="/">Back to the portfolio →</a></div>}
           {[...years].map(([year, yearPosts]) => (
             <section class="archive-year" aria-labelledby={`year-${year}`}>
               <h3 id={`year-${year}`}>{year}</h3>

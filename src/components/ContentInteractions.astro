@@ -137,12 +137,27 @@
        before the scrollbar is noticed. */
     const frames = [...document.querySelectorAll<HTMLElement>(".expressive-code .frame")];
     const syncCodeOverflow = () => {
-      frames.forEach((frame) => {
+      frames.forEach((frame, index) => {
         const pre = frame.querySelector("pre");
         if (!pre) return;
         const overflows = pre.scrollWidth > pre.clientWidth + 1;
         frame.toggleAttribute("data-overflows", overflows);
         frame.toggleAttribute("data-scrolled-end", overflows && pre.scrollLeft + pre.clientWidth >= pre.scrollWidth - 1);
+        /* Expressive Code makes a scrolling block a focusable region but
+           gives it no name, so two on a page were two landmarks called
+           nothing. The same three attributes it toggles are set here, in
+           one place and named: the block's title, or its place on the page.
+           (EC skips a block that already has a tabindex.) */
+        if (overflows) {
+          const title = frame.querySelector(".title")?.textContent?.replace(/\s+/g, " ").trim();
+          pre.setAttribute("tabindex", "0");
+          pre.setAttribute("role", "region");
+          pre.setAttribute("aria-label", title ? `Code: ${title}` : `Code block ${index + 1}`);
+        } else {
+          pre.removeAttribute("tabindex");
+          pre.removeAttribute("role");
+          pre.removeAttribute("aria-label");
+        }
       });
     };
     if (frames.length > 0) {
@@ -200,7 +215,9 @@
       let opener: HTMLImageElement | null = null;
       const open = (img: HTMLImageElement) => {
         opener = img;
-        shown.src = img.currentSrc || img.src;
+        /* The original file, not the rendition the column chose: the dialog
+           exists to show the pixels the column could not. */
+        shown.src = img.src;
         shown.alt = img.alt;
         shown.width = Number(img.getAttribute("width")) || img.naturalWidth || 1;
         shown.height = Number(img.getAttribute("height")) || img.naturalHeight || 1;

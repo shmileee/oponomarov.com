@@ -1,15 +1,5 @@
-const assetVersion = new URL(import.meta.url).searchParams.get("v");
-const dependencyUrl = (file) => {
-  const url = new URL(file, import.meta.url);
-  if (assetVersion) url.searchParams.set("v", assetVersion);
-  return url;
-};
-const [{ isGuardedArrowTarget, visibleFocusables }, readerModel] = await Promise.all([
-  import(dependencyUrl("./reader-focus.js")),
-  import(dependencyUrl("./reader-model.js")),
-]);
-const { createContentLoader, createManifestIndex, isPrimarySameTab, isReaderState, STUDY_HASH } =
-  readerModel;
+import { isGuardedArrowTarget, visibleFocusables } from "./reader-focus.js";
+import { createContentLoader, createManifestIndex, isPrimarySameTab, isReaderState, STUDY_HASH } from "./reader-model.js";
 
 /* `signal` (an AbortSignal) releases every listener this call binds; the
    homepage module aborts it before the client router swaps the document and
@@ -34,6 +24,7 @@ export function setupReader({ signal } = {}) {
   const status = dialog.querySelector("[data-reader-status]");
   const metaNumber = dialog.querySelector("[data-reader-meta-number]");
   const metaTopics = dialog.querySelector("[data-reader-meta-topics]");
+  const permalink = dialog.querySelector("[data-reader-permalink]");
   const closeButton = dialog.querySelector("[data-reader-close]");
   const previousButton = dialog.querySelector('[data-reader-direction="previous"]');
   const nextButton = dialog.querySelector('[data-reader-direction="next"]');
@@ -111,6 +102,10 @@ export function setupReader({ signal } = {}) {
     metaNumber.textContent = `Case study ${String(entry.number).padStart(2, "0")}`;
     metaTopics.textContent = ` · ${entry.topics.join(" · ")}`;
     title.textContent = entry.title;
+    if (permalink) {
+      permalink.href = entry.url;
+      permalink.setAttribute("aria-label", `Open “${entry.title}” as its own page`);
+    }
     /* The manifest's summaryHtml is the engine's own rendering of the
        frontmatter (escaped, backticks to <code>), the same string the study
        page prints as its dek. */
@@ -118,7 +113,7 @@ export function setupReader({ signal } = {}) {
       dek.innerHTML = entry.summaryHtml ?? "";
       dek.hidden = !entry.summaryHtml;
     }
-    document.title = `${portfolioDocumentTitle} - ${entry.title}`;
+    document.title = `${entry.title} - ${portfolioDocumentTitle}`;
     prose.innerHTML = content;
     document.dispatchEvent(new CustomEvent("oponomarov:content-updated", { detail: { root: prose } }));
     previousKicker.textContent = "Previous";
@@ -204,6 +199,15 @@ export function setupReader({ signal } = {}) {
   dialog.addEventListener("cancel", (event) => {
     event.preventDefault();
     closeReader();
+  }, { signal });
+  /* Escape by hand as well as through the dialog's cancel event: a browser
+     may withhold cancel without recent user activation, and the search
+     dialog closes on the key, so this one does too. */
+  dialog.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && dialog.open) {
+      event.preventDefault();
+      closeReader();
+    }
   }, { signal });
   dialog.addEventListener("click", (event) => {
     if (event.target === dialog) closeReader();

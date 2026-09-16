@@ -19,6 +19,13 @@ import { rehypeHeadingIds } from "@astrojs/markdown-remark";
  * arc and principle copy through the same pipeline, and a section link
  * inside a hero paragraph or a card would point at nothing a reader means
  * to share, so those collections are left alone by their source path.
+ *
+ * The heading's own content is wrapped in one <span class="heading-text">
+ * first. The portfolio's numbered section headings are flex rows (the
+ * counter, the text, the hairline), and a flex row lays out every child
+ * separately: a heading that held words and a code span came out as two
+ * columns, the words squeezed beside a tall capsule. Wrapped, the text is
+ * one flex item and wraps like a paragraph, whatever inline markup it holds.
  */
 const ENGINE_COPY = /[\\/]content[\\/](home|arc|principles)[\\/]/;
 const HEADINGS = new Set(["h2", "h3", "h4"]);
@@ -43,12 +50,15 @@ export default function rehypeHeadingAnchors() {
         if (HEADINGS.has(node.tagName) && typeof node.properties?.id === "string" && node.properties.id) {
           if (node.children.some((child) => child.type === "element" && child.properties?.className?.includes?.("heading-anchor"))) continue;
           const label = textOf(node).replace(/\s+/g, " ").trim();
-          node.children.push({
-            type: "element",
-            tagName: "a",
-            properties: { className: ["heading-anchor"], href: `#${node.properties.id}`, ariaLabel: `Link to “${label}”` },
-            children: [],
-          });
+          node.children = [
+            { type: "element", tagName: "span", properties: { className: ["heading-text"] }, children: node.children },
+            {
+              type: "element",
+              tagName: "a",
+              properties: { className: ["heading-anchor"], href: `#${node.properties.id}`, ariaLabel: `Link to “${label}”` },
+              children: [],
+            },
+          ];
           continue;
         }
         if (node.tagName !== "pre" && "children" in node) walk(node);

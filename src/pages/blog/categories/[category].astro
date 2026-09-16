@@ -3,18 +3,21 @@ import { getCollection } from "astro:content";
 import SiteLayout from "../../../components/SiteLayout.astro";
 import { uniqueCategories } from "../../../lib/categories.mjs";
 import { formatDate, slugForPost, sortPosts } from "../../../lib/posts";
+import { categoryDescription } from "../../../lib/site-metadata";
+import { topicLabel } from "../../../lib/topic-labels";
 
 export async function getStaticPaths() {
   const categories = uniqueCategories((await getCollection("posts")).map((post) => post.data.categories));
-  return categories.map((category) => ({ params: { category }, props: { category, title: category } }));
+  return categories.map((category) => ({ params: { category }, props: { category, title: topicLabel(category) } }));
 }
 
 const { category, title } = Astro.props;
 const posts = sortPosts((await getCollection("posts")).filter((post) => post.data.categories.includes(category)));
 const count = `${posts.length} ${posts.length === 1 ? "note" : "notes"}`;
+const description = categoryDescription(title, posts.map((post) => post.data.title));
 ---
 
-<SiteLayout activeApp="blog" canonicalOrigin="https://oponomarov.com" title={title} description={`Notes filed under ${title}.`} searchType="Topic" rssHref="/blog/feed.xml">
+<SiteLayout activeApp="blog" canonicalOrigin="https://oponomarov.com" title={title} description={description} searchType="Topic" rssHref="/blog/feed.xml">
   <main id="main-content" class="content-grid" tabindex="-1">
     <section class="category-detail" aria-labelledby="category-title">
       {/* The article header's shape: back link, eyebrow, title. The eyebrow

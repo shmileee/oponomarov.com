@@ -7,6 +7,8 @@ import rehypeHeadingAnchors from "./src/lib/rehype-heading-anchors.mjs";
 import rehypeImages from "./src/lib/rehype-images.mjs";
 import rehypeInlineCode from "./src/lib/rehype-inline-code.mjs";
 import rehypeTableScroll from "./src/lib/rehype-table-scroll.mjs";
+import rehypeTaskLists from "./src/lib/rehype-task-lists.mjs";
+import rehypeTokenLinks from "./src/lib/rehype-token-links.mjs";
 
 /* The copy button's confirmation is a toolbar label (prose.css draws it as
    the control's own accent box beside a check), not an exclamation. */
@@ -31,7 +33,7 @@ export default defineConfig({
     // adding one re-parses Expressive Code's output and drops code titles.
     processor: unified({
       remarkPlugins: [remarkAdmonitions],
-      rehypePlugins: [rehypeTableScroll, rehypeImages, rehypeInlineCode, rehypeHeadingAnchors],
+      rehypePlugins: [rehypeTableScroll, rehypeImages, rehypeInlineCode, rehypeTokenLinks, rehypeTaskLists, rehypeHeadingAnchors],
     }),
   },
   integrations: [expressiveCode({

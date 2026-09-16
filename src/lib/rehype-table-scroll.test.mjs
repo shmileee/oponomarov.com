@@ -31,6 +31,16 @@ test("prefers caption text when a preceding heading also exists", async () => {
   assert.equal(tree.children[1].properties.ariaLabel, "Install options");
 });
 
+test("two tables under one heading get distinct region names", async () => {
+  // Given
+  const tree = root(element("h2", [text("Voice dictation")]), element("table"), element("p", [text("and")]), element("table"));
+  // When
+  await transform(tree);
+  // Then
+  assert.equal(tree.children[1].properties.ariaLabel, "Voice dictation");
+  assert.equal(tree.children[3].properties.ariaLabel, "Voice dictation (table 2)");
+});
+
 test("uses the nearest preceding heading across nested containers", async () => {
   // Given
   const table = element("table", [element("caption", [text(" ")])]);

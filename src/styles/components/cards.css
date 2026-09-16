@@ -687,7 +687,10 @@
     letter-spacing: var(--tracking-heading);
     line-height: var(--leading-snug);
     text-decoration: none;
-    overflow-wrap: break-word;
+    /* The row is a grid track sized to its content: break-word did not
+       count towards its minimum, so one unbroken token in a title widened
+       the whole archive past the viewport (the stress build). */
+    overflow-wrap: anywhere;
   }
 
   .article-title:hover {

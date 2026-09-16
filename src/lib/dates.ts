@@ -5,14 +5,21 @@
  * row form under a year heading that already says the year ("04 Mar").
  * Nothing else formats a date, so a note shows the same date wherever it
  * is named. Dates are formatted in UTC, as the frontmatter states them.
+ *
+ * The short month is a fixed three letters. Intl's en-GB "short" month is
+ * four for September ("Sept") and three for every other month, so the day
+ * a September note is published the list's date column stops lining up.
  */
-export const dateFormats = {
-  display: { day: "2-digit", month: "long", year: "numeric" },
-  list: { day: "2-digit", month: "short", year: "numeric" },
-  dayMonth: { day: "2-digit", month: "short" },
-} as const satisfies Record<string, Intl.DateTimeFormatOptions>;
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] as const;
 
-export type DateVoice = keyof typeof dateFormats;
+export const dateVoices = ["display", "list", "dayMonth"] as const;
 
-export const formatDate = (date: Date, voice: DateVoice = "list") =>
-  new Intl.DateTimeFormat("en-GB", { ...dateFormats[voice], timeZone: "UTC" }).format(date);
+export type DateVoice = (typeof dateVoices)[number];
+
+export const formatDate = (date: Date, voice: DateVoice = "list") => {
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const year = date.getUTCFullYear();
+  if (voice === "display") return `${day} ${new Intl.DateTimeFormat("en-GB", { month: "long", timeZone: "UTC" }).format(date)} ${year}`;
+  const month = MONTHS[date.getUTCMonth()];
+  return voice === "list" ? `${day} ${month} ${year}` : `${day} ${month}`;
+};

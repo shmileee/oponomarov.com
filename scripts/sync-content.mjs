@@ -1,5 +1,6 @@
-import { copyFileSync, cpSync, mkdirSync, readdirSync, rmSync, statSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { copyFileSync, cpSync, mkdirSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { join, relative, resolve } from "node:path";
+import sharp from "sharp";
 
 const projectRoot = resolve(import.meta.dirname, "..");
 
@@ -50,4 +51,36 @@ rmSync(blogStaticTarget, { recursive: true, force: true });
 mkdirSync(blogStaticTarget, { recursive: true });
 cpSync(blogStaticSource, blogStaticTarget, { recursive: true, dereference: true });
 
-console.log(`Synced ${caseStudyAssetCount} case-study assets into public/case-studies and blog static files into public/blog-static.`);
+/* Responsive variants and a manifest. Content images arrive as authored
+   (a 1654px PNG for a 700px slot), so every raster copied above gets WebP
+   renditions at the widths the column can use and its own dimensions
+   recorded. rehype-images (src/lib/rehype-images.mjs) reads the manifest to
+   give every <img> width, height, srcset and sizes without the author
+   writing any of them; the original stays as the src fallback and the
+   lightbox's full-size view. Renditions sit next to the original under
+   public/ (rebuilt with it on every sync; a handful of screenshots convert
+   in well under a second) and are skipped when already newer than it. */
+const RASTER = /\.(?:png|jpe?g|webp)$/i;
+const WIDTHS = [640, 960, 1440];
+const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((entry) => (entry.isDirectory() ? walk(join(dir, entry.name)) : entry.isFile() && RASTER.test(entry.name) ? [join(dir, entry.name)] : []));
+const manifest = {};
+let renditionCount = 0;
+for (const file of [...walk(caseStudiesTarget), ...walk(blogStaticTarget)]) {
+  if (/\.\d+\.webp$/i.test(file)) continue; // a rendition from an earlier run, copied along
+  const { width, height } = await sharp(file).metadata();
+  if (!width || !height) continue;
+  const url = `/${relative(join(projectRoot, "public"), file).split("\\").join("/")}`;
+  const targets = [...WIDTHS.filter((candidate) => candidate < width * 0.9), width];
+  for (const target of targets) {
+    const rendition = file.replace(RASTER, `.${target}.webp`);
+    const stale = (statSync(rendition, { throwIfNoEntry: false })?.mtimeMs ?? 0) < statSync(file).mtimeMs;
+    if (!stale) continue;
+    await sharp(file).resize({ width: target, withoutEnlargement: true }).webp({ quality: 82, effort: 5 }).toFile(rendition);
+    renditionCount += 1;
+  }
+  manifest[url] = { width, height, variants: targets.map((target) => ({ src: url.replace(RASTER, `.${target}.webp`), width: target })) };
+}
+mkdirSync(join(projectRoot, "src/lib/generated"), { recursive: true });
+writeFileSync(join(projectRoot, "src/lib/generated/image-manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
+
+console.log(`Synced ${caseStudyAssetCount} case-study assets into public/case-studies and blog static files into public/blog-static; ${Object.keys(manifest).length} images in the manifest, ${renditionCount} WebP renditions written.`);

@@ -266,6 +266,51 @@
     background: var(--color-border-subtle);
   }
 
+  /* The heading's words are one flex item (rehype-heading-anchors wraps
+     them), so a code span or a link inside the heading wraps with the text
+     instead of standing beside it as a column of its own. */
+  [data-app="portfolio"] :is(.article .prose[data-article-body] > h2, .reader-prose > h3) > .heading-text {
+    min-inline-size: 0;
+  }
+
+  /* Task lists. The GFM checkbox is replaced at build time
+     (rehype-task-lists) by a mark the sheet draws: a hairline box on the
+     text's baseline band, filled with the accent and a check when the item
+     is done. The state is content, so it is an image with a name, not a
+     control that cannot be operated. */
+  .prose li > .task-mark {
+    display: inline-block;
+    inline-size: 1em;
+    block-size: 1em;
+    margin-inline-end: var(--space-2);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    vertical-align: -0.125em;
+  }
+
+  .prose li > .task-mark[data-checked] {
+    border-color: var(--color-accent);
+    background-color: var(--color-accent);
+  }
+
+  .prose li > .task-mark[data-checked]::before {
+    content: "";
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    background-color: var(--color-bg);
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7'/%3E%3C/svg%3E") center / 80% no-repeat;
+  }
+
+  /* The mark is the item's marker: the list (remark's `contains-task-list`,
+     so the unclassed-list rules above leave it alone) draws no bullet and
+     no indent of its own. */
+  .prose ul.contains-task-list {
+    padding-inline-start: 0;
+    list-style: none;
+  }
+
   /* ------------------------------------------------------------------ */
   /* Inline text                                                          */
   /* ------------------------------------------------------------------ */
@@ -540,16 +585,16 @@
          padding pulled back with margins: the body line plus 8px each way
          clears the 44px floor around the token without moving a row, in
          place of a 20px inline box, and the focus ring stays close to it. */
-  .prose a:has(> code) {
+  .prose a[data-token-link] {
     text-decoration: none;
   }
 
-  .prose a:has(> code) > code {
+  .prose a[data-token-link] > code {
     border-color: var(--color-accent);
     transition: color var(--dur-fast) var(--ease-out);
   }
 
-  .prose a:has(> code):is(:hover, :focus-visible) > code {
+  .prose a[data-token-link]:is(:hover, :focus-visible) > code {
     color: var(--color-text);
   }
 
@@ -557,7 +602,7 @@
      name (`<span aria-hidden>↗</span>`) sets at the token's own size and
      colour, a glyph beside the capsule rather than a body-size character
      hanging off it, and lights with the token. */
-  .prose a:has(> code) > span {
+  .prose a[data-token-link] > span {
     margin-inline-start: var(--space-1);
     color: var(--color-accent);
     font-family: var(--font-mono);
@@ -565,11 +610,11 @@
     transition: color var(--dur-fast) var(--ease-out);
   }
 
-  .prose a:has(> code):is(:hover, :focus-visible) > span {
+  .prose a[data-token-link]:is(:hover, :focus-visible) > span {
     color: var(--color-text);
   }
 
-  .prose td > a:has(> code) {
+  .prose td > a[data-token-link] {
     display: inline-block;
     margin-block: calc(-1 * var(--space-2));
     padding-block: var(--space-2);

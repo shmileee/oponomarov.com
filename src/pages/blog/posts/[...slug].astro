@@ -4,6 +4,7 @@ import ArticleShell from "../../../components/ArticleShell.astro";
 import PageToc from "../../../components/PageToc.astro";
 import SiteLayout from "../../../components/SiteLayout.astro";
 import { inlineContexts, plainText, renderInline } from "../../../lib/inline-markdown";
+import { topicLabel } from "../../../lib/topic-labels";
 import { slugForPost, sortPosts } from "../../../lib/posts";
 import { readingMinutes } from "../../../lib/reading-time";
 
@@ -42,7 +43,7 @@ const minutes = readingMinutes(post.body);
     adjacentLabel="Adjacent notes"
   >
     <ul slot="topics" class="topic-list" aria-label="Topics" data-pagefind-ignore>
-      {post.data.categories.map((category: string) => <li><a href={`/blog/categories/${category}/`}>{category}</a></li>)}
+      {post.data.categories.map((category: string) => <li><a href={`/blog/categories/${category}/`}>{topicLabel(category)}</a></li>)}
     </ul>
     <PageToc slot="toc" headings={headings} />
     <Content />

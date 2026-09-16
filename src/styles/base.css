@@ -8,6 +8,9 @@
   /* files so --weight-medium and --weight-semibold render real glyphs     */
   /* rather than a synthesised bold of the 400 file.                       */
   /* ------------------------------------------------------------------ */
+  /* A partial instance of the variable font (§3): opsz pinned at 28, the
+     middle of the heading range, wght 400–800. Half the bytes of the full
+     axis set, the same glyphs at every heading size the site sets. */
   @font-face {
     font-family: "Bricolage Grotesque";
     font-style: normal;

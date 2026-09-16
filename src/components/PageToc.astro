@@ -39,6 +39,20 @@ const count = `${entries.length} ${entries.length === 1 ? "section" : "sections"
         </ol>
       </nav>
     </details>
+    {/* The disclosure's state is decided before the first paint. Rendered
+        open and closed by the module script after load, the list stood
+        335px tall for one frame on every phone and tablet and then folded,
+        moving the whole article up (CLS 0.02–0.11 on every article route).
+        This runs as the parser reaches it, ahead of layout, and again after
+        every client-side navigation (data-astro-rerun), so the shape the
+        reader sees first is the shape that stays. The module script below
+        keeps owning the summary's tab stop and the breakpoint changes. */}
+    <script is:inline data-astro-rerun>
+      (() => {
+        const details = document.currentScript?.previousElementSibling;
+        if (details instanceof HTMLDetailsElement) details.open = matchMedia("(width >= 80rem)").matches;
+      })();
+    </script>
   </aside>
 )}
 

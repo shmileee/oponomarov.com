@@ -385,8 +385,15 @@
     color: var(--color-text-subtle);
   }
 
+  /* The type after the product ("Portfolio · Case study"): the middle dot
+     the site's other kickers use between two labels. */
   .global-search-result-meta i {
     font-style: normal;
+  }
+
+  .global-search-result-meta i::before {
+    content: "\00B7";
+    margin-inline-end: var(--space-2);
   }
 
   .global-search-result-meta small {

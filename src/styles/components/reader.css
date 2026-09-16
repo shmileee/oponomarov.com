@@ -4,7 +4,7 @@
  * Ported from the `reader*` rules in public/assets/css/site.css. The liveness
  * snapshot marks every `.reader-prose` descendant and the `body.reader-open`
  * state DEAD only because index.astro renders the prose empty and
- * public/assets/js/reader.js injects a study (and adds the body class) after a
+ * src/scripts/reader.js injects a study (and adds the body class) after a
  * user opens one. Those rules are required and are ported here.
  *
  * `.reader-prose` composes with `.prose`: the `prose` layer sits above
@@ -91,12 +91,36 @@
     z-index: 1;
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: space-between;
+    gap: var(--space-4);
     min-block-size: calc(var(--tap-size) + 2 * var(--space-4));
     margin: 0 calc(-1 * var(--space-gutter)) var(--space-8);
     border-block-end: var(--border-width) solid var(--color-border-subtle);
     padding: var(--space-4) var(--space-gutter);
     background: var(--color-surface-raised);
+  }
+
+  /* The study's own address, in the label voice the action links share. */
+  .reader-permalink {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: var(--tap-size);
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+
+  .reader-permalink:hover {
+    color: var(--color-text);
+  }
+
+  .reader-permalink:focus-visible {
+    outline: var(--focus-width) solid var(--color-focus);
+    outline-offset: var(--focus-offset);
   }
 
   .reader-close {
@@ -181,8 +205,10 @@
     font-weight: var(--weight-bold);
     letter-spacing: var(--tracking-heading);
     line-height: var(--leading-tight);
+    /* anywhere, not break-word: the title is a flex item and must be able
+       to give up width on an unbroken token. */
+    overflow-wrap: anywhere;
     text-wrap: balance;
-    overflow-wrap: break-word;
   }
 
   .reader-study > .reader-title {
