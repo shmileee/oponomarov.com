@@ -7,8 +7,9 @@
  * That is safe only while the token fits the narrowest line the site lays
  * out, which is the 320px viewport: a 280px column, less whatever the
  * token's context indents (a list item's 36px, an admonition's padding, a
- * card's padding), at the capsule size of the text around it (0.875 of the
- * body's 17px in a paragraph, of a card's 14px copy, of a 22px h3). The
+ * card's padding), at the capsule size of the text around it (0.85 of the
+ * body's 17px in a paragraph, of a card's 14px copy, of a 22px h3; the
+ * scale is tokens.css's --code-inline-scale, kept in step by hand). The
  * build works that out per span (rehype-inline-code for Markdown and
  * authored HTML, inline-markdown.ts for frontmatter strings) and marks
  * every span that would not fit with `data-long`; those wrap the way a long
@@ -24,18 +25,20 @@ export const CAPSULE_CHROME = 10;
 
 /**
  * Advance of one IBM Plex Mono character (0.6em) at the capsule size
- * (0.875em) of each text size the ramp resolves to at 320px.
+ * (--code-inline-scale, 0.85em) of each text size the ramp resolves to at
+ * 320px.
  */
+const CAPSULE_SCALE = 0.85;
 export const CHAR_WIDTH = {
-  body: 0.875 * 17 * 0.6, // paragraphs, list items, cells, admonitions: --text-base
-  small: 0.875 * 14 * 0.6, // card and step copy: --text-sm
-  lede: 0.875 * 19 * 0.6, // the article dek: --text-lg
-  h1: 0.875 * 38 * 0.6, // (3xl + 4xl) / 2
-  h2: 0.875 * 26 * 0.6, // (xl + 2xl) / 2
-  h3: 0.875 * 22 * 0.6, // xl
-  h4: 0.875 * 19 * 0.6, // lg
-  h5: 0.875 * 17 * 0.6,
-  h6: 0.875 * 17 * 0.6,
+  body: CAPSULE_SCALE * 17 * 0.6, // paragraphs, list items, cells, admonitions: --text-base
+  small: CAPSULE_SCALE * 14 * 0.6, // card and step copy: --text-sm
+  lede: CAPSULE_SCALE * 19 * 0.6, // the article dek: --text-lg
+  h1: CAPSULE_SCALE * 38 * 0.6, // (3xl + 4xl) / 2
+  h2: CAPSULE_SCALE * 26 * 0.6, // (xl + 2xl) / 2
+  h3: CAPSULE_SCALE * 22 * 0.6, // xl
+  h4: CAPSULE_SCALE * 19 * 0.6, // lg
+  h5: CAPSULE_SCALE * 17 * 0.6,
+  h6: CAPSULE_SCALE * 17 * 0.6,
 };
 
 /** Horizontal room each enclosing context takes from the column at 320px. */

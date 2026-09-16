@@ -627,10 +627,11 @@
     box-shadow: none;
   }
 
-  /* A titled frame gets the toolbar, terminal or editor. An untitled block
-     gets none: the 44px bar with three decorative dots sat on every fenced
-     block, nine of them on one note, and carried nothing but the copy
-     control, which floats over the corner of the block instead (below). */
+  /* Every frame carries the toolbar: the three window dots, the title when
+     the block has one, and the copy control. It is the site's code-window
+     chrome (the owner's call: a block without it read as a bare box beside
+     the studies' titled ones), and it gives the copy control a home that
+     never covers a line of code. */
   .prose .expressive-code .frame .header {
     display: flex;
     align-items: center;
@@ -645,10 +646,6 @@
     border-radius: var(--radius-md) var(--radius-md) 0 0;
     background: var(--code-toolbar-bg);
     color: var(--code-muted);
-  }
-
-  .prose .expressive-code .frame:not(.has-title) .header {
-    display: none;
   }
 
   /* The window dots, drawn in flow on every frame (EC only draws them on
@@ -720,11 +717,6 @@
     overscroll-behavior-inline: contain;
   }
 
-  /* An untitled block has no toolbar, so its <pre> keeps all four corners. */
-  .prose .expressive-code .frame:not(.has-title) pre {
-    border-radius: var(--radius-md);
-  }
-
   .prose .expressive-code pre > code {
     padding-block: var(--space-3);
   }
@@ -768,7 +760,8 @@
   .prose .expressive-code .frame[data-overflows]:not([data-scrolled-end])::after {
     content: "";
     position: absolute;
-    inset-block: 0 calc(var(--space-2) + var(--space-1));
+    /* From under the toolbar to above the scrollbar. */
+    inset-block: var(--tap-size) calc(var(--space-2) + var(--space-1));
     inset-inline-end: 0;
     inline-size: var(--space-10);
     border-end-end-radius: var(--radius-md);
@@ -776,66 +769,16 @@
     pointer-events: none;
   }
 
-  .prose .expressive-code .frame.has-title[data-overflows]:not([data-scrolled-end])::after {
-    inset-block-start: var(--tap-size);
-  }
-
-  /* The copy control: in the toolbar on a titled frame, floating over the
-     block's top corner on an untitled one. The 44px hit area stays; EC's
-     own background, border and icon layers are pulled in from the edges to
-     draw the 32px control the toolbar was designed around, and that drawn
-     box sits 20px from the frame's edge, where the code's text edge is. */
+  /* The copy control sits in the toolbar. The 44px hit area stays; EC's own
+     background, border and icon layers are pulled in from the edges to draw
+     the 32px control the toolbar was designed around, and that drawn box
+     sits 20px from the frame's edge, where the code's text edge is. */
   .prose .expressive-code .copy {
     --copy-control-inset: calc((var(--tap-size) - var(--space-8)) / 2);
 
     display: flex;
     inset-block-start: 0;
     inset-inline-end: calc(var(--space-5) - var(--copy-control-inset));
-  }
-
-  /* Over an untitled block the control is centred on the first line of
-     code and runs to the frame's edge on the block's own background, so
-     the line it covers ends cleanly under it rather than peeking out on
-     both sides. It shows on hover or focus where a pointer can hover, and
-     always on a touch screen: drawn at rest it hid the end of every long
-     first line under an opaque square. */
-  .prose .expressive-code .frame:not(.has-title) .copy {
-    --code-line: calc(var(--leading-code) * var(--code-font-size));
-
-    isolation: isolate;
-    inset-block-start: calc(var(--space-3) + var(--code-line) / 2 - var(--tap-size) / 2);
-    inset-inline-end: 0;
-    padding-inline-end: calc(var(--space-5) - var(--copy-control-inset));
-  }
-
-  .prose .expressive-code .frame:not(.has-title) .copy::before {
-    content: "";
-    position: absolute;
-    z-index: -1;
-    inset-block: calc((var(--tap-size) - var(--code-line)) / 2);
-    inset-inline: 0;
-    background: var(--code-bg);
-  }
-
-  @media (hover: hover) {
-    .prose .expressive-code .frame:not(.has-title) .copy {
-      opacity: 0;
-      transition: opacity var(--dur-fast) var(--ease-out);
-    }
-
-    .prose .expressive-code .frame:not(.has-title):is(:hover, :focus-within) .copy {
-      opacity: 1;
-    }
-  }
-
-  /* Floating over code it must not let a line show through. */
-  .prose .expressive-code .frame:not(.has-title) .copy button > div {
-    background: var(--code-bg);
-  }
-
-  .prose .expressive-code .frame:not(.has-title) .copy button:hover > div,
-  .prose .expressive-code .frame:not(.has-title) .copy button:focus-visible > div {
-    background: var(--color-accent-surface);
   }
 
   /* "Copied!" is a live region EC paints as a tooltip. Nothing reached it, so

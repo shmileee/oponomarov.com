@@ -293,6 +293,15 @@
     max-inline-size: none;
   }
 
+  /* A landing section's heading rule runs to the edge of the grid or step
+     list it introduces, not to the reading measure a column of text would
+     have: a rule that stopped 300px short of the cards under it read as a
+     mistake. The text still starts on the axis. */
+  [data-landing] > h2 {
+    grid-column: wide;
+    max-inline-size: none;
+  }
+
   /* The card surface: the site's one card, a flat raised surface inside a
      hairline (components/cards.css draws the case and contact cards from the
      same three values). The published docs cards carried a diagonal wash and
@@ -337,6 +346,13 @@
   .surface-grid > div:has(> :is(h2, h3, h4):first-child) > p {
     color: inherit;
     font-size: inherit;
+  }
+
+  /* The column's heading takes the column's width: as a flex item it
+     shrank to its own text, and its rule stopped where the words did while
+     the paragraph under it ran to the cell's edge. */
+  .surface-grid > div:has(> :is(h2, h3, h4):first-child) > :is(h2, h3, h4) {
+    align-self: stretch;
   }
 
   .surface-grid > a {

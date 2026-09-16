@@ -239,7 +239,7 @@ alias but may not redeclare it by route or theme.
 | `--code-muted` | `light-dark(var(--p-neutral-600), var(--p-neutral-400))` | Code/frame secondary text |
 | `--code-border` | `var(--color-border)` | Code frame border |
 | `--code-font-size` | `var(--text-sm)` | Fenced-code type |
-| `--code-inline-size` | `0.875em` | Inline code relative to surrounding text |
+| `--code-inline-size` | `0.85em` | Inline code relative to surrounding text (`--code-inline-scale`; `--code-block-scale` is the same 0.85 of the body step) |
 | `--code-inline-bg` | `var(--color-accent-surface)` | Inline-code fill |
 | `--code-inline-text` | `light-dark(var(--p-blue-700), var(--p-blue-300))` | Inline-code foreground |
 | `--table-border` | `var(--color-border)` | Table rules |
@@ -749,9 +749,9 @@ scrolls horizontally inside its own frame: the `<pre>` is the scroll container
 stylesheet), prose.css draws an always-visible thin scrollbar in the border
 tone on the block's own background, and ContentInteractions marks overflowing
 frames so the last characters fade until the block is scrolled to its end.
-Only a titled frame carries the toolbar; on an untitled block the copy control
-floats over the top corner. Authors may still reflow long commands with valid
-continuations for readability, but never to avoid a scroll.
+Every frame carries the toolbar — the three window dots, the title when the
+block has one, the copy control. Authors may still reflow long commands with
+valid continuations for readability, but never to avoid a scroll.
 
 Inline code uses `--font-mono`, `--code-inline-size`, `--code-inline-bg`,
 `--code-inline-text`, `--radius-sm`, and small token padding. It remains inline
@@ -776,11 +776,11 @@ with EC descendants excluded where needed. `path-token` adds nothing beyond
 `hyphens: none`: not another font, background, or code box. Do not restore
 `inline-code-unit` or `!important` fixes.
 
-Only a titled frame carries the toolbar; on an untitled block the copy
-control is centred on the first line of code, runs to the frame's edge on the
-block's own background, and appears on hover or focus where a pointer can
-hover (always on a touch screen). The toolbar's dots and the control's drawn
-box sit on the code's text edge (20px in from the frame).
+Every frame carries the toolbar, and the copy control lives in it, so it
+never covers a line of code. The toolbar's dots and the control's drawn box
+sit on the code's text edge (20px in from the frame). Code in a block is set
+at `--code-block-scale` (0.85) of the body step and a capsule at
+`--code-inline-scale` (0.85) of its text: one notion of code size.
 
 ## 11. Tables
 

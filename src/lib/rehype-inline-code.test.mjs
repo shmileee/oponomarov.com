@@ -13,18 +13,18 @@ const path = "~/.config/opencode/plugins/tmux-window-notification.ts";
 const fit = (size = "body", insets = []) => Math.floor((FLOOR_COLUMN - insets.reduce((sum, name) => sum + CONTEXT_INSET[name], 0) - CAPSULE_CHROME) / CHAR_WIDTH[size]);
 
 test("the model is the 320px column at the capsule size of each context", () => {
-  assert.equal(fit(), 30, "a paragraph holds 30 characters");
+  assert.equal(fit(), 31, "a paragraph holds 31 characters");
   assert.equal(fit("body", ["li"]), 26, "a list item holds 26");
   assert.equal(fit("body", ["li", "li"]), 22, "a nested list item holds 22");
-  assert.equal(fit("h3"), 23, "an h3 holds 23");
-  assert.equal(fit("h2"), 19, "an h2 holds 19");
+  assert.equal(fit("h3"), 24, "an h3 holds 24");
+  assert.equal(fit("h2"), 20, "an h2 holds 20");
   assert.equal(fit("small", ["card"]), 31, "a card's small copy holds 31");
   for (const [size, insets] of [["body", []], ["body", ["li"]], ["h3", []], ["small", ["card"]]]) {
     const max = fit(size, insets);
     assert.equal(fitsInline("x".repeat(max), { size, insets }), true, `${max} fit in ${size} ${insets}`);
     assert.equal(fitsInline("x".repeat(max + 1), { size, insets }), false, `${max + 1} do not fit in ${size} ${insets}`);
   }
-  assert.equal(isLongInlineCode(`  ${"x".repeat(30)}  `), false, "surrounding whitespace does not count");
+  assert.equal(isLongInlineCode(`  ${"x".repeat(31)}  `), false, "surrounding whitespace does not count");
 });
 
 test("a span is judged in its context: the same token fits a paragraph and not an h3", () => {
@@ -76,9 +76,9 @@ test("authored block HTML arriving as one raw node is scanned with its own nesti
   const tree = root(node);
   // When
   transform(tree);
-  // Then: the path and the 32-character span are long in a card, where the
-  // small copy holds 31; a paragraph holds 30, so 31 is long there.
-  assert.equal(node.value, `<section class="surface-grid"><article><span>OpenCode</span><a class="path-token" href="#"><code class="path-token" data-long>${path}</code></a><p>Uses <code data-long>${thirtyTwo}</code>, <code>${thirtyOne}</code> and <code>${twentyNine}</code>.</p></article></section><p><code>${twentyNine}</code> <code data-long>${thirtyOne}</code></p>`);
+  // Then: the path and the 32-character span are long in a card and in a
+  // paragraph (both hold 31); 31 and 29 fit in both.
+  assert.equal(node.value, `<section class="surface-grid"><article><span>OpenCode</span><a class="path-token" href="#"><code class="path-token" data-long>${path}</code></a><p>Uses <code data-long>${thirtyTwo}</code>, <code>${thirtyOne}</code> and <code>${twentyNine}</code>.</p></article></section><p><code>${twentyNine}</code> <code>${thirtyOne}</code></p>`);
 });
 
 test("authored inline HTML split across sibling nodes is marked on its opening tag", () => {
@@ -94,7 +94,7 @@ test("authored inline HTML split across sibling nodes is marked on its opening t
 test("raw markup under a <pre> is left alone, an authored mark is not doubled, and entities count once", () => {
   assert.equal(markRawMarkup(`<pre><code>${path}</code></pre>`, { insets: [], size: "body" }), `<pre><code>${path}</code></pre>`);
   assert.equal(markRawMarkup(`<code data-long>${path}</code>`, { insets: [], size: "body" }), `<code data-long>${path}</code>`);
-  const entities = `<code>&lt;${"z".repeat(28)}&gt;</code>`; // 30 characters rendered
+  const entities = `<code>&lt;${"z".repeat(29)}&gt;</code>`; // 31 characters rendered
   assert.equal(markRawMarkup(entities, { insets: [], size: "body" }), entities);
-  assert.equal(markRawMarkup(`<code>&lt;${"z".repeat(29)}&gt;</code>`, { insets: [], size: "body" }), `<code data-long>&lt;${"z".repeat(29)}&gt;</code>`);
+  assert.equal(markRawMarkup(`<code>&lt;${"z".repeat(30)}&gt;</code>`, { insets: [], size: "body" }), `<code data-long>&lt;${"z".repeat(30)}&gt;</code>`);
 });

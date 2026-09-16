@@ -187,26 +187,24 @@
     --code-text: light-dark(var(--p-ink-900), var(--p-neutral-200));
     --code-muted: light-dark(var(--p-neutral-600), var(--p-neutral-400));
     --code-border: var(--color-border);
-    /* Code sizing follows the HashiCorp developer docs, measured from
-       developer.hashicorp.com: inline code at 0.875 of its surrounding text,
-       code blocks at full body size. A block is a focal element and reads at
-       parity with prose; an inline span is a token inside a sentence and sits
-       just under it. The two scales differ deliberately.
-
-       The ratio is theirs; the base is not. Their body text is 16px, ours is
-       19px, so copying 1.0 straight across rendered 19px code where the
-       reference shows 16px. The block scale is set so the absolute size lands
-       near the reference (0.9 x 19px = 17.1px) while still reading a step
-       above the inline capsule.
+    /* Code sizing started from the HashiCorp developer docs (inline code at
+       0.875 of its text, blocks at body size) and was then taken one step
+       smaller by eye: at 0.85 a block reads as code beside 19px prose
+       rather than as a second body column (0.85 x 19px = 16.15px on a
+       laptop, 14.45px on a phone), and a capsule sits inside its sentence
+       instead of standing up out of it. The two scales are equal on
+       purpose: one notion of "code size" wherever code appears.
 
        The two sizes have different bases on purpose. A fenced block is sized
        from the body ramp: it is a block of its own and every block on the
        site is one size. An inline capsule is sized in em, from the text it
        sits in: the invariant is the RATIO, not the pixel. Card and step copy
        sit a step below body text, and a capsule pinned to the body ramp was
-       8% larger than the words around it there. S3 asserts the ratio. */
-    --code-inline-scale: 0.875;
-    --code-block-scale: 0.9;
+       8% larger than the words around it there. S3 asserts the ratio.
+       src/lib/inline-code.mjs assumes the inline scale when it works out
+       what fits a phone; change them together. */
+    --code-inline-scale: 0.85;
+    --code-block-scale: 0.85;
     --code-font-size: calc(var(--text-base) * var(--code-block-scale));
     --code-inline-size: calc(var(--code-inline-scale) * 1em);
     /* Tight as the glyphs: an inline span must not open up the line it sits in.
