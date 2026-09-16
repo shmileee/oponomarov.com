@@ -9,6 +9,7 @@
     "prebuild": "node scripts/sync-content.mjs",
     "build": "astro build --force && pagefind --site dist",
     "check": "astro check",
+    "test": "node --test src/lib/*.test.mjs scripts/qa/*.test.mjs",
     "preview": "astro preview --port 4325",
     "verify": "node scripts/verify-build.mjs && node scripts/verify-design.mjs",
     "qa": "node scripts/qa/measure.mjs --out=.omo/qa/current && node scripts/qa/contract.mjs .omo/qa/current/raw.json",
@@ -28,7 +29,7 @@
   "devDependencies": {
     "@astrojs/check": "0.9.10",
     "@types/node": "24.13.3",
-    "js-yaml": "4.1.0",
+    "js-yaml": "4.3.2",
     "pagefind": "1.5.2",
     "playwright": "^1.63.0",
     "stylelint": "^16.26.1",

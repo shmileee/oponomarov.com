@@ -1,16 +1,23 @@
-# Deploy the site to GitHub Pages: builds the engine plus the three public
-# content repos (checked out tokenlessly at build time) and publishes dist/.
+# Build the site (the engine plus the three public content repos, checked out
+# tokenlessly) and run every gate; on main and on a content-repo dispatch,
+# publish dist/ to GitHub Pages. A pull request runs the same build and gates
+# and stops there, so a regression is caught before it can merge.
+#
+# Actions are pinned to commit SHAs (the tag they came from is in the comment),
+# so a moved tag cannot change what runs here; Dependabot proposes the bumps.
 name: deploy
 
 on:
   push:
+    branches: [main]
+  pull_request:
     branches: [main]
   repository_dispatch:
     types: [portfolio-updated, blog-updated, dotfiles-updated]
   workflow_dispatch:
 
 concurrency:
-  group: pages
+  group: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'pages' }}
   cancel-in-progress: true
 
 jobs:
@@ -23,34 +30,34 @@ jobs:
       pages: read
     steps:
       - name: Checkout engine
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Checkout portfolio content
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: shmileee/portfolio
           path: content/portfolio
 
       - name: Checkout blog content
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: shmileee/blog
           path: content/blog
 
       - name: Checkout dotfiles content
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: shmileee/dotfiles
           path: content/dotfiles
 
       - name: Setup Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 24
           cache: npm
 
       - name: Configure Pages
-        uses: actions/configure-pages@v6
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
 
       - name: Install dependencies
         run: npm ci
@@ -63,6 +70,9 @@ jobs:
       # artifact is uploaded rather than after it is live.
       - name: Type check
         run: npm run check
+
+      - name: Unit tests
+        run: npm test
 
       - name: Lint stylesheets
         run: npm run lint:css
@@ -77,11 +87,13 @@ jobs:
         run: npm run qa
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v5
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
         with:
           path: dist
 
   deploy:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     needs: build
     permissions:
@@ -91,4 +103,4 @@ jobs:
     environment: github-pages
     steps:
       - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5

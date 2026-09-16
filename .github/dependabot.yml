@@ -1,0 +1,19 @@
+# Weekly proposals for the npm lockfile and the pinned action SHAs. Grouped so
+# a week's routine bumps arrive as one pull request each; the deploy workflow
+# runs every gate on it.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      npm:
+        patterns: ["*"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
