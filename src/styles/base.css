@@ -127,11 +127,12 @@
   }
 
   /* Smooth scrolling only while something on the page has focus, which is
-     the state after a reader clicks or keys a link: a table-of-contents
-     jump or a section link glides, while opening a deep link (nothing
-     focused yet) lands instantly instead of animating through five
-     thousand pixels of manual. Opt-in by preference, so reduced motion
-     never has to fight a later layer to switch it off. */
+     the state after a reader clicks or keys a control: opening a deep link
+     (nothing focused yet) lands instantly instead of animating through five
+     thousand pixels of manual. In-page links themselves are scrolled by
+     ContentInteractions (the client router would otherwise jump them), which
+     reads the same reduced-motion preference. Opt-in by preference, so
+     reduced motion never has to fight a later layer to switch it off. */
   @media (prefers-reduced-motion: no-preference) {
     html:focus-within {
       scroll-behavior: smooth;

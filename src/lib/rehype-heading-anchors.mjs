@@ -7,7 +7,7 @@ import { rehypeHeadingIds } from "@astrojs/markdown-remark";
  * had to find it in the TOC. Each h2–h4 now ends with an empty
  * <a class="heading-anchor" href="#id"> carrying the heading's text as its
  * accessible name; prose.css draws the "#" and shows it on hover or focus
- * (always, quietly, on a touch screen). The link is empty so it adds
+ * (and not at all where nothing can hover). The link is empty so it adds
  * nothing to the TOC text, to search excerpts or to the heading's own
  * accessible name.
  *

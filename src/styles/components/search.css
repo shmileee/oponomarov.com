@@ -228,6 +228,10 @@
 
   .global-search-scopes {
     display: flex;
+    /* A scroll container's automatic minimum height is zero, so as a flex
+       item the row gave up its height to a long result list and the chips
+       were cut in half under the hint. Only the results list may shrink. */
+    flex: none;
     gap: var(--space-2);
     padding-inline: var(--space-5);
     padding-block: var(--space-3);

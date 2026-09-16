@@ -134,7 +134,7 @@
 
   /* The section link rehype-heading-anchors appends to every article h2–h4:
      a "#" in the label voice after the heading text, revealed on hover or
-     focus (quietly always on a touch screen), on a 44px hit box that the
+     focus (and absent where nothing can hover), on a 44px hit box that the
      negative block margins keep out of the heading's line box. Its
      font-size is the heading's, so `1lh` here is the heading's line box;
      the glyph itself is drawn at the small step. The reader dialog hides
@@ -180,13 +180,20 @@
     outline-offset: calc(-1 * var(--focus-offset));
   }
 
+  /* No pointer to hover with, no link: shown at rest on a phone it wrapped
+     onto a line of its own under any heading that filled the column, a
+     stray "#" with nothing beside it. The TOC and the address bar still
+     carry the section's URL there. */
   @media (hover: none) {
     .prose :is(h2, h3, h4) > .heading-anchor {
-      opacity: 0.6;
+      display: none;
     }
   }
 
-  .reader-prose .heading-anchor {
+  /* Same specificity class as the rule that shows it, one more class: the
+     reader's headings belong to the homepage's URL, and a hash that names
+     no study closes the reader. */
+  .prose.reader-prose :is(h2, h3, h4) > .heading-anchor {
     display: none;
   }
 

@@ -152,6 +152,29 @@
       document.fonts?.ready.then(syncCodeOverflow);
     }
 
+    /* In-page links. The client router answers a same-page hash link itself
+       with an instant jump and drops the focus, so base.css's smooth scroll
+       (html:focus-within) never sees a TOC click. Handled here instead: the
+       target glides into view under the sticky header (instantly under
+       reduced motion), the hash is recorded, and focus moves to the target
+       so the next Tab continues from it. Links a dialog owns, and clicks
+       another handler has already claimed (the reader's study links), are
+       left alone. Capture phase: the router's own document listener was
+       registered first and would otherwise take the click before this. */
+    document.addEventListener("click", (event) => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const link = (event.target as Element).closest?.("a[href^='#']");
+      if (!(link instanceof HTMLAnchorElement) || link.hash.length < 2 || link.closest("dialog")) return;
+      const target = document.getElementById(decodeURIComponent(link.hash.slice(1)));
+      if (!target) return;
+      event.preventDefault();
+      const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      target.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+      if (location.hash !== link.hash) history.pushState(null, "", link.hash);
+      if (!target.hasAttribute("tabindex")) target.tabIndex = -1;
+      target.focus({ preventScroll: true });
+    }, { capture: true, signal });
+
     /* Lightbox. An article image whose file is wider than the column it
        renders in (a 1654px screenshot in a 736px exhibit) opens at the size
        the viewport allows, with its caption, in a modal the reader closes
