@@ -133,8 +133,13 @@ const authoredAdmonitions = markdownSources
   .map((marker) => admonitionKindOf[marker.slice(4, -1).toLowerCase()]);
 const expectedAdmonitions = authoredAdmonitions.length;
 const expectedAdmonitionKinds = [...new Set(authoredAdmonitions)].sort();
-/* Every titled code fence in the content becomes exactly one titled frame. */
-const expectedCodeTitles = markdownSources.flatMap((path) => [...readFileSync(path, "utf8").matchAll(/^```[^\n]*?\btitle="([^"]+)"/gm)].map((match) => match[1]));
+/* Every titled code fence in the content becomes one titled frame: as many
+   frames per title as fences carry it (two notes may both show a
+   `versions.tf`), never fewer and never more. */
+const expectedCodeTitles = new Map();
+for (const title of markdownSources.flatMap((path) => [...readFileSync(path, "utf8").matchAll(/^```[^\n]*?\btitle="([^"]+)"/gm)].map((match) => match[1]))) {
+  expectedCodeTitles.set(title, (expectedCodeTitles.get(title) ?? 0) + 1);
+}
 const expectedDocSlugs = readdirSync(docsSourceDir)
   .filter((name) => name.endsWith(".md"))
   .map((name) => name.replace(/\.md$/, ""))
@@ -159,10 +164,10 @@ const docsHtml = expectedDocSlugs
   .join("\n");
 
 const allArticleHtml = portfolioHtml + blogHtml + docsHtml;
-for (const filename of expectedCodeTitles) {
+for (const [filename, expected] of expectedCodeTitles) {
   const title = `<span class="title">${filename}</span>`;
   const occurrences = allArticleHtml.split(title).length - 1;
-  if (occurrences !== 1) throw new Error(`Expected one code frame titled ${filename} (one titled fence in the content), found ${occurrences}`);
+  if (occurrences !== expected) throw new Error(`Expected ${expected} code frame(s) titled ${filename} (${expected} titled fence(s) in the content), found ${occurrences}`);
 }
 if (portfolioHtml.includes('class="code-exhibit"')) throw new Error("A legacy portfolio code wrapper would create a nested code frame");
 /* The index and reader are bundled from src/scripts: the homepage loads one

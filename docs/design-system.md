@@ -580,7 +580,7 @@ Markdown nested in block HTML; do not indent it into a code block.
 | `media-figure` | Article image with ordinary figcaption | blog | `<figure class="media-figure">` around frame and caption |
 | `media-figure-wide` | Large screenshot modifier; grid opt-in remains explicit | blog | `<figure class="media-figure media-figure-wide wide">` around a large screenshot |
 | `media-figure-compact` | Intrinsically sized compact image, bounded by the prose track | blog | `<figure class="media-figure media-figure-compact">` around a compact screenshot |
-| `media-frame` | Responsive article-image frame | blog | `<div class="media-frame">` around an image with width, height, and alt |
+| `media-frame` | Responsive article-image frame; holds an `<img>` or a `<video controls playsinline preload="metadata" poster>` (an MP4 recording in place of an animated GIF: a third of the bytes, a pause control, a poster) | blog | `<div class="media-frame">` around an image with width, height, and alt |
 | `media-frame-dark` | Fixed dark asset backing; requires `media-frame` | blog | `<div class="media-frame media-frame-dark">` around a dark screenshot |
 | `media-frame-light` | Fixed light asset backing; requires `media-frame` | blog | `<div class="media-frame media-frame-light">` around a light screenshot |
 | `media-frame-scroll` | Deliberately scrollable image region; requires `media-frame` | blog | `<div class="media-frame media-frame-scroll" tabindex="0" role="region" aria-label="Scrollable tmux status-line screenshot">` around the screenshot |

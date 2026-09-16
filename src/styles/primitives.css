@@ -1686,7 +1686,9 @@
     box-shadow: var(--shadow-raised);
   }
 
-  .media-frame > img {
+  /* A screenshot or a recording: a video in the frame takes the same box
+     as an image (a terminal recording is a screenshot that moves). */
+  .media-frame > :is(img, video) {
     display: block;
     inline-size: 100%;
     block-size: auto;

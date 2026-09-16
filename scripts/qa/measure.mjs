@@ -586,6 +586,8 @@ const PROBE = () => {
       width: Math.round(el.getBoundingClientRect().width),
       parentWidth: Math.round(el.parentElement.getBoundingClientRect().width),
       parentLeft: Math.round(el.parentElement.getBoundingClientRect().left),
+      /* A Markdown table written straight into the body is its own grid item. */
+      direct: el.parentElement === body,
       scrolls: el.scrollWidth > el.clientWidth + 1,
     }));
     /* The Dotfiles landing is the one body that spreads to the wide track. */

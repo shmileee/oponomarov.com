@@ -348,8 +348,11 @@ export function evaluateContract(raw) {
       const room = Math.min(table.parentWidth, wide.width);
       if (table.scrolls && table.width < room - 1) fail(15, r, `${table.sel} (${table.label}) scrolls before taking its room`, table.width, `>= ${room}px (min of parent and wide track)`);
       /* A region narrower than its wrapper starts where the wrapper starts:
-         centred in a wide wrapper it sat 96px off the text at 1024. */
-      if (Number.isFinite(table.left) && Math.abs(table.left - table.parentLeft) > 1) fail(15, r, `${table.sel} (${table.label}) on its wrapper's left edge`, { left: table.left, parentLeft: table.parentLeft }, 'equal left edges (1px tolerance)');
+         centred in a wide wrapper it sat 96px off the text at 1024. A region
+         that is itself a child of the body grid has no wrapper to align to
+         (its parent is the full-bleed grid root); S23 holds it to the text
+         edge instead. */
+      if (!table.direct && Number.isFinite(table.left) && Math.abs(table.left - table.parentLeft) > 1) fail(15, r, `${table.sel} (${table.label}) on its wrapper's left edge`, { left: table.left, parentLeft: table.parentLeft }, 'equal left edges (1px tolerance)');
     }
   }
 

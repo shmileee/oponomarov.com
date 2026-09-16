@@ -313,6 +313,16 @@ test('S22 lets only a build-marked long span wrap, and never passes on a missing
   assert.ok(evaluateContract(blind)[22].failures.some((f) => /fragment evidence/.test(f.field)));
 });
 
+test('S15 lets a table region that is its own grid item sit on the text edge, not on the grid root', () => {
+  const raw = fixture();
+  const article = raw.results.find((r) => r.route === '/article/' && r.viewportWidth === 320);
+  article.articleGrid.tables.push({ sel: 'div.table-scroll.wide', label: 'Direct', left: 20, parentLeft: 0, width: 280, parentWidth: 320, scrolls: false, direct: true });
+  assert.equal(evaluateContract(raw)[15].failures.length, 0);
+  const wrapped = fixture();
+  wrapped.results.find((r) => r.route === '/article/' && r.viewportWidth === 320).articleGrid.tables.push({ sel: 'div.table-scroll', label: 'Wrapped', left: 20, parentLeft: 0, width: 280, parentWidth: 320, scrolls: false });
+  assert.ok(evaluateContract(wrapped)[15].failures.some((f) => /wrapper's left edge/.test(f.field)));
+});
+
 test('S15 checks every track relation, the rail, child containment and scrolling tables, and never passes on a missing probe', () => {
   const at1440 = (raw) => raw.results.find((r) => r.route === '/article/' && r.viewportWidth === 1440);
   const at1024 = (raw) => raw.results.find((r) => r.route === '/article/' && r.viewportWidth === 1024);
