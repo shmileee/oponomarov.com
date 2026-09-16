@@ -12,18 +12,26 @@
   /* Trigger.                                                             */
   /* ------------------------------------------------------------------ */
 
+  /* Drawn on the theme toggle's outline (shell.css): a 44px circle holding
+     the magnifier, which on a wide bar with a fine pointer lengthens into a
+     pill and takes the shortcut keycap beside the glyph. The two tools then
+     read as one pair whatever the width; a bare icon next to an outlined
+     button, with a boxed keycap floating between them, read as three. */
   .op-global-search-open {
     display: inline-flex;
+    flex: none;
     align-items: center;
     justify-content: center;
-    min-block-size: var(--tap-size);
+    gap: var(--space-2);
     min-inline-size: var(--tap-size);
-    /* The original is a bare icon in the bar, not a boxed control. */
-    border: 0;
+    block-size: var(--tap-size);
+    padding: 0;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-pill);
     background: none;
     color: var(--color-text-muted);
     cursor: pointer;
-    transition: color var(--dur-fast) var(--ease-out);
+    transition: color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
   }
 
   /* The glyph is a filled path with no paint of its own: an unfilled SVG
@@ -41,26 +49,29 @@
     outline-offset: var(--focus-offset);
   }
 
-  /* The shortcut keycap beside the icon: only where a keyboard is likely
-     (a fine pointer) and the bar has room for it (from 64rem). The dialog's
-     own "esc" keycap sets the tuple. */
+  /* The shortcut keycap: only where a keyboard is likely (a fine pointer)
+     and the bar has room for it (from 64rem). Inside an outlined pill it is
+     a tinted chip rather than a second outlined box - the pill is the
+     control, the chip the key - in the same face and size as the dialog's
+     own "esc" keycap. The script swaps ⌘ for Ctrl off Apple platforms. */
   .op-global-search-open__hint {
     display: none;
-    margin-inline-start: var(--space-2);
-    padding-inline: var(--space-2);
-    padding-block: var(--space-1);
-    border: var(--border-width) solid var(--kbd-border);
+    padding: var(--space-1) var(--space-2);
     border-radius: var(--radius-sm);
     background: var(--kbd-bg);
+    color: var(--color-text-subtle);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
     line-height: 1;
-    color: var(--color-text-subtle);
+    letter-spacing: 0.04em;
   }
 
   @media (width >= 64rem) and (hover: hover) and (pointer: fine) {
+    /* 12px to the glyph, 8px to the chip: the chip's own tint stands in
+       for the rest of the pill's inset on that side. */
     .op-global-search-open {
-      padding-inline: var(--space-2);
+      padding-inline: var(--space-3) var(--space-2);
     }
 
     .op-global-search-open__hint {
@@ -70,6 +81,7 @@
 
   @media (hover: hover) and (pointer: fine) {
     .op-global-search-open:hover {
+      border-color: var(--color-accent-border);
       color: var(--color-text);
     }
   }

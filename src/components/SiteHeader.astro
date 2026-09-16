@@ -38,14 +38,18 @@ const apps = [
     <div class="op-header__tools">
       <GlobalSearch />
       <button class="op-theme-toggle" type="button" aria-label="Switch to light theme" data-op-theme-toggle>
-        <span aria-hidden="true" data-theme-label>light</span>
-        {/* Below 48rem the written label collapses and this half-disc stands
-            in for it (components/shell.css). Drawn as an SVG rather than the
-            ◐ glyph: neither site font carries that code point, and the
-            fallback rendered it as a four-pixel dot. */}
+        {/* The theme in force, as a glyph: a sun in the light theme, a moon
+            in the dark one. Both drawings are in the markup and share the
+            box; components/shell.css paints one and not the other through
+            the --paint-in-* tokens, so the button needs no script to show
+            the right one on first paint or after the router swaps the
+            document. The button's aria-label names the action. */}
         <svg class="op-theme-toggle__icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-          <circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" stroke-width="1.5"></circle>
-          <path d="M8 2.5a5.5 5.5 0 0 0 0 11Z" fill="currentColor"></path>
+          <g class="op-theme-toggle__sun">
+            <circle cx="8" cy="8" r="3"></circle>
+            <path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.05 3.05l1.06 1.06M11.89 11.89l1.06 1.06M12.95 3.05l-1.06 1.06M4.11 11.89l-1.06 1.06"></path>
+          </g>
+          <path class="op-theme-toggle__moon" d="M14 8.53A6 6 0 1 1 7.47 2a4.67 4.67 0 0 0 6.53 6.53Z"></path>
         </svg>
       </button>
     </div>
@@ -80,11 +84,10 @@ const apps = [
     window.dispatchEvent(new CustomEvent("om-theme-change", { detail: theme }));
   };
 
+  /* The glyph follows the theme through CSS (shell.css); only the spoken
+     name of the action changes here. */
   const updateControls = () => {
     const theme = getTheme();
-    document.querySelectorAll<HTMLElement>("[data-theme-label]").forEach((label) => {
-      label.textContent = theme === "dark" ? "light" : "dark";
-    });
     document.querySelectorAll<HTMLButtonElement>("[data-op-theme-toggle]").forEach((button) => {
       button.setAttribute("aria-label", `Switch to ${theme === "dark" ? "light" : "dark"} theme`);
     });

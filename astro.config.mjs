@@ -1,12 +1,16 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "astro/config";
 import { unified } from "@astrojs/markdown-remark";
-import expressiveCode from "astro-expressive-code";
+import expressiveCode, { pluginFramesTexts } from "astro-expressive-code";
 import remarkAdmonitions from "./src/lib/remark-admonitions.mjs";
 import rehypeHeadingAnchors from "./src/lib/rehype-heading-anchors.mjs";
 import rehypeImages from "./src/lib/rehype-images.mjs";
 import rehypeInlineCode from "./src/lib/rehype-inline-code.mjs";
 import rehypeTableScroll from "./src/lib/rehype-table-scroll.mjs";
+
+/* The copy button's confirmation is a toolbar label (prose.css draws it as
+   the control's own accent box beside a check), not an exclamation. */
+pluginFramesTexts.overrideTexts("en", { copyButtonTooltip: "Copy code", copyButtonCopied: "Copied" });
 
 export default defineConfig({
   site: "https://oponomarov.com",
@@ -56,10 +60,11 @@ export default defineConfig({
         terminalTitlebarBackground: "var(--code-toolbar-bg)",
         /* The copy confirmation is a live region EC also paints. Left alone
            it lands on the toolbar in EC's own green, a colour this palette
-           does not contain. The inline-code pairing is the site's code
-           accent and is already contrast-checked in both themes. */
+           does not contain. prose.css draws the label itself (the accent
+           box beside the button); these keep EC's own layer in the palette
+           for anything that renders before the site's sheet applies. */
         tooltipSuccessBackground: "var(--color-accent-surface)",
-        tooltipSuccessForeground: "var(--code-inline-text)",
+        tooltipSuccessForeground: "var(--color-accent)",
       },
     },
   })],

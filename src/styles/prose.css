@@ -639,8 +639,10 @@
     gap: var(--space-3);
     min-block-size: var(--tap-size);
     /* The first dot's edge lands on the code's text edge below it (the
-       disc sits 4px into its 16px cell; the code is 20px in). */
-    padding: 0 var(--space-4);
+       disc sits 4px into its 16px cell; the code is 20px in). The end
+       padding keeps a long title clear of the copy control's drawn box
+       (20px in, 32px wide) with 8px to spare; the title wraps first. */
+    padding: 0 calc(var(--space-5) + var(--space-8) + var(--space-2)) 0 var(--space-4);
     border: 0;
     border-block-end: var(--border-width) solid var(--color-border-subtle);
     border-radius: var(--radius-md) var(--radius-md) 0 0;
@@ -777,21 +779,56 @@
     --copy-control-inset: calc((var(--tap-size) - var(--space-8)) / 2);
 
     display: flex;
+    align-items: center;
+    gap: 0;
     inset-block-start: 0;
     inset-inline-end: calc(var(--space-5) - var(--copy-control-inset));
   }
 
-  /* "Copied!" is a live region EC paints as a tooltip. Nothing reached it, so
-     it rendered in the browser UI font at body size - 19px of Arial-stack
-     sans sitting on a mono toolbar. It is a toolbar label, like the frame
-     title above it, and takes the same treatment. */
+  /* "Copied" is a live region EC paints as a tooltip: a caption-sized pill
+     with an arrow, and pinned to the top edge of the 44px control because
+     the region that wraps it is a plain block (EC's align-self: center on
+     the pill has nothing to centre in). Here the confirmation is the
+     control's own label: the same 32px box the hovered button draws, in the
+     accent tint, in the toolbar's label voice, sliding out from beside the
+     button while the button itself shows a check for as long as the label
+     stands. The text comes from astro.config.mjs (pluginFramesTexts). */
   .prose .expressive-code .copy div[aria-live] {
+    display: flex;
+    align-items: center;
+    align-self: stretch;
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     font-weight: var(--weight-medium);
     line-height: var(--leading-snug);
     letter-spacing: 0.08em;
     text-transform: uppercase;
+  }
+
+  .prose .expressive-code .copy .feedback {
+    display: inline-flex;
+    align-items: center;
+    block-size: var(--space-8);
+    /* 8px of daylight to the drawn button box, which starts one inset in. */
+    margin-inline-end: calc(var(--space-2) - var(--copy-control-inset));
+    padding: 0 var(--space-3);
+    border: var(--border-width) solid var(--color-accent-border);
+    border-radius: var(--radius-sm);
+    /* The accent tint is translucent; the toolbar colour under it keeps a
+       long title from showing through the label while it stands. */
+    background: linear-gradient(var(--color-accent-surface), var(--color-accent-surface)) var(--code-toolbar-bg);
+    color: var(--color-accent);
+    white-space: nowrap;
+    transform: translate3d(var(--space-2), 0, 0);
+  }
+
+  .prose .expressive-code .copy .feedback.show {
+    transform: none;
+  }
+
+  /* EC's tooltip arrow. */
+  .prose .expressive-code .copy .feedback::after {
+    display: none;
   }
 
   .prose .expressive-code .copy button {
@@ -825,18 +862,28 @@
   }
 
   .prose .expressive-code .copy button:hover > div,
-  .prose .expressive-code .copy button:focus-visible > div {
+  .prose .expressive-code .copy button:focus-visible > div,
+  .prose .expressive-code .copy:has(.feedback.show) button > div {
     background: var(--color-accent-surface);
   }
 
   .prose .expressive-code .copy button:hover::before,
-  .prose .expressive-code .copy button:focus-visible::before {
+  .prose .expressive-code .copy button:focus-visible::before,
+  .prose .expressive-code .copy:has(.feedback.show) button::before {
     border-color: var(--color-accent-border);
   }
 
   .prose .expressive-code .copy button:hover::after,
   .prose .expressive-code .copy button:focus-visible::after {
     background-color: var(--color-text);
+  }
+
+  /* The glyph is a check while the confirmation stands: EC paints the icon
+     as a mask over the button's foreground colour, so the swap is the mask
+     and the colour, nothing else. */
+  .prose .expressive-code .copy:has(.feedback.show) button::after {
+    background-color: var(--color-accent);
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 12.5l5 5L19.5 7'/%3E%3C/svg%3E");
   }
 
   .prose .expressive-code .copy button:focus-visible {
@@ -1028,8 +1075,8 @@
      against each other read worse than two that share a first line. Typed
      the way the TOKEN column below is typed - first element child, never
      the last column - because CSS cannot see text. The content primitives
-     add their own atomic wrappers (.keys, .shortcut-mode) to this treatment
-     where they are defined, in primitives.css. */
+     add their own atomic wrapper (.keys) to this treatment where it is
+     defined, in primitives.css. */
   .prose td:not(:last-child):has(> :is(code, kbd):first-child),
   .prose td:not(:last-child):has(> a:first-child > :is(code, kbd):first-child) {
     vertical-align: middle;

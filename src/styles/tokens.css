@@ -220,6 +220,13 @@
     --kbd-bg: var(--color-surface-raised);
     --kbd-border: var(--color-border);
 
+    /* Paint for a glyph that belongs to one theme (the header's sun and moon
+       share one box): the element's own colour in that theme, nothing in the
+       other. Components never branch on [data-theme] (§12); this is how one
+       of two drawings shows. */
+    --paint-in-light: light-dark(currentcolor, transparent);
+    --paint-in-dark: light-dark(transparent, currentcolor);
+
     /* Fixed backings that describe a captured screenshot, not the site theme.
        They do not set color-scheme or change surrounding prose. */
     --frame-dark: var(--p-ink-975);

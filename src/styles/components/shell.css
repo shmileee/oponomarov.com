@@ -49,7 +49,7 @@
     display: flex;
     flex: none;
     align-items: center;
-    gap: var(--space-1);
+    gap: var(--space-2);
   }
 
   /* ------------------------------------------------------------------ */
@@ -157,25 +157,26 @@
   /* Theme toggle.                                                        */
   /* ------------------------------------------------------------------ */
 
+  /* A round 44px icon button at every width. It used to spell the theme it
+     would switch to ("LIGHT" / "DARK") from 48rem and show a glyph only on
+     a phone; the word read as a status, and the two bars did not match.
+     The glyph is the theme in force - a sun in light, a moon in dark - and
+     the search control beside it (search.css) is drawn on the same
+     outline, so the tools read as one pair. */
   .op-theme-toggle {
     display: inline-flex;
     flex: none;
     align-items: center;
     justify-content: center;
-    min-inline-size: var(--tap-size);
-    min-block-size: var(--tap-size);
-    padding-inline: var(--space-3);
+    inline-size: var(--tap-size);
+    block-size: var(--tap-size);
+    padding: 0;
     border: var(--border-width) solid var(--color-border);
-    /* A pill, matching the original chrome. */
     border-radius: var(--radius-pill);
     background: none;
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
     color: var(--color-text-muted);
     cursor: pointer;
-    transition: color var(--dur-fast) var(--ease-out);
+    transition: color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
   }
 
   .op-theme-toggle:focus-visible {
@@ -183,11 +184,26 @@
     outline-offset: var(--focus-offset);
   }
 
-  /* The icon is the narrow-bar rendering only (below). */
   .op-theme-toggle__icon {
-    display: none;
+    display: block;
     inline-size: var(--space-4);
     block-size: var(--space-4);
+    fill: none;
+    stroke: currentcolor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Both drawings are in the markup; the tokens paint the one that belongs
+     to the theme in force and leave the other transparent (tokens.css), so
+     no script and no [data-theme] selector is involved. */
+  .op-theme-toggle__sun {
+    stroke: var(--paint-in-light);
+  }
+
+  .op-theme-toggle__moon {
+    stroke: var(--paint-in-dark);
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -198,9 +214,8 @@
   }
 
   /* Narrow bar. The published chrome tightens the gaps below 58rem and
-     again below 42rem, where the toggle becomes a round icon button so the
-     brand, three sections and both tools share one 3.5rem row. The nearest
-     steps on the fixed scale are 64rem and 48rem. */
+     again below 42rem so the brand, three sections and both tools share one
+     3.5rem row. The nearest steps on the fixed scale are 64rem and 48rem. */
   @media (width < 64rem) {
     .op-header__inner,
     .op-app-nav {
@@ -210,17 +225,18 @@
 
   @media (width < 48rem) {
     /* The row's own gaps close up: the nav's auto margin already takes the
-       slack wherever there is any, so these only bite when the bar is tight,
-       and the tool icons sit centred in 44px boxes with 14px of their own
-       air. That is what lets the 360px Android bar (brand 45, three labels
-       179, two tools 88, inside a 328px row) hold one line; it used to wrap
-       into a stray second row holding two icons. 320px still wraps. */
+       slack wherever there is any, so these only bite when the bar is tight.
+       The two tools are outlined circles, so they keep 4px between them
+       rather than touching. That is what lets the 360px Android bar (brand
+       45, three labels 179, two tools 92, inside a 328px row) hold one line;
+       it used to wrap into a stray second row holding two icons. 320px
+       still wraps. */
     .op-header__inner {
       gap: var(--space-1);
     }
 
     .op-header__tools {
-      gap: 0;
+      gap: var(--space-1);
     }
 
     /* The three labels need daylight between them more than they need
@@ -232,22 +248,6 @@
 
     .op-app-nav a {
       letter-spacing: 0;
-    }
-
-    .op-theme-toggle {
-      inline-size: var(--tap-size);
-      padding: 0;
-      letter-spacing: 0;
-    }
-
-    /* The written label (already aria-hidden) collapses; the half-disc icon
-       in the markup stands in for it. The button keeps its aria-label. */
-    .op-theme-toggle > span {
-      display: none;
-    }
-
-    .op-theme-toggle__icon {
-      display: block;
     }
   }
 

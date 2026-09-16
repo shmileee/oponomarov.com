@@ -162,12 +162,7 @@
       "element": "span"
     },
     "shortcut-mode": {
-      "description": "Editor-mode label in a shortcut reference table.",
-      "usedBy": ["dotfiles"],
-      "element": "span"
-    },
-    "shortcut-mode--start": {
-      "description": "Modifier of shortcut-mode marking the beginning of a mode group; not a standalone class.",
+      "description": "Editor-mode tag after a key in a shortcut reference table, in Vim's mode letters (n, v, o, i); the section's intro spells them out.",
       "usedBy": ["dotfiles"],
       "element": "span"
     },

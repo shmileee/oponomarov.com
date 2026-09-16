@@ -542,8 +542,7 @@ Markdown nested in block HTML; do not indent it into a code block.
 | `shortcut-prefix-summary__label` | Prefix label | dotfiles | `<span class="shortcut-prefix-summary__label">Prefix</span>` |
 | `shortcut-prefix-summary__release` | Release instruction | dotfiles | `<span class="shortcut-prefix-summary__release">then release</span>` |
 | `shortcut-then` | Visible sequence separator | dotfiles | `<span class="shortcut-then">then</span>` |
-| `shortcut-mode` | Mode label in a table cell | dotfiles | `<span class="shortcut-mode">Normal</span>` |
-| `shortcut-mode--start` | Start of a mode group; requires `shortcut-mode` | dotfiles | `<span class="shortcut-mode shortcut-mode--start">Visual</span>` |
+| `shortcut-mode` | Editor-mode tag after a key, in Vim's mode letters (`n`, `v`, `o`, `i`); spell the letters out once in the section's intro | dotfiles | `` `<leader>/` <span class="shortcut-mode">n v</span> `` in the key cell |
 
 ### Exhibits and article media
 
@@ -864,6 +863,14 @@ The saved preference wins; otherwise use the OS preference. The theme toggle
 stores `light` or `dark` under the same `om-theme` key. Do not duplicate the
 initializer in contact, docs, portfolio, blog, redirect documents, or reader
 content. V6 checks byte identity and the OS-preference branch on built routes.
+
+The toggle itself is a round icon button whose glyph is the theme in force
+(a sun in light, a moon in dark); its `aria-label` names the action. Both
+drawings are in the markup and `shell.css` paints one through the
+`--paint-in-light` / `--paint-in-dark` tokens (`light-dark(currentcolor,
+transparent)` and its mirror), so the glyph is right on first paint and after
+a router swap with no script and no `[data-theme]` selector. Use the same two
+tokens for any other glyph that belongs to one theme.
 
 Scheme plumbing, inside `tokens.css` only:
 
