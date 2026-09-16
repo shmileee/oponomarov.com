@@ -66,8 +66,16 @@ const apps = [
   };
   const getTheme = () => document.documentElement.dataset.theme === "light" ? "light" : "dark";
 
+  /* The browser chrome colour follows the theme (SiteFavicons carries both values). */
+  const applyThemeColor = (theme: "dark" | "light") => {
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    const color = meta?.dataset[theme === "light" ? "themeColorLight" : "themeColorDark"];
+    if (meta && color) meta.content = color;
+  };
+
   const persistTheme = (theme: "dark" | "light") => {
     document.documentElement.dataset.theme = theme;
+    applyThemeColor(theme);
     localStorage.setItem("om-theme", theme);
     window.dispatchEvent(new CustomEvent("om-theme-change", { detail: theme }));
   };
@@ -135,6 +143,8 @@ const apps = [
      it back before the new page paints, so a reader on the saved theme never
      sees the other one flash through. */
   document.addEventListener("astro:after-swap", () => {
-    document.documentElement.dataset.theme = readSavedTheme();
+    const theme = readSavedTheme();
+    document.documentElement.dataset.theme = theme;
+    applyThemeColor(theme);
   });
 </script>

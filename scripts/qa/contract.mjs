@@ -11,7 +11,7 @@ const NAMES = [
   'STYLESHEET PARITY', 'NO CLIPPING', 'HYGIENE', 'ZOOM', 'READER DIALOG', 'SKIP LINK',
   'CONTRAST', 'WIDE TRACKS',
   'SECTION HEADINGS', 'COMMENTS HEADING', 'TABLE HEADERS', 'KEYCAPS', 'PROSE PARAGRAPHS',
-  'GUTTER PARITY', 'ATOMIC TOKENS',
+  'GUTTER PARITY', 'ATOMIC TOKENS', 'BLOCK EDGES',
 ];
 const THEMES = ['light', 'dark'];
 const key = (r) => JSON.stringify([r.route, r.viewport, r.colorScheme]);
@@ -345,6 +345,26 @@ export function evaluateContract(raw) {
       /* A region narrower than its wrapper starts where the wrapper starts:
          centred in a wide wrapper it sat 96px off the text at 1024. */
       if (Number.isFinite(table.left) && Math.abs(table.left - table.parentLeft) > 1) fail(15, r, `${table.sel} (${table.label}) on its wrapper's left edge`, { left: table.left, parentLeft: table.parentLeft }, 'equal left edges (1px tolerance)');
+    }
+  }
+
+  /* S23 - every block stands on the text's edge. A code frame, table region,
+     admonition, quote, figure, disclosure or tab group that is a direct child
+     of a prose body starts where the body's paragraphs start and, unless it
+     opted into a wider track, ends where they end; inside a list item it
+     stands on the item's content edges. A region centred in its wide wrapper
+     (96px off the text at 1024) and a tab panel's stray padding are the
+     defects this catches. A route with a prose body and no recorded blocks
+     is fine (a short note); an absent probe is missing evidence. */
+  for (const r of good) {
+    if (!Array.isArray(r.blockEdges)) { fail(23, r, 'block edges probe', '(missing)', 'an array of block measurements'); continue; }
+    for (const block of r.blockEdges) {
+      if (Math.abs(block.left - block.expectedLeft) > 1) fail(23, r, `${block.sel} left edge${block.inItem ? ' (in a list item)' : ''}`, block.left, `${block.expectedLeft} (the text edge, 1px tolerance)`);
+      if (block.optIn) {
+        if (block.right < block.expectedRight - 1) fail(23, r, `${block.sel} right edge (${block.optIn})`, block.right, `>= ${block.expectedRight} (a wide block never ends short of the text)`);
+      } else if (Math.abs(block.right - block.expectedRight) > 1) {
+        fail(23, r, `${block.sel} right edge${block.inItem ? ' (in a list item)' : ''}`, block.right, `${block.expectedRight} (the text edge, 1px tolerance)`);
+      }
     }
   }
 

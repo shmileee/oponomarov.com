@@ -1,0 +1,100 @@
+/* Lightbox — the enlarged view of an article image (ContentInteractions
+   builds the dialog and opens it from any image whose file is wider than the
+   column it renders in). The same modal treatment as the search dialog: the
+   page dims to its own background, the image sits centred on it at the size
+   the viewport allows, its caption beneath in the figure voice, one close
+   control in the corner. A click anywhere closes it, so the whole surface
+   says so with the cursor. */
+@layer components {
+  [data-zoomable] {
+    cursor: zoom-in;
+  }
+
+  .lightbox {
+    inline-size: 100%;
+    max-inline-size: 100%;
+    block-size: 100%;
+    max-block-size: 100%;
+    margin: 0;
+    padding: var(--space-gutter);
+    border: 0;
+    background: none;
+    color: var(--color-text-body);
+    cursor: zoom-out;
+  }
+
+  .lightbox::backdrop {
+    background: var(--color-bg);
+    opacity: 0.92;
+  }
+
+  .lightbox__figure {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+    inline-size: 100%;
+    block-size: 100%;
+    margin: 0;
+  }
+
+  /* Bounded by the viewport less the gutters and the caption's row; the
+     intrinsic ratio holds, so a wide screenshot fills the width and a tall
+     one the height. */
+  .lightbox__figure > img {
+    display: block;
+    inline-size: auto;
+    block-size: auto;
+    max-inline-size: 100%;
+    max-block-size: calc(100% - var(--space-12));
+    object-fit: contain;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-raised);
+  }
+
+  .lightbox__caption {
+    max-inline-size: var(--measure-prose);
+    margin: 0;
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    line-height: var(--leading-snug);
+    text-align: center;
+    text-wrap: balance;
+  }
+
+  .lightbox__close {
+    position: absolute;
+    inset-block-start: var(--space-4);
+    inset-inline-end: var(--space-4);
+    display: grid;
+    place-items: center;
+    inline-size: var(--tap-size);
+    block-size: var(--tap-size);
+    padding: 0;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface-raised);
+    color: var(--color-text);
+    cursor: pointer;
+  }
+
+  .lightbox__close svg {
+    inline-size: var(--space-4);
+    block-size: var(--space-4);
+    fill: none;
+    stroke: currentcolor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+  }
+
+  .lightbox__close:hover {
+    border-color: var(--color-accent);
+  }
+
+  .lightbox__close:focus-visible {
+    outline: var(--focus-width) solid var(--color-focus);
+    outline-offset: var(--focus-offset);
+  }
+}

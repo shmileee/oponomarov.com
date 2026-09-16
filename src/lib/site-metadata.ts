@@ -2,6 +2,13 @@ export const ownerName = "Oleksandr Ponomarov";
 
 export const siteHost = "oponomarov.com";
 
+/**
+ * The page background of each theme as sRGB hex, for the theme-color meta
+ * (browser chrome cannot read a custom property). They mirror
+ * --p-neutral-75 and --p-ink-950 in tokens.css.
+ */
+export const themeColors = { light: "#f4f5f7", dark: "#0b1220" } as const;
+
 export const sectionNames = {
   portfolio: "Portfolio",
   blog: "Engineering Notes",

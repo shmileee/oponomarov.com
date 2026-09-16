@@ -132,6 +132,64 @@
     font-size: var(--text-base);
   }
 
+  /* The section link rehype-heading-anchors appends to every article h2–h4:
+     a "#" in the label voice after the heading text, revealed on hover or
+     focus (quietly always on a touch screen), on a 44px hit box that the
+     negative block margins keep out of the heading's line box. Its
+     font-size is the heading's, so `1lh` here is the heading's line box;
+     the glyph itself is drawn at the small step. The reader dialog hides
+     it: its headings belong to the homepage's URL, not the study's. */
+  .prose :is(h2, h3, h4) > .heading-anchor {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--tap-size);
+    block-size: var(--tap-size);
+    margin-block: calc((1lh - var(--tap-size)) / 2);
+    /* The glyph sits centred in its 44px box; pulling the box back keeps
+       the visible "#" a word-space from the heading. */
+    margin-inline-start: calc(-1 * var(--space-2));
+    border-radius: var(--radius-sm);
+    color: var(--color-text-subtle);
+    font-family: var(--font-mono);
+    font-weight: var(--weight-medium);
+    text-decoration: none;
+    vertical-align: middle;
+    opacity: 0;
+    transition: opacity var(--dur-fast) var(--ease-out);
+  }
+
+  .prose :is(h2, h3, h4) > .heading-anchor::before {
+    content: "#";
+    font-size: var(--text-sm);
+    line-height: 1;
+  }
+
+  .prose :is(h2, h3, h4):is(:hover, :focus-within) > .heading-anchor,
+  .prose :is(h2, h3, h4) > .heading-anchor:focus-visible {
+    opacity: 1;
+  }
+
+  .prose :is(h2, h3, h4) > .heading-anchor:is(:hover, :focus-visible) {
+    color: var(--color-accent);
+  }
+
+  .prose :is(h2, h3, h4) > .heading-anchor:focus-visible {
+    outline: var(--focus-width) solid var(--color-focus);
+    outline-offset: calc(-1 * var(--focus-offset));
+  }
+
+  @media (hover: none) {
+    .prose :is(h2, h3, h4) > .heading-anchor {
+      opacity: 0.6;
+    }
+  }
+
+  .reader-prose .heading-anchor {
+    display: none;
+  }
+
   .prose h6 {
     font-size: var(--text-sm);
   }

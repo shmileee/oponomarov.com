@@ -97,9 +97,9 @@
     /* ------------------------------------------------------------------ */
     /* Tier 2 — type                                                       */
     /* ------------------------------------------------------------------ */
-    --font-display: "Bricolage Grotesque", "Public Sans", sans-serif;
-    --font-body: "Public Sans", system-ui, sans-serif;
-    --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+    --font-display: "Bricolage Grotesque", "Bricolage Grotesque Fallback", "Public Sans", sans-serif;
+    --font-body: "Public Sans", "Public Sans Fallback", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", "IBM Plex Mono Fallback", ui-monospace, monospace;
 
     --weight-normal: 400;
     --weight-medium: 500;
@@ -288,6 +288,31 @@
     :root {
       --dur-fast: 0.01ms;
       --dur-base: 0.01ms;
+    }
+  }
+
+  /* More contrast, asked for at the OS level: the two quiet inks step up
+     to the strong ones and both hairlines darken, in both themes, without
+     any component knowing. Body copy becomes the full ink. */
+  @media (prefers-contrast: more) {
+    :root {
+      --color-text-body: var(--color-text);
+      --color-text-muted: light-dark(var(--p-ink-900-a84), var(--p-white-a78));
+      --color-text-subtle: light-dark(var(--p-ink-900-a66), var(--p-white-a60));
+      --color-border: light-dark(var(--p-ink-900-a66), var(--p-white-a60));
+      --color-border-subtle: light-dark(var(--p-ink-900-a16), var(--p-white-a16));
+    }
+  }
+
+  /* Forced colours (Windows High Contrast): the browser repaints text,
+     borders and backgrounds from the system palette, so borders and
+     outlines survive on their own. The two things drawn with a bare
+     background - the reading progress and the hero cursor - would vanish;
+     they keep painting (forced-color-adjust: none in their components)
+     and take the system highlight through their own token. */
+  @media (forced-colors: active) {
+    :root {
+      --color-progress: Highlight;
     }
   }
 }

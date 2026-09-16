@@ -55,6 +55,14 @@ function fixture() {
     gutter: { headerEdge: 20, blocks: route === '/article/'
       ? [{ sel: 'header.article-header', article: true, left: 20 }]
       : [{ sel: 'section.hero.section-shell', article: false, left: 20 }, { sel: 'div.section-shell.content-grid', article: false, left: 20 }] },
+    /* S23: a code frame on the text edge, a wide table region that starts
+       there and runs further right, a frame inside a list item on the item's
+       content edge. */
+    blockEdges: route === '/article/'
+      ? [{ sel: 'div.expressive-code', left: 20, right: vp.width - 20, expectedLeft: 20, expectedRight: vp.width - 20, optIn: null, inItem: false },
+         { sel: 'div.table-scroll', left: 20, right: vp.width - 20 + (vp.width >= 1024 && vp.width < 1280 ? 192 : 0), expectedLeft: 20, expectedRight: vp.width - 20, optIn: 'wide', inItem: false },
+         { sel: 'div.expressive-code', left: 56, right: vp.width - 20, expectedLeft: 56, expectedRight: vp.width - 20, optIn: null, inItem: true }]
+      : [],
     h1Count: 1, status: 200, sheets: ['/_astro/main.ABCdef12.css'],
   }))));
   return {
@@ -68,8 +76,8 @@ function fixture() {
   };
 }
 
-test('complete valid evidence passes all 23 scenarios', () => {
-  assert.deepEqual(evaluateContract(fixture()).map((s) => s.failures.length), Array(23).fill(0));
+test('complete valid evidence passes all 24 scenarios', () => {
+  assert.deepEqual(evaluateContract(fixture()).map((s) => s.failures.length), Array(24).fill(0));
 });
 
 
@@ -102,6 +110,8 @@ const violations = [
   (raw) => { raw.results[0].gutter.blocks[1].left = 40; },
   /* S22: `pre-commit` painted on two lines without the build's long mark. */
   (raw) => { raw.results[0].code.inlines.push({ ...raw.results[0].code.inlines[0], lines: 2, text: 'pre-commit' }); },
+  /* S23: a table region centred in its wrapper, 22px off the text edge. */
+  (raw) => { const r = raw.results.find((r) => r.route === '/article/'); r.blockEdges.push({ sel: 'div.table-scroll', left: 42, right: r.viewportWidth + 2, expectedLeft: 20, expectedRight: r.viewportWidth - 20, optIn: 'wide', inItem: false }); },
 ];
 for (const [id, mutate] of violations.entries()) {
   test(`S${id} rejects its violation with route/viewport and actual/expected evidence`, () => {
@@ -265,6 +275,19 @@ test('routes derive from sitemap or recursive HTML, excluding refresh stubs', as
   } finally {
     await rm(dist, { recursive: true, force: true });
   }
+});
+
+test('S23 holds every block to the text edge, lets a wide block run right, and never passes on a missing probe', () => {
+  const article = (raw) => raw.results.find((r) => r.route === '/article/' && r.viewportWidth === 1024);
+  const narrow = fixture();
+  article(narrow).blockEdges.push({ sel: 'aside.op-admonition', left: 20, right: 900, expectedLeft: 20, expectedRight: 1004, optIn: null, inItem: false });
+  assert.ok(evaluateContract(narrow)[23].failures.some((f) => /right edge/.test(f.field)));
+  const shortWide = fixture();
+  article(shortWide).blockEdges.push({ sel: 'figure.media-exhibit', left: 20, right: 700, expectedLeft: 20, expectedRight: 1004, optIn: 'wide', inItem: false });
+  assert.ok(evaluateContract(shortWide)[23].failures.some((f) => /never ends short/.test(f.expected)));
+  const blind = fixture();
+  delete article(blind).blockEdges;
+  assert.ok(evaluateContract(blind)[23].failures.some((f) => f.field === 'block edges probe'));
 });
 
 test('S22 lets only a build-marked long span wrap, and never passes on a missing fragment count', () => {

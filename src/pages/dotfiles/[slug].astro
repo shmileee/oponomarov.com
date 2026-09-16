@@ -5,6 +5,7 @@ import PageToc from "../../components/PageToc.astro";
 import SiteLayout from "../../components/SiteLayout.astro";
 import { adjacentDocs, loadDocs, type DocsPage } from "../../lib/docs";
 import { inlineContexts, plainText, renderInline } from "../../lib/inline-markdown";
+import { readingMinutes } from "../../lib/reading-time";
 
 export async function getStaticPaths() {
   const pages = await loadDocs();
@@ -33,6 +34,7 @@ const rawUrl = page.entry.data.editUrl?.replace("/edit/", "/raw/");
     title={page.entry.data.title}
     descriptionHtml={renderInline(page.entry.data.description, inlineContexts.lede)}
     backLink={{ href: "/dotfiles/", title: "dotfiles overview" }}
+    readingMinutes={readingMinutes(page.entry.body)}
     previous={previous && { href: previous.href, title: previous.title }}
     next={next && { href: next.href, title: next.title }}
     adjacentLabel="Adjacent documentation"

@@ -37,6 +37,13 @@ or removing a case study, note or manual is a content commit and nothing else:
 
 `summary`, `role`, `evidence`, `spotlightProof` and every `description` are
 inline Markdown: backticks and `**strong**` render, everything else is text.
+
+Inline code is one token: a capsule never wraps, so `pre-commit` cannot split
+at its hyphen. The build marks a span that would not fit a phone in its
+context (about 30 characters in a paragraph, 26 in a list item, fewer in a
+heading or a card) and lets only those wrap, at their spaces and slashes. So
+a command or path longer than that reads best as a fenced block; in running
+text it will wrap like a long URL.
 The homepage topic filters are the union of every study's `topics`; the
 spotlight section appears only when a study is marked `spotlight`.
 

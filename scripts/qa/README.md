@@ -97,7 +97,15 @@ A span under the threshold that paints on two lines — `pre-commit` split at
 its hyphen, `terraform apply` split at its space — fails; only marked spans
 may wrap. A sample without the fragment count is missing evidence.
 
-The checker prints all 23 PASS/FAIL lines with actual/expected evidence for each
+S23 (BLOCK EDGES) records every block a prose body holds — code frame, table
+region, admonition, quote, figure, disclosure, tab group — with its left and
+right edges against the edge of the body's first paragraph (or, inside a list
+item, the item's content box) and whether it opted into a wider track. A block
+must start on the text edge; one that did not opt in must end on it too, and
+one that did may only run further right. A route with a prose body and no
+blocks has no sample; an absent probe is missing evidence.
+
+The checker prints all 24 PASS/FAIL lines with actual/expected evidence for each
 failure and exits 1 if any scenario fails. The report is informational, supports
 the old baseline schema, and exits normally even when contracts are red. The
 current design is intentionally red; these assertions must not be relaxed to

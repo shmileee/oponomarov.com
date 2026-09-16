@@ -152,6 +152,78 @@
       document.fonts?.ready.then(syncCodeOverflow);
     }
 
+    /* Lightbox. An article image whose file is wider than the column it
+       renders in (a 1654px screenshot in a 736px exhibit) opens at the size
+       the viewport allows, with its caption, in a modal the reader closes
+       with Escape, the button or a click anywhere. The image becomes a
+       button (role, tabindex, key handling) only while it is worth opening,
+       re-judged on resize; images in links, in a deliberately scrolling
+       frame, or already shown at full size stay as they are. One dialog per
+       page, built here so the markup never has to remember it. */
+    const zoomables = [...document.querySelectorAll<HTMLImageElement>("[data-article-body] img, .reader-prose img")]
+      .filter((img) => !img.closest("a, .media-frame-scroll, .diagram-exhibit, button"));
+    if (zoomables.length > 0) {
+      let lightbox = document.querySelector<HTMLDialogElement>("[data-lightbox]");
+      if (!lightbox) {
+        lightbox = document.createElement("dialog");
+        lightbox.className = "lightbox";
+        lightbox.setAttribute("data-lightbox", "");
+        lightbox.setAttribute("aria-label", "Image, enlarged");
+        lightbox.innerHTML = '<figure class="lightbox__figure"><img alt="" width="1" height="1" decoding="async"><figcaption class="lightbox__caption"></figcaption></figure><button type="button" class="lightbox__close" aria-label="Close" data-lightbox-close><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 4 8 8m0-8-8 8"></path></svg></button>';
+        document.body.append(lightbox);
+      }
+      const shown = lightbox.querySelector("img") as HTMLImageElement;
+      const caption = lightbox.querySelector<HTMLElement>(".lightbox__caption")!;
+      let opener: HTMLImageElement | null = null;
+      const open = (img: HTMLImageElement) => {
+        opener = img;
+        shown.src = img.currentSrc || img.src;
+        shown.alt = img.alt;
+        shown.width = Number(img.getAttribute("width")) || img.naturalWidth || 1;
+        shown.height = Number(img.getAttribute("height")) || img.naturalHeight || 1;
+        const text = img.closest("figure")?.querySelector("figcaption")?.textContent?.replace(/\s+/g, " ").trim() ?? "";
+        caption.textContent = text;
+        caption.hidden = !text;
+        if (!lightbox!.open) lightbox!.showModal();
+      };
+      const close = () => { if (lightbox!.open) lightbox!.close(); };
+      const judge = () => {
+        /* Worth opening only when both the file and the viewport offer at
+           least a fifth more width than the image has in the column: on a
+           phone the exhibit already spans the screen, and a dialog that
+           shows the same pixels again is a dead end. */
+        const gutterSource = document.querySelector(".op-header__inner") ?? document.body;
+        const room = document.documentElement.clientWidth - 2 * parseFloat(getComputedStyle(gutterSource).paddingLeft || "0");
+        zoomables.forEach((img) => {
+          const intrinsic = Number(img.getAttribute("width")) || img.naturalWidth;
+          const zoomable = img.clientWidth > 0 && intrinsic > img.clientWidth * 1.2 && room > img.clientWidth * 1.2;
+          img.toggleAttribute("data-zoomable", zoomable);
+          if (zoomable) {
+            img.setAttribute("role", "button");
+            img.tabIndex = 0;
+            img.setAttribute("aria-label", `${img.alt || "Image"} (open larger)`);
+          } else {
+            img.removeAttribute("role");
+            img.removeAttribute("tabindex");
+            img.removeAttribute("aria-label");
+          }
+        });
+      };
+      judge();
+      addEventListener("resize", judge, { signal });
+      zoomables.forEach((img) => {
+        img.addEventListener("click", () => { if (img.hasAttribute("data-zoomable")) open(img); }, { signal });
+        img.addEventListener("keydown", (event) => {
+          if (!img.hasAttribute("data-zoomable") || (event.key !== "Enter" && event.key !== " ")) return;
+          event.preventDefault();
+          open(img);
+        }, { signal });
+      });
+      lightbox.addEventListener("click", close, { signal });
+      lightbox.querySelector("[data-lightbox-close]")?.addEventListener("click", close, { signal });
+      lightbox.addEventListener("close", () => { opener?.focus(); opener = null; }, { signal });
+    }
+
     const filter = document.querySelector<HTMLElement>("[data-shortcut-filter]");
     const input = filter?.querySelector<HTMLInputElement>("[data-shortcut-query]");
     const sections = [...document.querySelectorAll<HTMLElement>("[data-shortcut-section]")];

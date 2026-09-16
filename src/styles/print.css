@@ -31,6 +31,7 @@
     .comments-region,
     .reader,
     .global-search-dialog,
+    .lightbox,
     .context-help,
     .context-help-trigger,
     [data-context-help-mount],
@@ -41,7 +42,8 @@
     .topic-filters,
     .filter-status,
     .grid-toggle-row,
-    .expressive-code .copy {
+    .expressive-code .copy,
+    .heading-anchor {
       display: none;
     }
 

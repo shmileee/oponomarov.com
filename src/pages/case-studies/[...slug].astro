@@ -5,6 +5,7 @@ import PageToc from "../../components/PageToc.astro";
 import SiteLayout from "../../components/SiteLayout.astro";
 import { adjacentCaseStudies, formatCaseNumber, loadCaseStudies, type CaseStudy } from "../../lib/case-studies";
 import { inlineContexts, plainText, renderInline } from "../../lib/inline-markdown";
+import { readingMinutes } from "../../lib/reading-time";
 
 export async function getStaticPaths() {
   const studies = await loadCaseStudies();
@@ -63,6 +64,7 @@ const description = plainText(data.summary);
     title={data.title}
     descriptionHtml={renderInline(data.summary, inlineContexts.lede)}
     eyebrow={`Case study ${formatCaseNumber(study.number)}${data.featured ? " · featured" : ""}`}
+    readingMinutes={readingMinutes(study.entry.body)}
     backLink={{ href: "/#index", title: "all case studies" }}
   >
     <Fragment slot="proof">

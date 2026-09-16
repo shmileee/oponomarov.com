@@ -284,8 +284,35 @@ for (const page of pages) {
   if (!seen) throw new Error("V14 found no keycap font-size rule to check.");
 }
 
+// V15 - a byte budget. The design system is one stylesheet and a handful of
+//       scripts, and both grow only when someone means them to: a fix that
+//       adds a rule is fine, a fix that adds a subsystem shows up here first.
+//       Budgets sit about 15% over the build they were set against
+//       (author CSS 111KB, syntax-theme CSS 17KB, scripts 44KB, fonts 162KB,
+//       all uncompressed); raise one deliberately, in the same change that
+//       needs it. Pagefind's index is content-sized and is not budgeted.
+{
+  const bytes = (paths) => paths.reduce((sum, path) => sum + readFileSync(path).length, 0);
+  const built = filesBelow(dist);
+  const authorCss = built.filter((path) => /\/_astro\/(?!ec\.)[^/]+\.css$/.test(path));
+  const syntaxCss = built.filter((path) => /\/_astro\/ec\.[^/]+\.css$/.test(path));
+  const scripts = built.filter((path) => extname(path) === ".js" && !path.includes(`${join(dist, "pagefind")}/`));
+  const fonts = built.filter((path) => extname(path) === ".woff2");
+  const budgets = [
+    ["author stylesheets", authorCss, 128_000],
+    ["syntax-theme stylesheet", syntaxCss, 24_000],
+    ["scripts (own and Astro chunks)", scripts, 64_000],
+    ["web fonts", fonts, 200_000],
+  ];
+  for (const [label, paths, budget] of budgets) {
+    if (!paths.length) throw new Error(`V15 found no ${label} to weigh.`);
+    const total = bytes(paths);
+    if (total > budget) throw new Error(`${label} weigh ${total} bytes, over the ${budget}-byte budget: ${paths.map((path) => `${relative(dist, path)} (${readFileSync(path).length})`).join(", ")}. Raise the budget in verify-design.mjs only on purpose.`);
+  }
+}
+
 console.log(
   `Verified the design system: ${pages.length} pages on one stylesheet set and one theme script, ` +
   `${cssSources.length} fully layered stylesheets with no !important and no stray colours, ` +
-  `every table a reachable scroll region, every image sized, expressive-code layered and scrolling in its own frame, and keycaps sized like inline code.`,
+  `every table a reachable scroll region, every image sized, expressive-code layered and scrolling in its own frame, keycaps sized like inline code, and everything inside its byte budget.`,
 );

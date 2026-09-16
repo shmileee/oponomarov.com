@@ -56,6 +56,8 @@
     background: var(--color-progress);
     transform: translateY(0.06em);
     animation: hero-cursor-blink 1.1s steps(1) infinite;
+    /* Painted, not text: keeps its (system-highlight) colour under forced colours. */
+    forced-color-adjust: none;
   }
 
   @keyframes hero-cursor-blink {
@@ -158,9 +160,15 @@
     color: var(--color-text);
   }
 
+  /* Also a <button> (the 404 page opens the search dialog with one): the
+     reset gives buttons a border and a background of their own. */
   .secondary-link {
     padding-block: var(--space-2);
+    padding-inline: 0;
+    border: 0;
+    background: none;
     color: var(--color-text-muted);
+    cursor: pointer;
   }
 
   .secondary-link:hover {
@@ -655,6 +663,17 @@
     letter-spacing: var(--tracking-label);
     line-height: var(--leading-snug);
     text-transform: uppercase;
+  }
+
+  /* With the tablist in place the tab already names the panel, so the
+     panel's own repeat of the label goes, and the content it introduced
+     moves up to the panel's top edge. */
+  .tabs:has(> [role="tablist"]) > .tab > span:first-child {
+    display: none;
+  }
+
+  .tabs:has(> [role="tablist"]) > .tab > span:first-child + * {
+    margin-block-start: 0;
   }
 
   .tab > :last-child {

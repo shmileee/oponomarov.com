@@ -19,8 +19,13 @@ import { ogImagePath } from "../lib/og-path";
       <div class="hero-copy prose prose--lede"><p>The address may be mistyped, or the page may have moved. The work itself is still one link away.</p></div>
       <div class="hero-actions">
         <a class="primary-link" href="/#index">Browse case studies →</a>
+        <button class="secondary-link" type="button" data-open-search>Search the site</button>
         <a class="secondary-link" href="/">Back to the homepage</a>
       </div>
     </section>
   </main>
+  {/* The header's search dialog, opened from the page that most needs it. */}
+  <script is:inline data-astro-rerun>
+    document.querySelector("[data-open-search]")?.addEventListener("click", () => document.querySelector("[data-global-search-open]")?.click());
+  </script>
 </SiteLayout>

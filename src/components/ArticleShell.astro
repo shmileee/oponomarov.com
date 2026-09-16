@@ -1,4 +1,5 @@
 ---
+import { formatDate } from "../lib/dates";
 interface ArticleLink {
   readonly href: string;
   readonly title: string;
@@ -24,9 +25,7 @@ const {
   title, description, descriptionHtml, eyebrow, backLink, publishedTime, readingMinutes,
   previous, next, adjacentLabel = "Adjacent articles",
 } = Astro.props;
-const dateLabel = publishedTime && new Intl.DateTimeFormat("en-GB", {
-  day: "2-digit", month: "long", year: "numeric", timeZone: "UTC",
-}).format(publishedTime);
+const dateLabel = publishedTime && formatDate(publishedTime, "display");
 ---
 
 <main id="main-content" class="article content-grid" tabindex="-1">

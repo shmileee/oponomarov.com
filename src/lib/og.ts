@@ -66,7 +66,7 @@ export function ogCards(): Promise<Map<string, OgCard>> {
         section: "blog",
         title: post.data.title,
         description: plainText(post.data.description),
-        kicker: formatDate(post.data.date, { day: "2-digit", month: "long", year: "numeric" }),
+        kicker: formatDate(post.data.date, "display"),
       });
     }
     for (const category of uniqueCategories(posts.map((post) => post.data.categories))) {

@@ -122,11 +122,11 @@ export function setupReader({ signal } = {}) {
     prose.innerHTML = content;
     document.dispatchEvent(new CustomEvent("oponomarov:content-updated", { detail: { root: prose } }));
     previousKicker.textContent = "Previous";
-    previousNumber.textContent = `Case ${String(previous.number).padStart(2, "0")}`;
+    previousNumber.textContent = `Case study ${String(previous.number).padStart(2, "0")}`;
     previousTitle.textContent = previous.title;
     previousButton.setAttribute("aria-label", `Previous case study: ${previousNumber.textContent} — ${previous.title}`);
     nextKicker.textContent = "Next";
-    nextNumber.textContent = `Case ${String(next.number).padStart(2, "0")}`;
+    nextNumber.textContent = `Case study ${String(next.number).padStart(2, "0")}`;
     nextTitle.textContent = next.title;
     nextButton.setAttribute("aria-label", `Next case study: ${nextNumber.textContent} — ${next.title}`);
     study.removeAttribute("aria-busy");

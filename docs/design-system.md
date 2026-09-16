@@ -76,6 +76,7 @@ imports only; each of the other 14 files wraps its rules in its named layer.
 | `components/navigation.css` | `components` | TOC, adjacent navigation, topic list, back link, source actions |
 | `components/article.css` | `components` | Article header, dek, metadata, proof list, comments |
 | `components/reader.css` | `components` | Homepage reader dialog and its children |
+| `components/lightbox.css` | `components` | Enlarged-image dialog ContentInteractions opens from article images |
 | `prose.css` | `prose` | Shared prose, admonitions, EC frame adjustments, inline code, tables, native content elements |
 | `primitives.css` | `primitives` | Every selector in the content-primitive contract |
 | `utilities.css` | `utilities` | `sr-only` only |
@@ -997,6 +998,7 @@ verification until all four repositories adopt the contract.
 | V12 | No inline `style=` except EC-generated custom-property token spans | Content-owned presentation and sizing overrides |
 | V13 | No Astro `<style>` blocks except V1's exact layer-order-only head prelude | Scoped/page CSS outside the central entry |
 | V14 | Every `font-size` on a `kbd` rule in `prose.css`/`primitives.css` is `var(--code-inline-size)` | Keycaps pinned to a fixed step, rendering one cap at two sizes on one page |
+| V15 | Built bytes stay inside four budgets: author CSS 128KB, syntax-theme CSS 24KB, scripts 64KB, web fonts 200KB (uncompressed; about 15% over the build they were set against) | A fix that adds a subsystem rather than a rule; a design system that grows unnoticed |
 
 V9 reads raw content HTML, not code examples or EC-generated highlighting
 classes. At migration-audit time every old class must occur in `classes`,
@@ -1029,7 +1031,7 @@ value. S20 PROSE PARAGRAPHS holds every direct `.prose > p` to one size,
 excluding only `.prose--lede`; unlike S1 it deliberately does not exclude
 `header`, because the paragraph it exists to catch sits inside one.
 
-### Browser scenarios — S0–S22
+### Browser scenarios — S0–S23
 
 Run against a production build through `scripts/qa/measure.mjs` and
 `scripts/qa/contract.mjs`. Default viewports: 320, 375, 768, and 1440px; the full
@@ -1056,6 +1058,7 @@ current route set from the build rather than freezing that count forever.
 | S14–S20 | Contrast, wide tracks, and the typographic parity set; see `scripts/qa/README.md` | Token-level drift between the three content families |
 | S21 | The first child of every hub section shell, article header, article body, topic page and landing body starts on the header's text edge (1px) at every width | A region that picked up a second gutter, or an article column that drifted off the site's one left axis |
 | S22 | No inline code span paints on more than one line unless the build marked it `data-long`; samples without a fragment count fail | A token split at a hyphen, a two-word command split at its space, a capsule fragmented across lines |
+| S23 | Every block a prose body holds (code frame, table region, admonition, quote, figure, disclosure, tab group) starts on the paragraph text edge (1px) and, unless it opted into a wider track, ends on it; inside a list item, on the item's content edges | A table region centred in its wide wrapper, a frame with padding of its own, a block that slipped off the axis |
 
 Probe actual body paragraphs for S1, not eyebrows or metadata; exclude the two
 documented role modifiers from the normal-body comparison. For S2 measure the

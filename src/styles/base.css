@@ -57,6 +57,67 @@
   }
 
   /* ------------------------------------------------------------------ */
+  /* Metric-matched fallbacks. Until a webfont arrives its text is set in  */
+  /* a local face scaled and re-metricked to the same frequency-weighted  */
+  /* a–z advance, ascent and descent, so the swap changes glyph shapes,   */
+  /* not line breaks or page height (the first paint used to reflow every */
+  /* code-heavy page). Numbers from public/assets/fonts via fontTools:    */
+  /* size-adjust is the webfont's weighted advance over the fallback's;   */
+  /* the vertical overrides are the webfont's metrics divided by it.      */
+  /* Arial and Courier New ship on macOS and Windows; the Liberation faces */
+  /* are their metric-compatible twins on Linux, named as second sources. */
+  /* ------------------------------------------------------------------ */
+  @font-face {
+    font-family: "Public Sans Fallback";
+    font-style: normal;
+    src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("LiberationSans");
+    size-adjust: 105.23%;
+    ascent-override: 90.28%;
+    descent-override: 21.38%;
+    line-gap-override: 0%;
+  }
+
+  @font-face {
+    font-family: "Public Sans Fallback";
+    font-style: italic;
+    src: local("Arial Italic"), local("Arial-ItalicMT"), local("Liberation Sans Italic"), local("LiberationSans-Italic");
+    size-adjust: 105.23%;
+    ascent-override: 90.28%;
+    descent-override: 21.38%;
+    line-gap-override: 0%;
+  }
+
+  /* Display type runs at 650–700; Arial Bold is the closer advance there. */
+  @font-face {
+    font-family: "Bricolage Grotesque Fallback";
+    font-weight: 400 600;
+    src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("LiberationSans");
+    size-adjust: 100.81%;
+    ascent-override: 92.26%;
+    descent-override: 26.78%;
+    line-gap-override: 0%;
+  }
+
+  @font-face {
+    font-family: "Bricolage Grotesque Fallback";
+    font-weight: 601 800;
+    src: local("Arial Bold"), local("Arial-BoldMT"), local("Liberation Sans Bold"), local("LiberationSans-Bold");
+    size-adjust: 91.88%;
+    ascent-override: 101.22%;
+    descent-override: 29.39%;
+    line-gap-override: 0%;
+  }
+
+  @font-face {
+    font-family: "IBM Plex Mono Fallback";
+    src: local("Courier New"), local("CourierNewPSMT"), local("Liberation Mono"), local("LiberationMono");
+    size-adjust: 100%;
+    ascent-override: 102.5%;
+    descent-override: 27.5%;
+    line-gap-override: 0%;
+  }
+
+  /* ------------------------------------------------------------------ */
   /* Document                                                             */
   /* ------------------------------------------------------------------ */
   html {
@@ -65,10 +126,14 @@
     scroll-padding-block-start: calc(var(--header-height) + var(--space-10));
   }
 
-  /* Smooth scrolling is opt-in by preference, so reduced motion never has to
-     fight a later layer to switch it off. */
+  /* Smooth scrolling only while something on the page has focus, which is
+     the state after a reader clicks or keys a link: a table-of-contents
+     jump or a section link glides, while opening a deep link (nothing
+     focused yet) lands instantly instead of animating through five
+     thousand pixels of manual. Opt-in by preference, so reduced motion
+     never has to fight a later layer to switch it off. */
   @media (prefers-reduced-motion: no-preference) {
-    html {
+    html:focus-within {
       scroll-behavior: smooth;
     }
   }
@@ -267,5 +332,18 @@
     letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     color: var(--color-text-subtle);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Forced colours. Every pressed chip (topic filters, shortcut scopes,  */
+  /* search scopes) says so with a tinted background the system palette  */
+  /* removes; an underline survives it.                                   */
+  /* ------------------------------------------------------------------ */
+  @media (forced-colors: active) {
+    button[aria-pressed="true"] {
+      text-decoration: underline;
+      text-decoration-thickness: 2px;
+      text-underline-offset: 0.2em;
+    }
   }
 }

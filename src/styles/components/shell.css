@@ -275,6 +275,9 @@
     background: var(--color-progress);
     transform: scaleX(0);
     transform-origin: 0 50%;
+    /* Under forced colours the token is the system highlight (tokens.css);
+       the bar must be allowed to paint it. */
+    forced-color-adjust: none;
   }
 
   /* ------------------------------------------------------------------ */

@@ -5,6 +5,7 @@ import PageToc from "../../../components/PageToc.astro";
 import SiteLayout from "../../../components/SiteLayout.astro";
 import { inlineContexts, plainText, renderInline } from "../../../lib/inline-markdown";
 import { slugForPost, sortPosts } from "../../../lib/posts";
+import { readingMinutes } from "../../../lib/reading-time";
 
 export async function getStaticPaths() {
   const posts = sortPosts(await getCollection("posts"));
@@ -16,7 +17,7 @@ export async function getStaticPaths() {
 
 const { post, older, newer } = Astro.props;
 const { Content, headings } = await render(post);
-const readingMinutes = Math.floor((post.body || "").split(/\s+/).length / 220) + 1;
+const minutes = readingMinutes(post.body);
 ---
 
 <SiteLayout
@@ -35,7 +36,7 @@ const readingMinutes = Math.floor((post.body || "").split(/\s+/).length / 220) +
     descriptionHtml={renderInline(post.data.description, inlineContexts.lede)}
     backLink={{ href: "/blog/", title: "all notes" }}
     publishedTime={post.data.date}
-    readingMinutes={readingMinutes}
+    readingMinutes={minutes}
     previous={older && { href: `/blog/posts/${slugForPost(older)}/`, title: older.data.title, label: "← Older" }}
     next={newer && { href: `/blog/posts/${slugForPost(newer)}/`, title: newer.data.title, label: "Newer →" }}
     adjacentLabel="Adjacent notes"

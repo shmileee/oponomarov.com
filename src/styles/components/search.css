@@ -266,6 +266,18 @@
     color: var(--color-text);
   }
 
+  /* The per-scope result count, in the same voice as the topic chips'. */
+  .global-search-scopes [data-search-count] {
+    margin-inline-start: var(--space-2);
+    color: var(--color-text-subtle);
+    font-weight: var(--weight-medium);
+    letter-spacing: 0;
+  }
+
+  .global-search-scopes button[aria-pressed="true"] [data-search-count] {
+    color: var(--color-accent);
+  }
+
   /* ------------------------------------------------------------------ */
   /* Results (runtime-injected by Pagefind — see file header).            */
   /* ------------------------------------------------------------------ */

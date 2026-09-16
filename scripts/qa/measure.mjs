@@ -632,10 +632,49 @@ const PROBE = () => {
     return { headerEdge: Math.round(headerEdge * 100) / 100, blocks };
   })();
 
+  // 13. Block edges (S23). Every block a prose body holds - a code frame, a
+  //     table region, an admonition, a quote, a figure, a disclosure, a tab
+  //     group - against the edge of the paragraph text beside it. Direct
+  //     children of a prose root measure against the root's first paragraph;
+  //     blocks inside a list item against the item's own content box, since
+  //     the item is what indents them. A block that opted into a wider track
+  //     (`wide`, `full-bleed`, or placed there by the engine) keeps the left
+  //     edge and may run further right. The reader dialog is closed here and
+  //     is measured by S12.
+  const blockEdges = (() => {
+    const roots = [...document.querySelectorAll('.prose')].filter((root) => isRendered(root) && !root.closest('dialog'));
+    const BLOCKS = '.expressive-code, .table-scroll, .op-admonition, blockquote, figure, details, .tabs, pre';
+    const out = [];
+    for (const root of roots) {
+      const reference = [...root.children].find((child) => child.matches('p') && isRendered(child));
+      if (!reference) continue;
+      const ref = reference.getBoundingClientRect();
+      for (const el of root.querySelectorAll(BLOCKS)) {
+        if (!isRendered(el) || el.closest('pre') && el.tagName !== 'PRE' || el.closest('.expressive-code') && !el.matches('.expressive-code')) continue;
+        if (el.closest('.prose') !== root) continue;
+        const item = el.parentElement?.closest('li');
+        let expectedLeft, expectedRight;
+        if (el.parentElement === root) { expectedLeft = ref.left; expectedRight = ref.right; }
+        else if (item && item.closest('.prose') === root) {
+          const cs = getComputedStyle(item); const r = item.getBoundingClientRect();
+          expectedLeft = r.left + parseFloat(cs.borderLeftWidth) + parseFloat(cs.paddingLeft);
+          expectedRight = r.right - parseFloat(cs.borderRightWidth) - parseFloat(cs.paddingRight);
+        } else continue; /* inside a panel, a quote or an admonition: that container's own concern */
+        const r = el.getBoundingClientRect();
+        const placed = getComputedStyle(el).gridColumnStart;
+        const optIn = el.matches('.full-bleed') || placed === 'full' ? 'full-bleed' : el.matches('.wide') || placed === 'wide' || el.parentElement?.matches('.wide') ? 'wide' : null;
+        out.push({ sel: describe(el), path: ancestry(el), left: Math.round(r.left * 100) / 100, right: Math.round(r.right * 100) / 100,
+          expectedLeft: Math.round(expectedLeft * 100) / 100, expectedRight: Math.round(expectedRight * 100) / 100, optIn, inItem: Boolean(item) });
+      }
+    }
+    return out;
+  })();
+
   return {
     viewportWidth: vw,
     articleGrid,
     gutter,
+    blockEdges,
     parity,
     theme: docEl.dataset.theme ?? null,
     bodyBackgroundColor: getComputedStyle(document.body).backgroundColor,

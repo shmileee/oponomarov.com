@@ -29,7 +29,7 @@ export default {
       "border-radius": fromTokens("--radius-"),
       /* The three family names exist only in @font-face, which has to name
          them literally; everywhere else must go through a token. */
-      "font-family": [...fromTokens("--font-"), '/^"(Bricolage Grotesque|Public Sans|IBM Plex Mono)"/'],
+      "font-family": [...fromTokens("--font-"), '/^"(Bricolage Grotesque|Public Sans|IBM Plex Mono)( Fallback)?"/'],
       /* Unitless 1 is glyph alignment for icons and kbd, not body rhythm. */
       "line-height": [...fromTokens("--leading-"), "1"],
       /* Single digits are local stacking inside one component; the --z-*

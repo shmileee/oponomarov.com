@@ -1,9 +1,12 @@
 ---
-const themeColor = "#0b1220";
+import { themeColors } from "../lib/site-metadata";
 ---
 
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any" />
 <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
 <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
 <link rel="manifest" href="/site.webmanifest" />
-<meta name="theme-color" content={themeColor} />
+{/* Browser chrome follows the page: the theme-init script (SiteLayout) and
+    the toggle (SiteHeader) set `content` from these two values, so a saved
+    light theme on a dark OS gets light chrome, not the OS default. */}
+<meta name="theme-color" content={themeColors.dark} data-theme-color-light={themeColors.light} data-theme-color-dark={themeColors.dark} />

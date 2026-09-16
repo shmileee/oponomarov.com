@@ -74,6 +74,8 @@ const image = new URL(ogImage, canonicalOrigin);
 const saved = localStorage.getItem("om-theme");
 const preferred = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
 document.documentElement.dataset.theme = saved || preferred;
+const themeColor = document.querySelector('meta[name="theme-color"]');
+if (themeColor) themeColor.content = themeColor.dataset[document.documentElement.dataset.theme === "light" ? "themeColorLight" : "themeColorDark"];
     </script>
     <title>{documentTitle}</title>
     <meta name="description" content={description} data-pagefind-meta="description[content]" />
@@ -83,8 +85,14 @@ document.documentElement.dataset.theme = saved || preferred;
         happens to find (a case-study h1 can carry a code capsule). */}
     <meta content={plainTitle} data-pagefind-meta="title[content]" />
     {robots && <meta name="robots" content={robots} />}
+    {/* The three faces on every first screen: body, display, and the mono the
+        header brand, the navigation and every code capsule are set in (10KB
+        a weight). base.css declares metric-matched local fallbacks, so the
+        swap when these land moves no line. */}
     <link rel="preload" href="/assets/fonts/public-sans-latin.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
     <link rel="preload" href="/assets/fonts/bricolage-grotesque-latin.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
+    <link rel="preload" href="/assets/fonts/ibm-plex-mono-latin-400.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
+    <link rel="preload" href="/assets/fonts/ibm-plex-mono-latin-500.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
     <link rel="canonical" href={canonical} />
     <SiteFavicons />
     {rssHref && <link rel="alternate" type="application/rss+xml" title="Engineering notes" href={rssHref} />}

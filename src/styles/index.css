@@ -13,6 +13,7 @@
 @import "./components/navigation.css";
 @import "./components/article.css";
 @import "./components/reader.css";
+@import "./components/lightbox.css";
 @import "./prose.css";
 @import "./primitives.css";
 @import "./utilities.css";

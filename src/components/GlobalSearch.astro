@@ -49,11 +49,14 @@
       <kbd>esc</kbd>
     </label>
 
+    {/* Each scope shows how many of the current query's results it holds
+        (Pagefind's per-filter counts), so a reader sees where the matches
+        are before narrowing. */}
     <div class="global-search-scopes" role="group" aria-label="Limit search results">
-      <button type="button" aria-pressed="true" data-search-product="">All</button>
-      <button type="button" aria-pressed="false" data-search-product="Portfolio">Portfolio</button>
-      <button type="button" aria-pressed="false" data-search-product="Notes">Notes</button>
-      <button type="button" aria-pressed="false" data-search-product="Dotfiles">Dotfiles</button>
+      <button type="button" aria-pressed="true" data-search-product="">All<span data-search-count hidden></span></button>
+      <button type="button" aria-pressed="false" data-search-product="Portfolio">Portfolio<span data-search-count hidden></span></button>
+      <button type="button" aria-pressed="false" data-search-product="Notes">Notes<span data-search-count hidden></span></button>
+      <button type="button" aria-pressed="false" data-search-product="Dotfiles">Dotfiles<span data-search-count hidden></span></button>
     </div>
 
     <p class="global-search-hint" data-global-search-hint>Search case studies, engineering notes, and Dotfiles documentation.</p>
@@ -113,10 +116,26 @@
         const pagefindPath = "/pagefind/pagefind.js";
         pagefindPromise = import(pagefindPath).then(async (pagefind) => {
           await pagefind.init?.();
+          /* Loads the filter index once, so every search (filtered or not)
+             reports how many results each section holds. */
+          await pagefind.filters?.().catch(() => undefined);
           return pagefind;
         });
       }
       return pagefindPromise;
+    };
+
+    /* The count beside each scope: how many of this query's results each
+       section holds, whatever scope is pressed. Hidden with no query. */
+    const setCounts = (counts) => {
+      scopeButtons.forEach((button) => {
+        const badge = button.querySelector("[data-search-count]");
+        if (!badge) return;
+        const product = button.dataset.searchProduct;
+        const count = counts ? (product ? counts.byProduct[product] ?? 0 : counts.total) : undefined;
+        badge.hidden = count === undefined;
+        badge.textContent = count === undefined ? "" : String(count);
+      });
     };
 
     const render = async () => {
@@ -126,6 +145,7 @@
         results.innerHTML = "";
         input.setAttribute("aria-expanded", "false");
         setActive(-1);
+        setCounts(undefined);
         hint.textContent = "Search case studies, engineering notes, and Dotfiles documentation.";
         return;
       }
@@ -136,6 +156,8 @@
         const response = await pagefind.search(query, activeProduct ? { filters: { product: activeProduct } } : undefined);
         const matches = await Promise.all(response.results.slice(0, 9).map((result) => result.data()));
         if (currentRequest !== requestId) return;
+        const byProduct = Object.keys(response.totalFilters?.product ?? {}).length ? response.totalFilters.product : response.filters?.product ?? {};
+        setCounts({ total: response.unfilteredResultCount ?? response.results.length, byProduct });
 
         hint.textContent = matches.length
           ? `${matches.length} result${matches.length === 1 ? "" : "s"}${activeProduct ? ` in ${activeProduct}` : " across all sites"}`
@@ -159,6 +181,7 @@
         results.innerHTML = "";
         input.setAttribute("aria-expanded", "false");
         setActive(-1);
+        setCounts(undefined);
         const reason = error instanceof Error ? error.message : String(error);
         hint.textContent = `Search is unavailable. ${reason}`;
       }
