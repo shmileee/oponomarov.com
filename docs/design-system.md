@@ -749,6 +749,7 @@ The agreed Astro integration settings are:
 | EC `cascadeLayer` | `"expressive-code"` |
 | EC `defaultProps` | `{ wrap: false, preserveIndent: true }` — lines never wrap; a block wider than its column scrolls inside its own frame |
 | EC `useThemedScrollbars` | `false` |
+| EC `plugins` | `[pluginFrameTitlePath()]` (`src/lib/expressive-code-frame-title.mjs`) — splits a rendered frame title at its last slash into `.title-dir` and `.title-name` spans and repeats the whole path in a `title` tooltip |
 
 Use the plan's `styleOverrides` mapping:
 
@@ -787,6 +788,15 @@ frames so the last characters fade until the block is scrolled to its end.
 Every frame carries the toolbar — the three window dots, the title when the
 block has one, the copy control. Authors may still reflow long commands with
 valid continuations for readability, but never to avoid a scroll.
+
+A frame title is a file path and is set verbatim: original case (a path's case
+is part of it), no tracking, one line. A path the header cannot hold is cut
+with an ellipsis rather than wrapped, and the cut falls on the directory, never
+on the file name: the build splits the title at its last slash (the slash
+travels with the name), prose.css lays the name out first and gives the
+directory what is left (`stacks/aws/acme-dev…/stack.tm.hcl`, never narrower
+than its ellipsis), and only a name wider than the header on its own is cut at
+its end. The full path stays the element's text and its tooltip.
 
 Inline code uses `--font-mono`, `--code-inline-size`, `--code-inline-bg`,
 `--code-inline-text`, `--radius-sm`, and small token padding. It remains inline
@@ -870,6 +880,19 @@ headings over their columns, key chords in the shortcut reference beside
 their actions — and the region itself starts on its wrapper's left edge
 (`margin-inline: 0`), so a table that fits the measure sits on the text's
 axis whatever room the wide track offers to its right.
+
+A **token column** is a body column whose every cell is one verbatim token
+and nothing else — a code span, a keycap, or a link around one — or an empty
+or dash placeholder among them; the last column, the description, is never
+one. `rehypeTableScroll` decides this at build time, with the text nodes CSS
+cannot see (`td:has(> code:first-child)` also matched "reads via `x`, owns…"
+and set a sentence nowrap), and marks each cell `data-token-cell`. prose.css
+keys three things on the mark: the column is exactly as wide as its widest
+token (a zero preferred width, so every prose column beside it gets the rest),
+each token stays on one line, and each sits on the row's centre line beside
+the description it labels. A lone token in a column of sentences is a short
+sentence and gets none of this; the chord cells of the shortcut reference are
+keycap sequences, not code, and take their centring from primitives.css.
 
 Column floors are three custom properties declared once on `.prose table`
 (`--table-label-floor`, `--table-description-floor`, `--table-token-space`);
@@ -1113,7 +1136,7 @@ current route set from the build rather than freezing that count forever.
 | S6 | 100% of tables inside regions with `tabindex="0"`, `role="region"`, and an accessible name | Keyboard-inaccessible columns |
 | S7 | Zero standalone controls below 44×44px at 375px; inline prose links exempt | Undersized targets |
 | S8 | Identical non-EC stylesheet set across all real routes | Per-family CSS loading |
-| S9 | Zero self-overflowing `overflow:hidden` containers outside the `sr-only` allowlist | Content clipping disguised as no page overflow |
+| S9 | Zero self-overflowing `overflow:hidden` containers outside the `sr-only` allowlist and the declared ellipsis (`text-overflow: ellipsis` with the full text in a `title` tooltip: a frame title's directory) | Content clipping disguised as no page overflow |
 | S10 | No unauthorized inline styles; all images sized and named; exactly one `h1`; zero console errors | Content hygiene and runtime regressions |
 | S11 | At 200% root text size: no page overflow, and body text scales with the rem-bearing ramp; verify browser zoom too | Viewport-only font clamps and zoom clipping |
 | S12 | Homepage reader opens and fetched code has EC styling applied | Lost reader behavior or unstyled code after deleting legacy CSS |

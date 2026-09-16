@@ -192,6 +192,9 @@ const PROBE = () => {
         // an overflow:visible self-scroller is a real visual break, not a scroll affordance
         clipped: cs.overflowX === 'hidden' || cs.overflowX === 'clip',
         srOnly: el.matches('.sr-only'),
+        /* A cut declared by an ellipsis, with the whole text a hover away
+           (the frame title's directory), is an affordance, not a clip. */
+        ellipsisWithTooltip: cs.textOverflow === 'ellipsis' && Boolean(el.closest('[title]')?.getAttribute('title')?.trim()),
         scrollable: cs.overflowX === 'auto' || cs.overflowX === 'scroll',
       });
     }

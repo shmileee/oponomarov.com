@@ -82,6 +82,64 @@ const TABLE_ROLES = {
   td: "cell",
 };
 
+/* A token column is a body column whose every cell is one verbatim token
+   and nothing else - a code span, a keycap, or a link around one of those:
+   `stacks/`, `Ctrl`, a linked path - or an empty or dash placeholder among
+   them. prose.css sizes such a column to its widest token, keeps each token
+   on one line, and centres it beside the description it labels. It used to
+   find the cells with `td:has(> code:first-child)`, which CSS evaluates over
+   element children only: "reads or is read via <code>x</code>, owns…" also
+   has code as its first element child, and a prose cell in a note's
+   classification table was set nowrap, pushing the whole table into a 600px
+   scroll at 1440. The decision needs the text nodes and the whole column
+   (one token in a column of sentences is a short sentence, not a label), so
+   it is made here, and the last column is never one: it is the description.
+   Cells with a rowspan or colspan are not tokens; a table that uses them is
+   a grid, not a list of labelled pairs. */
+const TOKEN_TAGS = new Set(["code", "kbd"]);
+const PLACEHOLDER = /^[\s\-\u2013\u2014]*$/;
+/** @param {import("hast").Element} cell @returns {"token" | "placeholder" | "prose"} */
+const cellKind = (cell) => {
+  if (cell.properties.rowSpan > 1 || cell.properties.colSpan > 1) return "prose";
+  const children = cell.children.filter((child) => !isBlank(child));
+  if (children.length === 0) return "placeholder";
+  if (children.length !== 1) return "prose";
+  const [only] = children;
+  if (only.type === "text") return PLACEHOLDER.test(only.value) ? "placeholder" : "prose";
+  if (only.type !== "element") return "prose";
+  if (TOKEN_TAGS.has(only.tagName)) return "token";
+  if (only.tagName !== "a") return "prose";
+  const inner = only.children.filter((child) => !isBlank(child));
+  return inner.length === 1 && inner[0].type === "element" && TOKEN_TAGS.has(inner[0].tagName) ? "token" : "prose";
+};
+
+/** @param {import("hast").Element} table */
+const markTokenColumns = (table) => {
+  /** @type {import("hast").Element[][]} */
+  const rows = [];
+  /** @param {import("hast").Element} node */
+  const collect = (node) => {
+    for (const child of node.children) {
+      if (child.type !== "element" || child.tagName === "table") continue;
+      if (child.tagName === "tr") {
+        const cells = child.children.filter((cell) => cell.type === "element" && cell.tagName === "td");
+        if (cells.length > 0) rows.push(/** @type {import("hast").Element[]} */ (cells));
+      } else if (child.tagName === "thead") {
+        continue;
+      } else {
+        collect(child);
+      }
+    }
+  };
+  collect(table);
+  const width = Math.max(0, ...rows.map((cells) => cells.length));
+  for (let column = 0; column < width - 1; column += 1) {
+    const kinds = rows.map((cells) => (cells[column] ? cellKind(cells[column]) : "prose"));
+    if (kinds.includes("prose") || !kinds.includes("token")) continue;
+    for (const cells of rows) cells[column].properties.dataTokenCell = true;
+  }
+};
+
 /** @param {import("hast").Element} table */
 const assignTableRoles = (table) => {
   /** @param {import("hast").Element} node */
@@ -95,6 +153,7 @@ const assignTableRoles = (table) => {
     }
   };
   visit(table);
+  markTokenColumns(table);
 };
 
 /** Wrap parsed Markdown and HTML tables; register rehype-raw before this plugin. */

@@ -196,7 +196,7 @@ export function evaluateContract(raw) {
       if (target.inlineProseLink !== true) fail(7, r, `${target.path} (${target.text})`, { width: target.w, height: target.h }, '>= 44x44 CSS px or inline prose link');
     }
     for (const e of r.selfScrollers ?? []) {
-      if (['hidden', 'clip'].includes(e.overflowX) && e.srOnly !== true) fail(9, r, `${e.path} overflow-x`, { overflowX: e.overflowX, scrollWidth: e.scrollWidth, clientWidth: e.clientWidth }, 'no hidden/clip self-overflow except .sr-only');
+      if (['hidden', 'clip'].includes(e.overflowX) && e.srOnly !== true && e.ellipsisWithTooltip !== true) fail(9, r, `${e.path} overflow-x`, { overflowX: e.overflowX, scrollWidth: e.scrollWidth, clientWidth: e.clientWidth }, 'no hidden/clip self-overflow except .sr-only, or an ellipsis whose full text is in a title tooltip');
     }
     for (const style of r.inlineStyleAttrs ?? []) {
       /* Two inline styles are legitimate and neither is authored presentation:

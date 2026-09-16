@@ -164,9 +164,18 @@ const docsHtml = expectedDocSlugs
   .join("\n");
 
 const allArticleHtml = portfolioHtml + blogHtml + docsHtml;
+/* A rendered title is the path split at its last slash into a directory span
+   and a name span (expressive-code-frame-title.mjs), the whole path repeated
+   in the tooltip; a bare file name is a name span alone. */
+const renderedTitle = (filename) => {
+  const cut = filename.lastIndexOf("/");
+  const parts = cut <= 0 || cut === filename.length - 1
+    ? `<span class="title-name">${filename}</span>`
+    : `<span class="title-dir">${filename.slice(0, cut)}</span><span class="title-name">${filename.slice(cut)}</span>`;
+  return `<span class="title" title="${filename}">${parts}</span>`;
+};
 for (const [filename, expected] of expectedCodeTitles) {
-  const title = `<span class="title">${filename}</span>`;
-  const occurrences = allArticleHtml.split(title).length - 1;
+  const occurrences = allArticleHtml.split(renderedTitle(filename)).length - 1;
   if (occurrences !== expected) throw new Error(`Expected ${expected} code frame(s) titled ${filename} (${expected} titled fence(s) in the content), found ${occurrences}`);
 }
 if (portfolioHtml.includes('class="code-exhibit"')) throw new Error("A legacy portfolio code wrapper would create a nested code frame");

@@ -94,7 +94,8 @@ const violations = [
   (raw) => { raw.results[0].tables.push({ wrapperOverflowX: 'auto', wrapperTabIndex: '-1', wrapperRole: 'region', wrapperLabel: 'Data' }); },
   (raw) => { raw.results[1].smallTargets.push({ path: 'a', w: 43, h: 44, inlineProseLink: false }); },
   (raw) => { raw.results[0].sheets.push('/extra.css'); },
-  (raw) => { raw.results[0].selfScrollers.push({ path: 'div', overflowX: 'clip', srOnly: false }); },
+  /* A clip, and an ellipsis without the whole text reachable: the ellipsis alone excuses nothing. */
+  (raw) => { raw.results[0].selfScrollers.push({ path: 'div', overflowX: 'clip', srOnly: false }, { path: 'span', overflowX: 'hidden', srOnly: false, ellipsisWithTooltip: false }); },
   (raw) => { raw.results[0].inlineStyleAttrs.push({ path: 'span', value: '' }); },
   (raw) => { raw.zoomResults[0].bodyFontSize = '16px'; },
   (raw) => { raw.interactions.readerDialogs[0].preBackgrounds = ['rgba(0, 0, 0, 0)']; },
@@ -221,6 +222,8 @@ test('only the specified target, clipping and inline-style exceptions pass', () 
   const raw = fixture();
   raw.results[1].smallTargets.push({ w: 8, h: 20, inlineProseLink: true });
   raw.results[0].selfScrollers.push({ overflowX: 'hidden', srOnly: true });
+  /* A frame title's directory, cut with an ellipsis and repeated in a tooltip. */
+  raw.results[0].selfScrollers.push({ overflowX: 'hidden', srOnly: false, ellipsisWithTooltip: true });
   raw.results[0].inlineStyleAttrs.push({ value: '--0:#fff;--1:#000' });
   raw.results[0].tables.push({ wrapperOverflowX: 'scroll', wrapperTabIndex: '0', wrapperRole: 'region', wrapperLabel: 'Data' });
   /* A block that overflows by more than the tolerance is fine when it scrolls inside itself. */

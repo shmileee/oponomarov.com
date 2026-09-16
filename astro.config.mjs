@@ -2,6 +2,7 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "astro/config";
 import { unified } from "@astrojs/markdown-remark";
 import expressiveCode, { pluginFramesTexts } from "astro-expressive-code";
+import pluginFrameTitlePath from "./src/lib/expressive-code-frame-title.mjs";
 import remarkAdmonitions from "./src/lib/remark-admonitions.mjs";
 import rehypeHeadingAnchors from "./src/lib/rehype-heading-anchors.mjs";
 import rehypeImages from "./src/lib/rehype-images.mjs";
@@ -48,6 +49,10 @@ export default defineConfig({
        be its own scroll container. */
     defaultProps: { wrap: false, preserveIndent: true },
     useThemedScrollbars: false,
+    /* Frame titles are file paths: split at the last slash so prose.css can
+       keep the file name whole and cut the directory when the header is
+       narrow (src/lib/expressive-code-frame-title.mjs). */
+    plugins: [pluginFrameTitlePath()],
     styleOverrides: {
       codeFontFamily: "var(--font-mono)",
       codeFontSize: "var(--code-font-size)",

@@ -1197,22 +1197,19 @@
     border-inline-start: var(--border-width) solid var(--color-border-subtle);
   }
 
+  /* Every cell centres, the action column included. prose.css keeps a prose
+     cell on top so that two multi-line blocks never centre against each
+     other; here the action is never beside another prose cell, only beside
+     a chord, and below 48rem a chord may wrap to two or three lines while
+     the action is one. Top-aligned, "Toggle pane zoom" sat on the Ctrl+A
+     line with "then +" orphaned beneath it, as if it named the prefix
+     alone; centred, it names the whole chord, which is how the published
+     table read. Scoped rather than general because "a row whose other cells
+     are all atomic" is a per-row judgement the build's token mark
+     (data-token-cell, one code token per cell) does not make for chords,
+     which are keycap sequences, not code. */
   .shortcut-reference tbody td {
     padding-block: var(--space-4);
-  }
-
-  /* The action column centres too. prose.css keeps a prose cell on top so
-     that two multi-line blocks never centre against each other; here the
-     action is never beside another prose cell, only beside a chord, and
-     below 48rem a chord may wrap to two or three lines while the action is
-     one. Top-aligned, "Toggle pane zoom" sat on the Ctrl+A line with
-     "then +" orphaned beneath it, as if it named the prefix alone; centred,
-     it names the whole chord, which is how the published table read. This
-     is scoped rather than general because "a row whose other cells are all
-     atomic" cannot be written in CSS (:has() does not nest), and a
-     positional stand-in would misfire on a code / label / description
-     table. */
-  .shortcut-reference tbody td:last-child {
     vertical-align: middle;
   }
 

@@ -226,6 +226,66 @@ test("writes explicit table roles so the stacked phone rendering keeps its seman
   assert.equal((code.match(/<td role="cell">/g) || []).length, 2);
 });
 
+test("marks a column whose every cell is one token, and not a sentence that merely contains one", async () => {
+  // Given
+  const token = element("td", [text("\n  "), element("code", [text("stacks/")]), text(" ")]);
+  const linked = element("td", [element("a", [element("code", [text("main.tf")])], { href: "#" })]);
+  const keycap = element("td", [element("kbd", [text("Ctrl")])]);
+  const sentence = element("td", [text("reads or is read via "), element("code", [text("terraform_remote_state")]), text(", owns shared networking")]);
+  const two = element("td", [element("code", [text("ys")]), text(" / "), element("code", [text("ds")])]);
+  const last = element("td", [element("code", [text("never")])]);
+  const tree = root(element("table", [element("tbody", [element("tr", [token, linked, keycap, sentence, two, last])])]));
+  // When
+  await transform(tree);
+  // Then
+  assert.equal(token.properties.dataTokenCell, true);
+  assert.equal(linked.properties.dataTokenCell, true);
+  assert.equal(keycap.properties.dataTokenCell, true);
+  assert.equal(sentence.properties.dataTokenCell, undefined);
+  assert.equal(two.properties.dataTokenCell, undefined);
+  assert.equal(last.properties.dataTokenCell, undefined, "the last column is the description, never a token column");
+});
+
+test("a lone token in a column of sentences is not a token column; a dash placeholder does not break one", async () => {
+  // Given
+  const lone = element("td", [element("code", [text("terraform_remote_state")])]);
+  const prose = element("td", [text("single AWS context, no remote-state coupling")]);
+  const mixed = element("table", [element("tbody", [
+    element("tr", [prose, element("td", [text("migrate now")])]),
+    element("tr", [lone, element("td", [text("migrate later")])]),
+  ])]);
+  const first = element("td", [element("code", [text("--tags")])]);
+  const dash = element("td", [text("\u2014")]);
+  const empty = element("td", [text("\n")]);
+  const withPlaceholders = element("table", [element("thead", [element("tr", [element("th", [text("Flag")]), element("th", [text("Meaning")])])]), element("tbody", [
+    element("tr", [first, element("td", [text("filter")])]),
+    element("tr", [dash, element("td", [text("no filter")])]),
+    element("tr", [empty, element("td", [text("nothing")])]),
+  ])]);
+  const onlyDashes = element("td", [text("-")]);
+  const dashes = element("table", [element("tbody", [element("tr", [onlyDashes, element("td", [text("x")])])])]);
+  // When
+  await transform(root(mixed, withPlaceholders, dashes));
+  // Then
+  assert.equal(lone.properties.dataTokenCell, undefined);
+  assert.equal(prose.properties.dataTokenCell, undefined);
+  assert.equal(first.properties.dataTokenCell, true);
+  assert.equal(dash.properties.dataTokenCell, true);
+  assert.equal(empty.properties.dataTokenCell, true);
+  assert.equal(onlyDashes.properties.dataTokenCell, undefined, "a column of placeholders alone is not a token column");
+});
+
+test("renders the token mark as data-token-cell through the markdown pipeline", async () => {
+  // Given
+  const processor = await createMarkdownProcessor({
+    rehypePlugins: [rehypeRaw, (await import("./rehype-table-scroll.mjs")).default],
+  });
+  // When
+  const { code } = await processor.render("| Key | Does |\n| --- | --- |\n| `q` | quits |\n| `w` | writes, via `:w` |\n");
+  // Then
+  assert.equal((code.match(/<td role="cell" data-token-cell>/g) || []).length, 2);
+});
+
 test("keeps a role an author already wrote on a table part", async () => {
   // Given
   const th = element("th", [text("Name")], { scope: "row" });

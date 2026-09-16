@@ -714,8 +714,22 @@
     content: none;
   }
 
-  /* A title (or the terminal label) is a plain tracked mono label, not a tab. */
+  /* A title is a file path, set verbatim in the label voice: a path's case
+     is part of it (`Makefile`, `README.md`), so no transform, and no
+     tracking, which mixed-case mono does not want. It is one thing, so it
+     never wraps: uppercased and free to break, the longest titles in the
+     corpus (78 characters) sat on three lines under the dots at every
+     width, split inside `eu-west-1`. When the header cannot hold the whole
+     path it is cut with an ellipsis instead - on the directory, never on
+     the file name. The build splits the title at its last slash for that
+     (expressive-code-frame-title.mjs): the name is laid out first, at its
+     full length up to the header's width, and the directory takes what is
+     left, cut at its end (`stacks/aws/acme-dev…/stack.tm.hcl`); only a name
+     that is itself wider than the header is cut at its own end. The full
+     path stays the element's text and its tooltip. A title with no
+     directory (`mise.toml`) is a name alone and cuts the same way. */
   .prose .expressive-code .frame .title {
+    display: flex;
     position: static;
     flex: 0 1 auto;
     min-inline-size: 0;
@@ -723,17 +737,40 @@
     border: 0;
     border-radius: 0;
     padding: 0;
-    overflow: visible;
+    overflow: hidden;
     background: none;
     box-shadow: none;
     color: var(--code-muted);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     font-weight: var(--weight-medium);
-    line-height: 1;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    overflow-wrap: anywhere;
+    /* Clipped for the ellipsis, so the line box must hold the descenders. */
+    line-height: var(--leading-snug);
+    letter-spacing: 0;
+    text-overflow: ellipsis;
+    text-transform: none;
+    white-space: nowrap;
+  }
+
+  /* Never narrower than its ellipsis (two cells: at exactly one, rounding
+     can leave the glyph not fitting and the browser clips a letter instead):
+     a directory cut to nothing would leave `/stack.tm.hcl`, which reads as a
+     path from the root; `…/stack.tm.hcl` says something was left out. */
+  .prose .expressive-code .frame .title-dir {
+    flex: 1 1 0;
+    min-inline-size: 2ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Laid out at its own width first (auto basis against the directory's
+     zero), so the directory only ever gets what the name leaves; when the
+     name alone is wider than the header it is the one cut, at its end. */
+  .prose .expressive-code .frame .title-name {
+    flex: 0 1 auto;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .prose .expressive-code .frame .title::before,
@@ -1112,21 +1149,6 @@
     padding-block-end: var(--space-4);
   }
 
-  /* An atomic cell - a code token, a keycap, a linked name - beside a
-     description that wraps sits on the row's centre line, so the pair reads
-     as one entity rather than a label floating at the top of the paragraph
-     it names. Only atomic cells: a prose cell beside another prose cell
-     keeps the top alignment above, because two multi-line blocks centred
-     against each other read worse than two that share a first line. Typed
-     the way the TOKEN column below is typed - first element child, never
-     the last column - because CSS cannot see text. The content primitives
-     add their own atomic wrapper (.keys) to this treatment where it is
-     defined, in primitives.css. */
-  .prose td:not(:last-child):has(> :is(code, kbd):first-child),
-  .prose td:not(:last-child):has(> a:first-child > :is(code, kbd):first-child) {
-    vertical-align: middle;
-  }
-
   /* ------------------------------------------------------------------ */
   /* Column sizing                                                        */
   /* Auto table layout is arithmetic. Every column has a minimum: the     */
@@ -1176,15 +1198,25 @@
     white-space: var(--table-token-space);
   }
 
-  /* TOKEN. A cell that opens with verbatim code labels its row and is not
-     a sentence, so the whole cell sizes to its content and its parts stay
-     on one line. `<td>Starts <code>x</code> with…</td>` also has code as
-     its first element child; what separates the two in every reference
-     table is the column, so the last column is never a token column. A
-     cell that opens with a keycap sequence (.keys) is not code and keeps
-     wrapping between its keys. */
-  .prose td:not(:last-child):has(> code:first-child),
-  .prose td:not(:last-child):has(> a:first-child > code:first-child) {
+  /* TOKEN column. The build marks a body column whose every cell is one
+     verbatim token (`data-token-cell`, rehype-table-scroll: decided with the
+     text nodes CSS cannot see, so "reads via <code>x</code>, owns…" is never
+     one, and never the last column). Such a cell labels its row and is not a
+     sentence: it stays on one line, and its column is exactly as wide as its
+     widest token - with a preferred width of zero the column takes its
+     minimum (the tokens, which cannot wrap) and every prose column beside
+     it gets the rest, which is where the words are. It also sits on the
+     row's centre line, so a token beside a description that wraps reads as
+     one entity rather than a label floating at the top of the paragraph it
+     names. Only token cells: a prose cell beside another prose cell keeps
+     the top alignment above, because two multi-line blocks centred against
+     each other read worse than two that share a first line. A cell that
+     opens with a keycap sequence (.keys) is not code and keeps wrapping
+     between its keys; the content primitives give it the centring where it
+     is defined, in primitives.css. */
+  .prose td[data-token-cell]:not(:last-child) {
+    inline-size: 0;
+    vertical-align: middle;
     white-space: var(--table-token-space);
   }
 
@@ -1194,8 +1226,7 @@
      to a word per line; with the floor, the region scrolls a table of
      readable rows instead. The floor is on the LAST column only, never on
      a token column. */
-  .prose td:not(:last-child):has(> code:first-child) ~ td:last-child,
-  .prose td:not(:last-child):has(> a:first-child > code:first-child) ~ td:last-child {
+  .prose td[data-token-cell]:not(:last-child) ~ td:last-child {
     min-inline-size: var(--table-description-floor);
   }
 
@@ -1204,8 +1235,7 @@
      the description on its floor, the label was the only column that could
      give, and gave everything. At a quarter the longest label in the corpus
      ("Packages and applications") sits on two lines, never on three. */
-  .prose td:has(~ td:not(:last-child) > code:first-child),
-  .prose td:has(~ td:not(:last-child) > a:first-child > code:first-child) {
+  .prose td:not([data-token-cell]):has(~ td[data-token-cell]:not(:last-child)) {
     min-inline-size: var(--table-label-floor);
   }
 
@@ -1265,7 +1295,10 @@
       border-block-start: var(--border-width) solid var(--color-border-subtle);
     }
 
+    /* A token cell's zero preferred width sized a column; as a block it
+       would size the block, so it goes back to auto with the rest. */
     .prose table:not(:has(tr > :nth-child(4))) :is(td, tbody tr:last-child > td) {
+      inline-size: auto;
       padding: 0;
       border: 0;
       text-align: start;
