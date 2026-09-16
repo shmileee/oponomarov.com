@@ -145,6 +145,36 @@
     border-block-start: var(--border-width) solid var(--color-border-subtle);
     overflow-y: auto;
     overscroll-behavior: contain;
+    /* No scrollbar: a bar down a list of section names read as a defect
+       (the Setup manual's 20 entries overflow a 900px rail). The fades
+       below say "more" on whichever edge has more, PageToc keeps the
+       entry in view scrolled into the visible band, and wheel, trackpad
+       and keyboard still scroll it. The search scopes row hides its bar
+       the same way. */
+    scrollbar-width: none;
+  }
+
+  .toc__nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* PageToc marks the list while it overflows and at either end of its
+     scroll: the mask fades the edge that has more behind it, 24px deep,
+     and leaves an edge the list has reached sharp. */
+  .toc__nav[data-overflows] {
+    mask-image: linear-gradient(to bottom, transparent, black var(--space-6), black calc(100% - var(--space-6)), transparent);
+  }
+
+  .toc__nav[data-overflows][data-at-start] {
+    mask-image: linear-gradient(to bottom, black calc(100% - var(--space-6)), transparent);
+  }
+
+  .toc__nav[data-overflows][data-at-end] {
+    mask-image: linear-gradient(to bottom, transparent, black var(--space-6));
+  }
+
+  .toc__nav[data-overflows][data-at-start][data-at-end] {
+    mask-image: none;
   }
 
   .toc__list {
@@ -270,8 +300,6 @@
       max-block-size: calc(100dvh - var(--toc-rail-inset) - var(--tap-size) - var(--space-6));
       padding: 0 0 var(--space-2);
       border-block-start: 0;
-      scrollbar-width: thin;
-      scrollbar-color: var(--color-border) transparent;
     }
 
     /* Two heading levels, told apart by tone first and indent second: a

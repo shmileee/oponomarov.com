@@ -89,6 +89,20 @@ const count = `${entries.length} ${entries.length === 1 ? "section" : "sections"
          back only when the active entry changes, so a reader who has scrolled
          the rail by hand is not fought on every frame. */
       const nav = details.querySelector<HTMLElement>(".toc__nav");
+      /* The list hides its scrollbar (navigation.css); these marks drive the
+         edge fades that say where more entries are. */
+      const syncEdges = () => {
+        if (!nav) return;
+        const overflows = nav.scrollHeight > nav.clientHeight + 1;
+        nav.toggleAttribute("data-overflows", overflows);
+        nav.toggleAttribute("data-at-start", overflows && nav.scrollTop <= 1);
+        nav.toggleAttribute("data-at-end", overflows && nav.scrollTop + nav.clientHeight >= nav.scrollHeight - 1);
+      };
+      nav?.addEventListener("scroll", syncEdges, { passive: true, signal });
+      addEventListener("resize", syncEdges, { signal });
+      details.addEventListener("toggle", syncEdges, { signal });
+      document.fonts?.ready.then(() => { if (!signal.aborted) syncEdges(); });
+      syncEdges();
       let revealed: HTMLAnchorElement | undefined;
       const reveal = (link: HTMLAnchorElement) => {
         if (!nav || nav.scrollHeight <= nav.clientHeight + 1) return;
