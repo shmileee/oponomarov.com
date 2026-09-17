@@ -13,8 +13,12 @@
     <path d="m20.3 19-4.7-4.7a7.3 7.3 0 1 0-1.3 1.3l4.7 4.7a.9.9 0 0 0 1.3-1.3ZM5.5 10a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0Z"></path>
   </svg>
   {/* The shortcut, shown beside the icon on a wide bar with a fine pointer
-      (components/search.css); the script swaps ⌘ for Ctrl off Apple platforms. */}
-  <kbd class="op-global-search-open__hint" aria-hidden="true" data-global-search-hint-key>⌘K</kbd>
+      (components/search.css): two keycaps, the modifier and the letter, as
+      the dialog and the manuals draw keys. The script swaps ⌘ for Ctrl off
+      Apple platforms. */}
+  <span class="op-global-search-open__hint" aria-hidden="true">
+    <kbd data-global-search-hint-key>⌘</kbd><kbd>K</kbd>
+  </span>
 </button>
 
 <dialog class="global-search-dialog" aria-labelledby="global-search-title" data-global-search-dialog>
@@ -84,7 +88,7 @@
     let activeIndex = -1;
 
     const hintKey = open.querySelector("[data-global-search-hint-key]");
-    if (hintKey && !/Mac|iPhone|iPad|iPod/.test(navigator.platform)) hintKey.textContent = "Ctrl K";
+    if (hintKey && !/Mac|iPhone|iPad|iPod/.test(navigator.platform)) hintKey.textContent = "Ctrl";
 
     const options = () => [...results.querySelectorAll("[role='option']")];
     const setActive = (index) => {
