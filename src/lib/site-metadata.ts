@@ -37,7 +37,7 @@ export const sectionNotes = {
 export const pageDescriptions = {
   home: "Platform & Site Reliability Engineer — case studies from building the infrastructure backbone of an industrial IoT company.",
   blog: "A home for poorly researched ideas that I find myself repeating a lot anyway.",
-  contact: "Contact Oleksandr Ponomarov by email, LinkedIn, or GitHub.",
+  contact: "For roles, collaborations, technical conversations, or questions about something I’ve published, choose the channel that fits.",
 } as const;
 
 /** A topic page's description: what is filed there and the newest notes,

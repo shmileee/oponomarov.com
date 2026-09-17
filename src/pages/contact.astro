@@ -1,6 +1,30 @@
 ---
 import SiteLayout from "../components/SiteLayout.astro";
-import { pageDescriptions } from "../lib/site-metadata";
+import { ownerName, pageDescriptions } from "../lib/site-metadata";
+
+const email = "ponomarov.aleksandr@gmail.com";
+const github = "https://github.com/shmileee";
+const linkedin = "https://www.linkedin.com/in/aleksandr-ponomarov";
+
+/* The one place the site says who the person behind it is in a form a
+   search engine can read: the two profiles the cards link (and mark rel="me")
+   as the same person, the address, where he is. */
+const structuredData = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "ContactPage",
+  url: "https://oponomarov.com/contact/",
+  name: `Contact ${ownerName}`,
+  description: pageDescriptions.contact,
+  mainEntity: {
+    "@type": "Person",
+    name: ownerName,
+    url: "https://oponomarov.com/",
+    email: `mailto:${email}`,
+    jobTitle: "Platform & Site Reliability Engineer",
+    address: { "@type": "PostalAddress", addressLocality: "Wrocław", addressCountry: "PL" },
+    sameAs: [github, linkedin],
+  },
+});
 ---
 
 <SiteLayout
@@ -9,34 +33,62 @@ import { pageDescriptions } from "../lib/site-metadata";
   description={pageDescriptions.contact}
   searchType="Contact"
 >
+  <script slot="head" type="application/ld+json" set:html={structuredData} />
   <main id="main-content" class="content-grid" tabindex="-1">
     <div class="contact-page wide">
       <section class="contact-hero section-shell hero" aria-labelledby="contact-title">
         <h1 id="contact-title">Let’s talk.<span class="hero-cursor" aria-hidden="true"></span></h1>
-        <p class="hero-copy">For roles, collaborations, technical conversations, or questions about something I’ve published, choose the channel that fits.</p>
+        <p class="hero-copy">{pageDescriptions.contact}</p>
+        {/* The two things a first message wants to know before it is written:
+            where the reply comes from and roughly when. */}
+        <p class="contact-meta">
+          <span>Wrocław, Poland</span><span>CET</span><span>Replies within a few days</span>
+        </p>
       </section>
 
+      {/* Each card is one link, named by its heading and stretched over the
+          card by the link's ::after (cards.css), so a screen reader hears
+          "Email me, link" and the address as its description, rather than
+          the eyebrow, the heading, the paragraph and the address as one
+          link name. The copy control sits in the card's top corner, above
+          the stretched link: the one thing on the card that does not open
+          the mail client. */}
       <section class="contact-methods section-shell" aria-label="Ways to get in touch">
-        <a class="contact-method" id="email" href="mailto:ponomarov.aleksandr@gmail.com">
-          <span class="contact-method__number">01 · direct</span>
-          <h2>Email me</h2>
-          <p class="prose">Best when your message needs context, an introduction, or a concrete next step.</p>
-          <span class="contact-method__action">ponomarov.aleksandr@gmail.com <span aria-hidden="true">→</span></span>
-        </a>
+        <ul class="contact-method-list">
+          <li class="contact-method" id="email">
+            <div class="contact-method__head">
+              <span class="contact-method__number">01 · direct</span>
+              <button type="button" class="contact-copy" data-copy={email} aria-label="Copy the email address" title="Copy the email address">
+                <svg class="contact-copy__icon" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5" /><path d="M10.5 5.5V3.75A1.25 1.25 0 0 0 9.25 2.5H3.75A1.25 1.25 0 0 0 2.5 3.75v5.5a1.25 1.25 0 0 0 1.25 1.25H5.5" fill="none" stroke="currentColor" stroke-width="1.5" /></svg>
+                <svg class="contact-copy__check" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><path d="M3 8.5l3.2 3L13 4.5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" /></svg>
+              </button>
+              <span class="sr-only" aria-live="polite" data-copy-status></span>
+            </div>
+            <h2><a href={`mailto:${email}`} aria-describedby="contact-email-address">Email me</a></h2>
+            <p>Best when your message needs context, an introduction, or a concrete next step.</p>
+            <div class="contact-method__action">
+              <span class="contact-method__target"><span id="contact-email-address">{email}</span> <span aria-hidden="true">→</span></span>
+            </div>
+          </li>
 
-        <a class="contact-method" id="linkedin" href="https://www.linkedin.com/in/aleksandr-ponomarov" rel="me">
-          <span class="contact-method__number">02 · professional</span>
-          <h2>Connect on LinkedIn</h2>
-          <p class="prose">Useful for professional introductions, roles, collaborations, and staying in touch.</p>
-          <span class="contact-method__action">Open LinkedIn <span aria-hidden="true">↗</span></span>
-        </a>
+          <li class="contact-method" id="linkedin">
+            <div class="contact-method__head"><span class="contact-method__number">02 · professional</span></div>
+            <h2><a href={linkedin} rel="me">Connect on LinkedIn</a></h2>
+            <p>Useful for professional introductions, roles, collaborations, and staying in touch.</p>
+            <div class="contact-method__action">
+              <span class="contact-method__target">Open LinkedIn <span aria-hidden="true">↗</span></span>
+            </div>
+          </li>
 
-        <a class="contact-method" id="github" href="https://github.com/shmileee" rel="me">
-          <span class="contact-method__number">03 · public work</span>
-          <h2>Find me on GitHub</h2>
-          <p class="prose">Use this for repositories, implementation details, and the public work behind these sites.</p>
-          <span class="contact-method__action">github.com/shmileee <span aria-hidden="true">↗</span></span>
-        </a>
+          <li class="contact-method" id="github">
+            <div class="contact-method__head"><span class="contact-method__number">03 · public work</span></div>
+            <h2><a href={github} rel="me" aria-describedby="contact-github-address">Find me on GitHub</a></h2>
+            <p>Use this for repositories, implementation details, and the public work behind these sites.</p>
+            <div class="contact-method__action">
+              <span class="contact-method__target"><span id="contact-github-address">github.com/shmileee</span> <span aria-hidden="true">↗</span></span>
+            </div>
+          </li>
+        </ul>
       </section>
 
       <section class="contact-note section">
@@ -48,3 +100,61 @@ import { pageDescriptions } from "../lib/site-metadata";
     </div>
   </main>
 </SiteLayout>
+
+<script>
+  /* The copy control: the address goes to the clipboard, the button shows
+     a check and tints for a moment, and the live region says so for a
+     screen reader. Re-run after every client-side navigation; the guard
+     keeps one listener per button when the same document is visited
+     twice. */
+  const COPIED_FOR = 1600;
+  const initCopy = () => {
+    document.querySelectorAll<HTMLButtonElement>("[data-copy]:not([data-copy-bound])").forEach((button) => {
+      button.dataset.copyBound = "true";
+      const status = button.parentElement?.querySelector<HTMLElement>("[data-copy-status]");
+      const idleLabel = button.getAttribute("aria-label") ?? "";
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      /* Where the asynchronous clipboard is refused (an embedded browser, a
+         page not counted as secure), select the address on the card and
+         copy the selection the old way; if even that is refused the
+         selection stays, one keystroke from copied. */
+      const target = document.getElementById(button.getAttribute("aria-describedby") ?? "") ?? button.closest(".contact-method")?.querySelector<HTMLElement>(".contact-method__target > span:first-child");
+      const copyBySelection = () => {
+        if (!target) return false;
+        const range = document.createRange();
+        range.selectNodeContents(target);
+        const selection = getSelection();
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+        const copied = document.execCommand("copy");
+        if (copied) selection?.removeAllRanges();
+        return copied;
+      };
+      button.addEventListener("click", async () => {
+        const text = button.dataset.copy ?? "";
+        let copied = false;
+        try {
+          await navigator.clipboard.writeText(text);
+          copied = true;
+        } catch {
+          copied = copyBySelection();
+        }
+        if (copied) {
+          button.dataset.copied = "true";
+          button.setAttribute("aria-label", "Copied");
+          if (status) status.textContent = "Email address copied.";
+        } else if (status) {
+          status.textContent = "Copying was refused; the address is selected on the card.";
+        }
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          delete button.dataset.copied;
+          button.setAttribute("aria-label", idleLabel);
+          if (status) status.textContent = "";
+        }, COPIED_FOR);
+      });
+    });
+  };
+  initCopy();
+  document.addEventListener("astro:page-load", initCopy);
+</script>

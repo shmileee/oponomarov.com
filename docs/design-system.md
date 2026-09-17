@@ -980,6 +980,24 @@ each: one wrapped row of `tag n` pairs below the sidebar breakpoint, and in
 the sidebar a list with one tag per hairlined row and the count on the right
 edge (`components/cards.css`).
 
+### The contact page
+
+`/contact/` is the one page that says who is behind the three sites in a form
+a machine reads: a `ContactPage` JSON-LD record in its head whose `mainEntity`
+is a `Person` with the email, the address (Wrocław), the job title and the two
+profiles the cards link as `sameAs` (the same two carry `rel="me"`). The hero
+lede is `pageDescriptions.contact`, so the page, its meta description and its
+Open Graph card read the same sentence, and a mono meta line under it gives
+the location, the time zone and the expected reply time. The three channels
+are a list of cards; each card's link is on its heading and stretched over the
+card by the link's `::after`, so the link's name is the heading ("Email me")
+with the address as its description, rather than every word on the card. The
+email card carries a copy control in its eyebrow row, a 44px target drawn as a
+24px disc above the stretched link, which writes the address to the clipboard
+(falling back to selecting it and `execCommand("copy")` where the async
+clipboard is refused), shows a check in the accent tint for a moment, and
+announces the result in a live region.
+
 ### Open Graph cards
 
 Every canonical page ships a 1200×630 card at `/og/<path>.png`
