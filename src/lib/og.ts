@@ -10,7 +10,7 @@ import { plainText } from "./inline-markdown";
 import { ogSlug } from "./og-path";
 import { formatDate, slugForPost, sortPosts } from "./posts";
 import { categoryDescription, ownerName, pageDescriptions, sectionPath, siteHost, type SiteSection } from "./site-metadata";
-import { topicLabel } from "./topic-labels";
+import { topicLabel, topicTag } from "./topic-labels";
 
 /**
  * Open Graph cards, one per canonical page, rendered at build time by
@@ -75,7 +75,7 @@ export function ogCards(): Promise<Map<string, OgCard>> {
       const label = topicLabel(category);
       add(`/blog/categories/${category}/`, {
         section: "blog",
-        title: label,
+        title: topicTag(category),
         description: categoryDescription(label, filed.map((post) => post.data.title)),
         kicker: `Topic · ${filed.length} ${filed.length === 1 ? "note" : "notes"}`,
       });

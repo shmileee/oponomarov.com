@@ -4,7 +4,7 @@ import SiteLayout from "../../../components/SiteLayout.astro";
 import { uniqueCategories } from "../../../lib/categories.mjs";
 import { formatDate, slugForPost, sortPosts } from "../../../lib/posts";
 import { categoryDescription } from "../../../lib/site-metadata";
-import { topicLabel } from "../../../lib/topic-labels";
+import { topicLabel, topicTag } from "../../../lib/topic-labels";
 
 export async function getStaticPaths() {
   const categories = uniqueCategories((await getCollection("posts")).map((post) => post.data.categories));
@@ -25,7 +25,7 @@ const description = categoryDescription(title, posts.map((post) => post.data.tit
       <header class="detail-header">
         <a class="back-link" href="/blog/">all notes</a>
         <p class="eyebrow">Topic · {count}</p>
-        <h1 id="category-title">{title}</h1>
+        <h1 id="category-title">{topicTag(category)}</h1>
       </header>
       {posts.length > 0 ? (
         <ol class="article-list category-list" data-pagefind-ignore>

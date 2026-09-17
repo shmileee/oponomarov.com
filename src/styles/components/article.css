@@ -1,6 +1,6 @@
 /* Article — layer `components`.
    The header block above every article body, the article-scoped composition
-   of the shared navigation primitives (topic chips, adjacent navigation, the
+   of the shared navigation primitives (tags, adjacent navigation, the
    footer link row), and the comments region below it.
    One implementation replaces three: the blog `.detail-header.post-header`,
    the case-study `.case-detail-header`, and the docs `.docs-page-header`.
@@ -95,14 +95,14 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* Header slots: proof list and topic chips.                            */
+  /* Header slots: proof list and tags.                                   */
   /* ------------------------------------------------------------------ */
 
   .article-header > .case-proof {
     align-self: stretch;
   }
 
-  /* The chips themselves are the shared quiet pill (components/navigation.css);
+  /* The tags themselves are the shared row (components/navigation.css);
      only the header rhythm is set here. */
   .article-header > .topic-list {
     margin-block-start: var(--space-5);

@@ -538,6 +538,14 @@
     color: var(--color-text-subtle);
   }
 
+  /* The topic directory: an index of hashtags with a count each. On a phone
+     it is one wrapped row of `#tag n` pairs, the way tags read anywhere
+     else; in the desktop sidebar it is a list, one tag per row with the
+     count on the right edge, so nine tags read as a table of contents
+     rather than as pills wrapping in a 16rem column with three of them
+     stranded on their own rows. Every link is a 44px target either way;
+     the visual row is pulled to a 32px pitch with the same negative-margin
+     trick the chips use. */
   .topic-directory {
     margin-block-start: var(--space-10);
     border-block-start: var(--border-width) solid var(--color-border-subtle);
@@ -545,7 +553,7 @@
   }
 
   .topic-directory-label {
-    margin: 0 0 var(--space-4);
+    margin: 0 0 var(--space-3);
     color: var(--color-text-subtle);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
@@ -558,7 +566,7 @@
   .topic-directory ul {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-2);
+    gap: 0 var(--space-5);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -567,6 +575,7 @@
   .topic-directory li {
     min-inline-size: 0;
     max-inline-size: 100%;
+    margin-block: calc((var(--space-8) - var(--tap-size)) / 2);
   }
 
   .topic-directory a {
@@ -576,9 +585,6 @@
     min-inline-size: var(--tap-size);
     min-block-size: var(--tap-size);
     max-inline-size: 100%;
-    border: var(--border-width) solid var(--color-border);
-    border-radius: var(--radius-pill);
-    padding: var(--space-1) var(--space-2) var(--space-1) var(--space-3);
     color: var(--color-text-muted);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
@@ -586,24 +592,42 @@
     line-height: var(--leading-snug);
     text-decoration: none;
     overflow-wrap: anywhere;
+    transition: color var(--dur-fast) var(--ease-out);
   }
 
   .topic-directory a:hover {
-    border-color: var(--color-accent);
-    background: var(--color-accent-surface);
-    color: var(--color-accent-soft);
+    color: var(--color-accent);
+  }
+
+  .topic-directory a:hover .topic-directory-tag {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
   }
 
   .topic-directory-count {
-    display: inline-grid;
-    place-items: center;
     flex: 0 0 auto;
-    min-inline-size: var(--space-6);
-    block-size: var(--space-6);
-    border-radius: var(--radius-pill);
-    background: var(--color-surface);
     color: var(--color-text-subtle);
-    font-size: var(--text-xs);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @container (width >= 64rem) {
+    .topic-directory ul {
+      display: block;
+    }
+
+    .topic-directory li {
+      margin-block: 0;
+    }
+
+    .topic-directory li + li {
+      border-block-start: var(--border-width) solid var(--color-border-subtle);
+    }
+
+    .topic-directory a {
+      display: flex;
+      justify-content: space-between;
+      inline-size: 100%;
+    }
   }
 
   .archive-years {

@@ -2,14 +2,16 @@
 import { getCollection } from "astro:content";
 import SiteLayout from "../../components/SiteLayout.astro";
 import { formatDate, slugForPost, sortPosts } from "../../lib/posts";
-import { topicLabel } from "../../lib/topic-labels";
+import { topicTag } from "../../lib/topic-labels";
 import { pageDescriptions } from "../../lib/site-metadata";
 
 const posts = sortPosts(await getCollection("posts"));
 const years = Map.groupBy(posts, (post) => String(post.data.date.getFullYear()));
 const categoryCounts = new Map<string, number>();
 posts.forEach((post) => post.data.categories.forEach((category) => categoryCounts.set(category, (categoryCounts.get(category) || 0) + 1)));
-const categories = [...categoryCounts].sort(([a], [b]) => a.localeCompare(b));
+/* Most-filed first, so the index reads as what the notes are about; ties in
+   name order so the tail is stable. */
+const categories = [...categoryCounts].sort(([a, countA], [b, countB]) => countB - countA || a.localeCompare(b));
 ---
 
 <SiteLayout
@@ -41,7 +43,7 @@ const categories = [...categoryCounts].sort(([a], [b]) => a.localeCompare(b));
               <p class="topic-directory-label" id="topic-directory-title">Browse by topic</p>
               <ul>
                 {categories.map(([category, count]) => (
-                  <li><a href={`/blog/categories/${category}/`}><span>{topicLabel(category)}</span><span class="topic-directory-count" aria-label={`${count} posts`}>{count}</span></a></li>
+                  <li><a href={`/blog/categories/${category}/`}><span class="topic-directory-tag">{topicTag(category)}</span><span class="topic-directory-count" aria-label={`${count} ${count === 1 ? "note" : "notes"}`}>{count}</span></a></li>
                 ))}
               </ul>
             </nav>

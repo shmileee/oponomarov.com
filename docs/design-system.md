@@ -962,12 +962,22 @@ do; do not work around it with a second theme script.
 Ten tabs, a history list and a search result all show the start of a title,
 and every page used to read "Oleksandr Ponomarov - Engineering Notes - …" to
 the same cut. `verify-build` accepts either shape and nothing else. Topic and
-category slugs (`kubernetes`, `developer-tools`, `ai`) are shown through
-`topicLabel()` (`src/lib/topic-labels.ts`): a short list of proper names and
-a generic rule (hyphens to spaces, first letter raised) for everything else,
-so a new category has a readable name the day it is written. A topic page's
+category slugs (`kubernetes`, `developer-tools`, `ai`) have two display forms
+(`src/lib/topic-labels.ts`). Wherever topics are listed, on a note's header, a
+study's header, the homepage filters and cards, the blog index directory and
+a topic page's heading, they are tags: `topicTag()` is the slug behind a hash,
+lower case with its hyphens (`#developer-tools`), plain mono text with no
+pill. In a heading that is a sentence, a document title, an RSS category or a
+description, `topicLabel()` gives the proper name: a short list of names and a
+generic rule (hyphens to spaces, first letter raised) for everything else, so
+a new category has a readable name the day it is written. A topic page's
 description names the count and the newest notes; a study may set
 `description` when its `summary` is too short to stand as a snippet.
+
+The blog index's topic directory lists the tags most-filed first with a count
+each: one wrapped row of `#tag n` pairs below the sidebar breakpoint, and in
+the sidebar a list with one tag per hairlined row and the count on the right
+edge (`components/cards.css`).
 
 ### Open Graph cards
 
