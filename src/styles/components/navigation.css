@@ -423,10 +423,11 @@
   /* Tags.                                                                */
   /* One row serves all three renderings: a linked <li> (blog), a bare    */
   /* <span> (case study), and a plain list item (homepage). A tag is the  */
-  /* slug behind a hash (`#terraform`, topic-labels.ts), set as plain     */
-  /* mono text in the muted tone with a word of space between tags, the   */
-  /* way a hashtag reads anywhere: the pill the published chips wore     */
-  /* around a proper-name label is chrome a hash already supplies.       */
+  /* slug as written (`terraform`, topic-labels.ts), set the way every    */
+  /* other metadata row on the site is set: small muted mono with a       */
+  /* middle dot between items, as the date and reading time above it and  */
+  /* the case cards' topic line already are. The pill the published chips */
+  /* wore around a proper-name label is gone with the proper name.       */
   /* Where the tag is a link, the link is the whole 44px target, pulled  */
   /* back onto the 24px row by its wrapper's negative margins.           */
   /* ------------------------------------------------------------------ */
@@ -434,7 +435,7 @@
   .topic-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 0 var(--space-4);
+    gap: 0 var(--space-2);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -449,6 +450,14 @@
     display: inline-flex;
     align-items: center;
     min-block-size: var(--space-6);
+  }
+
+  /* The separator belongs to the item it precedes, so a row that wraps
+     never ends a line with a dot; it is not part of the link. */
+  .topic-list > * + *::before {
+    content: "\00B7";
+    margin-inline-end: var(--space-2);
+    color: var(--color-text-subtle);
   }
 
   /* A wrapper around a link takes no room of its own: the 44px link is

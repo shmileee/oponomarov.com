@@ -143,7 +143,7 @@ const readerManifest = studies.map((study) => ({
                   <div><dt>Evidence</dt><dd set:html={renderInline(study.entry.data.evidence, inlineContexts.card)} /></div>
                 </dl>
               ) : <span class="case-card-summary" set:html={renderInline(study.entry.data.summary, inlineContexts.card)} />}
-              <span class="case-card-topics">{study.entry.data.topics.map(topicTag).join(" · ")}</span>
+              <span class="case-card-topics">{study.entry.data.topics.map((topic) => <span>{topicTag(topic)}</span>)}</span>
               <span class="case-card-action">{study.entry.data.spotlight ? "full story ↑" : "read →"}</span>
             </a>
           ))}

@@ -340,8 +340,20 @@
     font-weight: var(--weight-semibold);
   }
 
+  /* The card's tag row: the same middle-dot separators as every tag row,
+     each dot belonging to the tag it precedes so a wrapped row never ends
+     a line on a dot. */
   .case-card-topics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-2);
     margin-block-start: auto;
+  }
+
+  .case-card-topics > * + *::before {
+    content: "\00B7";
+    margin-inline-end: var(--space-2);
+    color: var(--color-text-subtle);
   }
 
   /* Shared proof list (spotlight + case cards + case-study header). */
@@ -538,14 +550,14 @@
     color: var(--color-text-subtle);
   }
 
-  /* The topic directory: an index of hashtags with a count each. On a phone
-     it is one wrapped row of `#tag n` pairs, the way tags read anywhere
-     else; in the desktop sidebar it is a list, one tag per row with the
-     count on the right edge, so nine tags read as a table of contents
-     rather than as pills wrapping in a 16rem column with three of them
-     stranded on their own rows. Every link is a 44px target either way;
-     the visual row is pulled to a 32px pitch with the same negative-margin
-     trick the chips use. */
+  /* The topic directory: an index of tags with a count each. On a phone it
+     is one wrapped row of `tag n` pairs, the way tags read anywhere else;
+     in the desktop sidebar it is a list, one tag per row with the count on
+     the right edge, so nine tags read as a table of contents rather than as
+     pills wrapping in a 16rem column with three of them stranded on their
+     own rows. Every link is a 44px target either way; the visual row is
+     pulled to a 32px pitch with the same negative-margin trick the tag rows
+     use. */
   .topic-directory {
     margin-block-start: var(--space-10);
     border-block-start: var(--border-width) solid var(--color-border-subtle);

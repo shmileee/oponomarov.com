@@ -47,15 +47,15 @@ export function topicLabel(slug: string): string {
 }
 
 /**
- * The slug as a tag, the way it is shown wherever topics are listed as
- * chips or as an index: `#terraform`, `#developer-tools`. A tag is the slug
- * itself, lower case with its hyphens, behind a hash, because that is what
- * a hashtag is and because it is also the URL segment the tag links to; the
- * proper-name form above is for headings and sentences, where "#gitops"
- * would read as markup. A portfolio topic may be written with spaces
- * ("developer experience"); a hashtag cannot contain one, so they become
- * hyphens.
+ * The slug as a tag, the way it is shown wherever topics are listed in a
+ * row or as an index: `terraform`, `developer-tools`. A tag is the slug
+ * itself, lower case with its hyphens, the identifier the content wrote and
+ * the URL segment it links to, set in the site's metadata voice (small
+ * muted mono, middle dots between tags) rather than as a hashtag, which is
+ * a social network's idiom. The proper-name form above is for headings and
+ * sentences. A portfolio topic may be written with spaces ("developer
+ * experience"); a tag is one token, so they become hyphens.
  */
 export function topicTag(slug: string): string {
-  return `#${slug.trim().toLowerCase().replace(/\s+/g, "-")}`;
+  return slug.trim().toLowerCase().replace(/\s+/g, "-");
 }
