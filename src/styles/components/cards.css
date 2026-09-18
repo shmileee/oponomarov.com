@@ -552,14 +552,10 @@
     color: var(--color-text-subtle);
   }
 
-  /* The topic directory: an index of tags with a count each. On a phone it
-     is one wrapped row of `tag n` pairs, the way tags read anywhere else;
-     in the desktop sidebar it is a list, one tag per row with the count on
-     the right edge, so nine tags read as a table of contents rather than as
-     pills wrapping in a 16rem column with three of them stranded on their
-     own rows. Every link is a 44px target either way; the visual row is
-     pulled to a 32px pitch with the same negative-margin trick the tag rows
-     use. */
+  /* The notes index's topic directory: the same pill chips the homepage
+     filters use (topic-filters above), one per category, wrapping in the
+     sidebar and in the stacked header alike, with the note count inside the
+     chip in the subtle tone. One chip vocabulary across the two indexes. */
   .topic-directory {
     margin-block-start: var(--space-10);
     border-block-start: var(--border-width) solid var(--color-border-subtle);
@@ -580,7 +576,7 @@
   .topic-directory ul {
     display: flex;
     flex-wrap: wrap;
-    gap: 0 var(--space-5);
+    gap: var(--space-2);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -589,72 +585,37 @@
   .topic-directory li {
     min-inline-size: 0;
     max-inline-size: 100%;
-    margin-block: calc((var(--space-8) - var(--tap-size)) / 2);
   }
 
   .topic-directory a {
-    position: relative;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: var(--space-2);
-    min-inline-size: 0; /* base.css floors every non-prose link at 44px */
+    min-inline-size: var(--tap-size);
     min-block-size: var(--tap-size);
     max-inline-size: 100%;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-pill);
+    padding: var(--space-2) var(--space-4);
     color: var(--color-text-muted);
     font-family: var(--font-mono);
-    font-size: var(--text-xs);
+    font-size: var(--text-sm);
     font-weight: var(--weight-medium);
     line-height: var(--leading-snug);
     text-decoration: none;
     overflow-wrap: anywhere;
-    transition: color var(--dur-fast) var(--ease-out);
-  }
-
-  /* The 44px hit area for a short entry ("ecr 1") sits on a pseudo-element
-     centred on the text, as for .topic-list, so the wrapped row keeps even
-     gaps between entries; S7 measures the pseudo-element with the box. */
-  .topic-directory a::after {
-    content: "";
-    position: absolute;
-    inset-block: 0;
-    inset-inline-start: 50%;
-    inline-size: max(100%, var(--tap-size));
-    translate: -50% 0;
   }
 
   .topic-directory a:hover {
-    color: var(--color-accent);
-  }
-
-  .topic-directory a:hover .topic-directory-tag {
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
+    border-color: var(--color-accent);
+    color: var(--color-accent-soft);
   }
 
   .topic-directory-count {
     flex: 0 0 auto;
     color: var(--color-text-subtle);
     font-variant-numeric: tabular-nums;
-  }
-
-  @container (width >= 64rem) {
-    .topic-directory ul {
-      display: block;
-    }
-
-    .topic-directory li {
-      margin-block: 0;
-    }
-
-    .topic-directory li + li {
-      border-block-start: var(--border-width) solid var(--color-border-subtle);
-    }
-
-    .topic-directory a {
-      display: flex;
-      justify-content: space-between;
-      inline-size: 100%;
-    }
   }
 
   .archive-years {

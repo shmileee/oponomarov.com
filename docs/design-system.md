@@ -985,10 +985,10 @@ day it is written. A topic page's description names the count and the newest
 notes; a study may set `description` when its `summary` is too short to stand
 as a snippet.
 
-The blog index's topic directory lists the tags most-filed first with a count
-each: one wrapped row of `tag n` pairs below the sidebar breakpoint, and in
-the sidebar a list with one tag per hairlined row and the count on the right
-edge (`components/cards.css`).
+The blog index's topic directory lists the tags most-filed first as the same
+pill chips the homepage topic filters use, each carrying its note count in the
+subtle tone, wrapping in the sidebar and in the stacked header alike
+(`components/cards.css`): one chip vocabulary across the two indexes.
 
 ### The contact page
 
