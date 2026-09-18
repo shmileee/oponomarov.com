@@ -128,9 +128,11 @@
     color: var(--color-text);
   }
 
+  /* The arrow sits in the middle of the gap between two steps (the step's
+     bottom padding), not a few pixels above the next number. */
   .arc-arrow {
     position: absolute;
-    inset-block-end: var(--space-3);
+    inset-block-end: calc(var(--space-12) / 2);
     inset-inline-start: calc(var(--space-10) / 2);
     z-index: 1;
     padding: var(--space-1);
@@ -139,7 +141,7 @@
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     line-height: var(--leading-tight);
-    transform: translateX(-50%);
+    transform: translate(-50%, 50%);
   }
 
   /* ------------------------------------------------------------------ */

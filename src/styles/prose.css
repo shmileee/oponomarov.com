@@ -386,6 +386,13 @@
     line-height: calc(var(--leading-body) * 1em / var(--code-inline-scale));
   }
 
+  /* A bullet needs no room for two digits: the dot sits at the text edge
+     and the item text one step in, not at the number indent above, which
+     read as a gap between dot and text on a phone. */
+  .prose ul:not([class]) {
+    --list-indent: var(--space-5);
+  }
+
   /* The bullet: a dot on the x-height centre of the first line. */
   .prose ul:not([class]) > li::before {
     content: "";

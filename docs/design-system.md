@@ -972,11 +972,11 @@ do; do not work around it with a second theme script.
 Ten tabs, a history list and a search result all show the start of a title,
 and every page used to read "Oleksandr Ponomarov - Engineering Notes - …" to
 the same cut. `verify-build` accepts either shape and nothing else. Topic and
-category slugs (`kubernetes`, `developer-tools`, `ai`) have two display forms
+category slugs (`kubernetes`, `devex`, `ai`) have two display forms
 (`src/lib/topic-labels.ts`). Wherever topics are listed, on a note's header, a
 study's header, the homepage filters and cards and the blog index directory,
 they are tags: `topicTag()` is the slug as written, lower case with its
-hyphens (`developer-tools`), set in the metadata voice, small muted mono with
+hyphens (`devex`), set in the metadata voice, small muted mono with
 a middle dot between tags, with no pill and no hash. In a heading, a document
 title, an RSS category or a description, `topicLabel()` gives the proper
 name: a short list of names and a generic rule (hyphens to spaces, first

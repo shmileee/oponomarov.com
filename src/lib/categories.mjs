@@ -34,3 +34,30 @@ export const readPostCategories = (dirPath) =>
       if (Array.isArray(categories) && categories.every((category) => typeof category === "string")) return categories;
       throw new Error(`${path} frontmatter must declare categories as a string or an array of strings`);
     });
+
+/**
+ * Old category slugs and the slug each now lives at. A renamed category
+ * keeps its URL working: the categories page renders a redirect for every
+ * key, and verify-build checks that each target is a live category and
+ * that no key is itself a category.
+ *
+ * @type {Readonly<Record<string, string>>}
+ */
+export const categoryAliases = Object.freeze({
+  "developer-tools": "devex",
+});
+
+/**
+ * Alias routes for the categories that exist: [oldSlug, newSlug] pairs,
+ * failing on an alias that points at a category no post carries or that
+ * collides with a real one.
+ *
+ * @param {readonly string[]} categories
+ * @returns {[string, string][]}
+ */
+export const categoryRedirects = (categories) =>
+  Object.entries(categoryAliases).map(([from, to]) => {
+    if (categories.includes(from)) throw new Error(`Category alias "${from}" is also a live category; drop the alias or rename the posts.`);
+    if (!categories.includes(to)) throw new Error(`Category alias "${from}" points at "${to}", which no post carries.`);
+    return [from, to];
+  });

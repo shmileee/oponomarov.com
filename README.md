@@ -32,7 +32,7 @@ or removing a case study, note or manual is a content commit and nothing else:
 | --- | --- | --- |
 | `content/case-studies/<folder>/index.md` | `order` (integer, optional; unnumbered studies follow alphabetically) — the displayed case number is the position in that order | `aliases` (old slugs and reader ids that redirect here and open the reader), `featured`, `spotlight`, `spotlightProof`, `cardLabel`, `role`, `evidence` |
 | `content/arc/*.md` | `number` | `links[].study` names a case-study **folder**; an unknown folder fails the build with the offending reference |
-| `content/posts/*.md` | `date`, newest first | `categories` → `/blog/categories/<category>/`; `aliases` (old slugs that redirect here; the slug is the file name without its date, so a renamed file lists its old name here — comments are keyed by pathname, so the alias keeps the link, not the thread) |
+| `content/posts/*.md` | `date`, newest first | `categories` → `/blog/categories/<category>/` (a renamed category keeps its old URL through `categoryAliases` in `src/lib/categories.mjs`); `aliases` (old slugs that redirect here; the slug is the file name without its date, so a renamed file lists its old name here — comments are keyed by pathname, so the alias keeps the link, not the thread) |
 | `docs/content/*.md` | `index.md` first, then `order`, then title | The adjacent Previous/Next cards follow this sequence |
 
 `summary`, `role`, `evidence`, `spotlightProof` and every `description` are

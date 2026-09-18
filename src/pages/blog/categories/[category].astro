@@ -1,23 +1,46 @@
 ---
 import { getCollection } from "astro:content";
 import SiteLayout from "../../../components/SiteLayout.astro";
-import { uniqueCategories } from "../../../lib/categories.mjs";
+import { categoryRedirects, uniqueCategories } from "../../../lib/categories.mjs";
 import { formatDate, slugForPost, sortPosts } from "../../../lib/posts";
 import { categoryDescription } from "../../../lib/site-metadata";
 import { topicLabel } from "../../../lib/topic-labels";
 
 export async function getStaticPaths() {
   const categories = uniqueCategories((await getCollection("posts")).map((post) => post.data.categories));
-  return categories.map((category) => ({ params: { category }, props: { category, title: topicLabel(category) } }));
+  return [
+    ...categories.map((category) => ({ params: { category }, props: { category, title: topicLabel(category), redirect: false } })),
+    /* A renamed category keeps its old URL as a redirect page (categories.mjs). */
+    ...categoryRedirects(categories).map(([from, to]) => ({ params: { category: from }, props: { category: to, title: topicLabel(to), redirect: true } })),
+  ];
 }
 
-const { category, title } = Astro.props;
+const { category, title, redirect } = Astro.props;
 const posts = sortPosts((await getCollection("posts")).filter((post) => post.data.categories.includes(category)));
 const count = `${posts.length} ${posts.length === 1 ? "note" : "notes"}`;
 const description = categoryDescription(title, posts.map((post) => post.data.title));
+const href = `/blog/categories/${category}/`;
 ---
 
-<SiteLayout activeApp="blog" canonicalOrigin="https://oponomarov.com" title={title} description={description} searchType="Topic" rssHref="/blog/feed.xml">
+{redirect ? (
+  <SiteLayout
+    activeApp="blog"
+    canonicalOrigin="https://oponomarov.com"
+    canonicalPath={href}
+    title="Topic moved"
+    description={description}
+    robots="noindex,follow"
+    indexable={false}
+  >
+    <Fragment slot="head">
+      <meta http-equiv="refresh" content={`0; url=${href}`} />
+      <script is:inline define:vars={{ target: href }}>location.replace(target + location.search + location.hash);</script>
+    </Fragment>
+    <main id="main-content" class="content-grid" tabindex="-1">
+      <div class="prose"><p>Moved to <a href={href}>{title}</a>.</p></div>
+    </main>
+  </SiteLayout>
+) : <SiteLayout activeApp="blog" canonicalOrigin="https://oponomarov.com" title={title} description={description} searchType="Topic" rssHref="/blog/feed.xml">
   <main id="main-content" class="content-grid" tabindex="-1">
     <section class="category-detail" aria-labelledby="category-title">
       {/* The article header's shape: back link, eyebrow, title. The eyebrow
@@ -39,4 +62,4 @@ const description = categoryDescription(title, posts.map((post) => post.data.tit
       ) : <div class="empty-state"><p>No notes are filed here yet.</p><a href="/blog/">Back to Notes →</a></div>}
     </section>
   </main>
-</SiteLayout>
+</SiteLayout>}

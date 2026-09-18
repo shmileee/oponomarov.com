@@ -160,18 +160,24 @@
     color: var(--color-text);
   }
 
-  /* Also a <button> (the 404 page opens the search dialog with one): the
-     reset gives buttons a border and a background of their own. */
+  /* The quiet action: the same pill as the primary, drawn in the border
+     tone with muted text, so "Contact me →" beside (or, on a phone, under)
+     "Browse case studies →" reads as the second of two buttons rather than
+     a stray line of small mono text. Also a <button> (the 404 page opens
+     the search dialog with one): the reset gives buttons a border and a
+     background of their own, overridden here. */
   .secondary-link {
-    padding-block: var(--space-2);
-    padding-inline: 0;
-    border: 0;
+    padding: var(--space-2) var(--space-5);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-pill);
     background: none;
     color: var(--color-text-muted);
+    letter-spacing: 0.04em;
     cursor: pointer;
   }
 
   .secondary-link:hover {
+    border-color: var(--color-text-subtle);
     color: var(--color-text);
   }
 

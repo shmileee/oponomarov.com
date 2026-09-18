@@ -1,13 +1,13 @@
 /**
  * Topics and categories are written as slugs in the content repositories
- * (`kubernetes`, `developer-tools`, `argocd`, `ai`), which is what a URL and
+ * (`kubernetes`, `devex`, `argocd`, `ai`), which is what a URL and
  * a filter key want. Shown as they are written they became labels: a page
- * headed "kubernetes", a chip reading "developer-tools", an Open Graph card
+ * headed "kubernetes", a chip reading "devex", an Open Graph card
  * saying "argocd". This is the one place a slug becomes its display name.
  *
  * Proper names that the generic rule would get wrong are listed; anything
  * else is the slug with hyphens as spaces and the first letter raised
- * ("developer experience" → "Developer experience", "cost" → "Cost"). A new
+ * ("cost" → "Cost", "gitops" → "Gitops" until listed). A new
  * category in a content repository therefore has a readable name on the day
  * it is written, and a wrong one is fixed here, once.
  */
@@ -17,6 +17,7 @@ const NAMED: Readonly<Record<string, string>> = {
   aws: "AWS",
   cicd: "CI/CD",
   "ci-cd": "CI/CD",
+  devex: "DevEx",
   ecr: "ECR",
   eks: "EKS",
   gcp: "GCP",
@@ -48,7 +49,7 @@ export function topicLabel(slug: string): string {
 
 /**
  * The slug as a tag, the way it is shown wherever topics are listed in a
- * row or as an index: `terraform`, `developer-tools`. A tag is the slug
+ * row or as an index: `terraform`, `devex`. A tag is the slug
  * itself, lower case with its hyphens, the identifier the content wrote and
  * the URL segment it links to, set in the site's metadata voice (small
  * muted mono, middle dots between tags) rather than as a hashtag, which is

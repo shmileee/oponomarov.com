@@ -35,7 +35,7 @@ const renderedPrinciples = await Promise.all(principleEntries.map(async (entry) 
 
 /* Filter buttons come from the studies themselves: the known topics keep
    this order, and a topic that appears for the first time is appended. */
-const topics = collectTopics(studies, ["reliability", "networking", "developer experience", "security", "ai", "cost", "delivery"]);
+const topics = collectTopics(studies, ["reliability", "networking", "devex", "security", "ai", "cost", "delivery"]);
 const initiallyVisible = 9;
 const readerManifest = studies.map((study) => ({
   id: study.folder,
