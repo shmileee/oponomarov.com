@@ -1173,7 +1173,7 @@ current route set from the build rather than freezing that count forever.
 | S4 | Every `pre` whose lines overflow is its own scroll container (`overflow-x: auto`); none wraps or overflows the page | Wrapped commands, and code widening the page |
 | S5 | Zero non-fixed elements painting outside the viewport at 320px | Hidden grid or media blowouts |
 | S6 | 100% of tables inside regions with `tabindex="0"`, `role="region"`, and an accessible name | Keyboard-inaccessible columns |
-| S7 | Zero standalone controls below 44×44px at 375px; inline prose links exempt | Undersized targets |
+| S7 | Zero standalone controls below 44×44px at 375px, counting an absolutely positioned pseudo-element hit area (a tag in a row keeps its text-width box so the dots between tags stay even); inline prose links exempt | Undersized targets |
 | S8 | Identical non-EC stylesheet set across all real routes | Per-family CSS loading |
 | S9 | Zero self-overflowing `overflow:hidden` containers outside the `sr-only` allowlist and the declared ellipsis (`text-overflow: ellipsis` with the full text in a `title` tooltip: a frame title's directory) | Content clipping disguised as no page overflow |
 | S10 | No unauthorized inline styles; all images sized and named; exactly one `h1`; zero console errors | Content hygiene and runtime regressions |

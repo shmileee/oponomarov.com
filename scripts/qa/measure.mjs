@@ -369,10 +369,29 @@ const PROBE = () => {
   const inlineStyleAttrs = [docEl, document.body, ...all].filter((el) => el.hasAttribute('style'))
     .map((el) => ({ sel: describe(el), path: ancestry(el), value: el.getAttribute('style') }));
 
-  // 7. Tap targets (interactive elements smaller than 44x44 CSS px).
+  // 7. Tap targets (interactive elements smaller than 44x44 CSS px). A
+  //    target may carry its hit area on an absolutely positioned
+  //    pseudo-element (a tag in a row keeps its text-width box so the dots
+  //    between tags stay even); the pseudo-element's used size counts as
+  //    the target's when it is at least as large as the box.
+  const hitArea = (el, r) => {
+    let width = r.width;
+    let height = r.height;
+    for (const pseudo of ['::before', '::after']) {
+      const ps = getComputedStyle(el, pseudo);
+      if (ps.content === 'none' || ps.position !== 'absolute') continue;
+      const pw = parseFloat(ps.width);
+      const ph = parseFloat(ps.height);
+      if (Number.isFinite(pw) && pw > width) width = pw;
+      if (Number.isFinite(ph) && ph > height) height = ph;
+    }
+    return { width, height };
+  };
   const smallTargets = Array.from(document.querySelectorAll('a,button,input,select,textarea,[role="button"],summary'))
     .map((el) => ({ el, r: el.getBoundingClientRect(), cs: getComputedStyle(el) }))
-    .filter(({ r, cs }) => r.width > 0 && r.height > 0 && cs.visibility !== 'hidden' && (r.width < 44 || r.height < 44))
+    .filter(({ r, cs }) => r.width > 0 && r.height > 0 && cs.visibility !== 'hidden')
+    .map((entry) => ({ ...entry, hit: hitArea(entry.el, entry.r) }))
+    .filter(({ hit }) => hit.width < 44 || hit.height < 44)
     .map(({ el, r, cs }) => ({
       sel: describe(el), path: ancestry(el), w: r.width, h: r.height,
       text: (el.textContent || '').trim().slice(0, 30),
