@@ -20,6 +20,14 @@ const caseStudies = defineCollection({
     description: z.string().optional(),
     role: z.string().optional(),
     evidence: z.string().optional(),
+    /* When the work happened: a year, or a range with an en dash
+       (`2022–2024`, `2023–present`). Shown in the study's metadata line and
+       in the reader; the studies carry no dates otherwise. */
+    period: z.string().regex(/^\d{4}(–(\d{4}|present))?$/, "a year, or a range with an en dash: 2022–2024").optional(),
+    /* Series links by folder name. Declaring one side is enough — the other
+       study gets the reverse link at build time (src/lib/case-study-series.mjs). */
+    prequel: slug.optional(),
+    sequel: slug.optional(),
     topics: z.array(z.string()).min(1),
     /* Position in the published order (src/lib/case-studies.ts). Optional so
        a new folder builds before it is numbered; unnumbered studies follow

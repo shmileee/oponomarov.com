@@ -30,7 +30,7 @@ or removing a case study, note or manual is a content commit and nothing else:
 
 | Content | Ordering | Also read by the engine |
 | --- | --- | --- |
-| `content/case-studies/<folder>/index.md` | `order` (integer, optional; unnumbered studies follow alphabetically) — the displayed case number is the position in that order | `aliases` (old slugs and reader ids that redirect here and open the reader), `featured`, `spotlight`, `spotlightProof`, `cardLabel`, `role`, `evidence` |
+| `content/case-studies/<folder>/index.md` | `order` (integer, optional; unnumbered studies follow alphabetically) — the displayed case number is the position in that order | `aliases` (old slugs and reader ids that redirect here and open the reader), `featured`, `spotlight`, `spotlightProof`, `cardLabel`, `role`, `evidence`, `period` (`2022–2024`, shown in the metadata line and the reader), `sequel`/`prequel` (a folder this study continues in or from; declared on either side, rendered as a card at the end of both bodies, an unknown folder fails the build) |
 | `content/arc/*.md` | `number` | `links[].study` names a case-study **folder**; an unknown folder fails the build with the offending reference |
 | `content/posts/*.md` | `date`, newest first | `categories` → `/blog/categories/<category>/` (a renamed category keeps its old URL through `categoryAliases` in `src/lib/categories.mjs`, applied once the content carries the rename); `aliases` (old slugs that redirect here; the slug is the file name without its date, so a renamed file lists its old name here — comments are keyed by pathname, so the alias keeps the link, not the thread) |
 | `docs/content/*.md` | `index.md` first, then `order`, then title | The adjacent Previous/Next cards follow this sequence |

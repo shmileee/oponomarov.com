@@ -1,4 +1,5 @@
 import { getCollection, type CollectionEntry } from "astro:content";
+import { seriesLinks } from "./case-study-series.mjs";
 
 /**
  * The case-study catalogue, derived entirely from the portfolio content.
@@ -12,6 +13,9 @@ import { getCollection, type CollectionEntry } from "astro:content";
  *
  * `aliases` are old slugs (`12-the-fleet-that-patches-itself`, or an id the
  * reader once used) that still redirect here and still open the reader.
+ *
+ * `series` holds the study this one continues from and the one it continues
+ * in, resolved from either side's `prequel`/`sequel` frontmatter.
  */
 export interface CaseStudy {
   readonly entry: CollectionEntry<"caseStudies">;
@@ -21,6 +25,12 @@ export interface CaseStudy {
   readonly number: number;
   readonly href: string;
   readonly aliases: readonly string[];
+  readonly series: CaseStudySeries;
+}
+
+export interface CaseStudySeries {
+  readonly prequel?: CaseStudy;
+  readonly sequel?: CaseStudy;
 }
 
 export const caseStudyFolder = (entry: CollectionEntry<"caseStudies">) => entry.id.replace(/\/index$/, "");
@@ -41,13 +51,26 @@ let cached: Promise<CaseStudy[]> | undefined;
 export function loadCaseStudies(): Promise<CaseStudy[]> {
   cached ??= (async () => {
     const entries = (await getCollection("caseStudies")).sort(compareStudies);
-    const studies = entries.map((entry, index) => ({
+    const studies: CaseStudy[] = entries.map((entry, index) => ({
       entry,
       folder: caseStudyFolder(entry),
       number: index + 1,
       href: caseStudyHref(caseStudyFolder(entry)),
       aliases: entry.data.aliases,
+      series: {},
     }));
+    /* Series links are declared on one study and resolved for both; a folder
+       that does not exist, or two studies claiming one sequel, fails here. */
+    const byFolder = new Map(studies.map((study) => [study.folder, study]));
+    const links = seriesLinks(studies.map((study) => ({ folder: study.folder, prequel: study.entry.data.prequel, sequel: study.entry.data.sequel })));
+    for (const study of studies) {
+      const link = links.get(study.folder);
+      if (!link) continue;
+      const series: { prequel?: CaseStudy; sequel?: CaseStudy } = {};
+      if (link.prequel) series.prequel = byFolder.get(link.prequel);
+      if (link.sequel) series.sequel = byFolder.get(link.sequel);
+      (study as { series: CaseStudySeries }).series = series;
+    }
     /* Every alias must be unique across the catalogue and must not shadow a
        real folder: a redirect that points two ways is a build error, not a
        page that resolves to whichever study won. */

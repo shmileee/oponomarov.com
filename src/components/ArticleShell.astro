@@ -15,6 +15,8 @@ interface Props {
   readonly eyebrow?: string;
   readonly backLink?: ArticleLink;
   readonly publishedTime?: Date;
+  /** When the work happened, for an article that has a period rather than a date (`2022–2024`). */
+  readonly periodLabel?: string;
   readonly readingMinutes?: number;
   readonly previous?: ArticleLink;
   readonly next?: ArticleLink;
@@ -22,10 +24,11 @@ interface Props {
 }
 
 const {
-  title, description, descriptionHtml, eyebrow, backLink, publishedTime, readingMinutes,
+  title, description, descriptionHtml, eyebrow, backLink, publishedTime, periodLabel, readingMinutes,
   previous, next, adjacentLabel = "Adjacent articles",
 } = Astro.props;
 const dateLabel = publishedTime && formatDate(publishedTime, "display");
+const hasMeta = Boolean(publishedTime || periodLabel || readingMinutes !== undefined);
 ---
 
 <main id="main-content" class="article content-grid" tabindex="-1">
@@ -40,10 +43,12 @@ const dateLabel = publishedTime && formatDate(publishedTime, "display");
         find the page. SiteLayout supplies the clean title for the result. */}
     <h1 data-pagefind-weight="8">{title}</h1>
     {descriptionHtml ? <p class="article-dek prose prose--lede" set:html={descriptionHtml} /> : description && <p class="article-dek prose prose--lede">{description}</p>}
-    {(publishedTime || readingMinutes !== undefined) && (
+    {hasMeta && (
       <p class="article-meta" data-pagefind-ignore>
         {publishedTime && <time datetime={publishedTime.toISOString()}>{dateLabel}</time>}
-        {publishedTime && readingMinutes !== undefined && <span aria-hidden="true">·</span>}
+        {publishedTime && (periodLabel || readingMinutes !== undefined) && <span aria-hidden="true">·</span>}
+        {periodLabel && <span>{periodLabel}</span>}
+        {periodLabel && readingMinutes !== undefined && <span aria-hidden="true">·</span>}
         {readingMinutes !== undefined && <span>{readingMinutes} min read</span>}
       </p>
     )}

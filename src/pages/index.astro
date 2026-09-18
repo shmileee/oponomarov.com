@@ -46,8 +46,9 @@ const readerManifest = studies.map((study) => ({
   /* Rendered here so the reader shows the same dek the study page does;
      renderInline escapes the source, so this is the only HTML it carries. */
   summaryHtml: renderInline(study.entry.data.summary, inlineContexts.lede),
-  /* Tags, so the dialog reads as the page does. */
+  /* Tags and the period, so the dialog reads as the page does. */
   topics: study.entry.data.topics.map(topicTag),
+  period: study.entry.data.period ?? null,
 }));
 ---
 

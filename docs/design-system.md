@@ -77,7 +77,7 @@ imports only; each of the other 14 files wraps its rules in its named layer.
 | `components/article.css` | `components` | Article header, dek, metadata, proof list, comments |
 | `components/reader.css` | `components` | Homepage reader dialog and its children |
 | `components/lightbox.css` | `components` | Enlarged-image dialog ContentInteractions opens from article images |
-| `prose.css` | `prose` | Shared prose, admonitions, EC frame adjustments, inline code, tables, native content elements |
+| `prose.css` | `prose` | Shared prose, admonitions, EC frame adjustments, inline code, tables, native content elements, the case-study series card the engine renders at the end of a body that continues elsewhere |
 | `primitives.css` | `primitives` | Every selector in the content-primitive contract |
 | `utilities.css` | `utilities` | `sr-only` only |
 | `print.css` | `print` | `@media print` only: hides the screen chrome, dialogs and navigation, flattens the grids to one column, wraps code and keeps blocks whole; the last layer so it wins without `!important` |

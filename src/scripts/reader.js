@@ -99,7 +99,9 @@ export function setupReader({ signal } = {}) {
     const previous = manifest.byId.get(manifest.ids[(current - 1 + manifest.ids.length) % manifest.ids.length]);
     const next = manifest.byId.get(manifest.ids[(current + 1) % manifest.ids.length]);
     activeId = entry.id;
-    metaNumber.textContent = `Case study ${String(entry.number).padStart(2, "0")}`;
+    /* The page's metadata line shows the period beside the reading time; the
+       dialog has one line for furniture, so the period follows the number. */
+    metaNumber.textContent = `Case study ${String(entry.number).padStart(2, "0")}${entry.period ? ` · ${entry.period}` : ""}`;
     /* One span per topic, the dot inside it with a no-break space: a line
        can break only before a topic, never between a dot and its tag or at
        the hyphen inside "developer-experience". */

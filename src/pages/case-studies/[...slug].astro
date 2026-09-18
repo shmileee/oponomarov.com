@@ -65,6 +65,7 @@ const description = plainText(data.description ?? data.summary);
     title={data.title}
     descriptionHtml={renderInline(data.summary, inlineContexts.lede)}
     eyebrow={`Case study ${formatCaseNumber(study.number)}${data.featured ? " · featured" : ""}`}
+    periodLabel={data.period}
     readingMinutes={readingMinutes(study.entry.body)}
     backLink={{ href: "/#index", title: "all case studies" }}
   >
@@ -82,6 +83,27 @@ const description = plainText(data.description ?? data.summary);
     <div slot="topics" class="topic-list" aria-label="Topics" data-pagefind-ignore>{data.topics.map((topic: string) => <span>{topicTag(topic)}</span>)}</div>
     <PageToc slot="toc" headings={headings} />
     <Content />
+    {/* The series card closes the article body rather than the page: the
+        homepage reader loads the body, so a study that continues elsewhere
+        says so in the dialog too, and the reader opens the link in place. */}
+    {(study.series.prequel || study.series.sequel) && (
+      <nav class="series-nav" aria-label="Series" data-pagefind-ignore>
+        {study.series.prequel && (
+          <a href={study.series.prequel.href}>
+            <span class="series-nav__label">Continues from</span>
+            <span class="series-nav__number">Case {formatCaseNumber(study.series.prequel.number)}</span>
+            <strong class="series-nav__title">{study.series.prequel.entry.data.title}</strong>
+          </a>
+        )}
+        {study.series.sequel && (
+          <a class="series-nav__next" href={study.series.sequel.href}>
+            <span class="series-nav__label">Continues in</span>
+            <span class="series-nav__number">Case {formatCaseNumber(study.series.sequel.number)}</span>
+            <strong class="series-nav__title">{study.series.sequel.entry.data.title}</strong>
+          </a>
+        )}
+      </nav>
+    )}
     <Fragment slot="footer">
       {/* The published adjacent cards stack kicker, case number and title on
           three lines; the shared shell renders a single label, so the case

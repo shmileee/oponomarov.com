@@ -1463,6 +1463,86 @@
   }
 
   /* ------------------------------------------------------------------ */
+  /* Series card (a case study that continues in, or from, another).     */
+  /* Rendered by the engine at the end of the article body, so the reader */
+  /* carries it; the same card as the adjacent navigation, on the prose   */
+  /* measure, with the prose link treatment turned off inside it.         */
+  /* ------------------------------------------------------------------ */
+
+  .prose .series-nav {
+    display: grid;
+    gap: var(--space-4);
+    margin-block-start: var(--space-10);
+    padding-block-start: var(--space-6);
+    border-block-start: var(--border-width) solid var(--color-border-subtle);
+  }
+
+  @media (width >= 48rem) {
+    .prose .series-nav {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    /* A lone "continues in" card sits in the second column, where the
+       adjacent navigation keeps its next card. */
+    .prose .series-nav__next {
+      grid-column: -2;
+      text-align: end;
+    }
+  }
+
+  .prose .series-nav a {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-block-size: var(--tap-size);
+    padding: var(--space-4);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    color: var(--color-text);
+    text-decoration: none;
+    transition: border-color var(--dur-fast) var(--ease-out);
+  }
+
+  .prose .series-nav a:hover {
+    border-color: var(--color-accent-border);
+  }
+
+  .prose .series-nav a:focus-visible {
+    outline: var(--focus-width) solid var(--color-focus);
+    outline-offset: var(--focus-offset);
+  }
+
+  .prose .series-nav__label,
+  .prose .series-nav__number {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    line-height: var(--leading-snug);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .prose .series-nav__label {
+    font-weight: var(--weight-medium);
+    color: var(--color-text-subtle);
+  }
+
+  .prose .series-nav__number {
+    color: var(--color-text-muted);
+  }
+
+  .prose .series-nav__title {
+    font-family: var(--font-display);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.01em;
+    overflow-wrap: anywhere;
+  }
+
+  .prose .series-nav a:hover .series-nav__title {
+    color: var(--color-accent-soft);
+  }
+
+  /* ------------------------------------------------------------------ */
   /* Footnotes (remark-gfm emits <section class="footnotes">)             */
   /* ------------------------------------------------------------------ */
 
