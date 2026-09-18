@@ -57,7 +57,9 @@ const htmlFiles = filesBelow(dist).filter((path) => path.endsWith(".html"));
 for (const htmlPath of htmlFiles) {
   const html = readFileSync(htmlPath, "utf8");
   const documentMarkup = html.replace(/<script\b[\s\S]*?<\/script>/gi, "");
-  for (const match of documentMarkup.matchAll(/(?:href|src)="([^"]+)"/g)) {
+  /* A video's poster is an asset reference like any other: a missing one
+     leaves the frame blank until play, which is why it is checked here. */
+  for (const match of documentMarkup.matchAll(/(?:href|src|poster)="([^"]+)"/g)) {
     const raw = match[1].replaceAll("&amp;", "&");
     if (/^(?:[a-z]+:|\/\/|#|data:)/i.test(raw)) continue;
     const clean = raw.split(/[?#]/)[0];

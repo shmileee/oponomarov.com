@@ -34,8 +34,10 @@ let caseStudyAssetCount = 0;
 for (const folder of readdirSync(caseStudiesSource, { withFileTypes: true })) {
   if (!folder.isDirectory()) continue;
   const folderSource = join(caseStudiesSource, folder.name);
+  /* Every media file beside a study's index.md ships with it: recordings,
+     their posters in whichever raster format, and inline-able SVGs. */
   const assets = readdirSync(folderSource, { withFileTypes: true })
-    .filter((entry) => entry.isFile() && /\.(?:mp4|png|svg)$/i.test(entry.name));
+    .filter((entry) => entry.isFile() && /\.(?:mp4|png|jpe?g|webp|svg)$/i.test(entry.name));
   if (assets.length === 0) continue;
   const folderTarget = join(caseStudiesTarget, folder.name);
   mkdirSync(folderTarget, { recursive: true });
