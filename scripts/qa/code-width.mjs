@@ -15,8 +15,9 @@
  *   comment         a comment or transcript annotation that can be trimmed
  *   code            everything else: a literal, an output line, a long name
  *
- * `--strict` exits 1 when any url-in-comment line exists; the other two kinds
- * are judgement calls and only ever reported. The measurement is static, so a
+ * `--strict` exits 1 when any url-in-comment line exists (the authoring
+ * check, `npm run qa:code`); `npm run verify` runs the plain report, so a
+ * comment in a content repository never blocks an engine deploy. The measurement is static, so a
  * change to the type scale or the column width means re-measuring the column
  * (scripts/qa/measure.mjs reports the rendered width) and updating the
  * default here.

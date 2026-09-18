@@ -2,7 +2,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { basename, dirname, extname, join, normalize, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import yaml from "js-yaml";
-import { categoryAliases, readPostCategories, uniqueCategories } from "../src/lib/categories.mjs";
+import { categoryAliases, categoryRedirects, readPostCategories, uniqueCategories } from "../src/lib/categories.mjs";
 
 /* Every expectation below is derived from the content roots, never typed in:
    a new case study, note, topic or manual changes the expected counts and
@@ -107,7 +107,7 @@ const postRedirects = postRoutes.filter(isPostRedirect).sort();
 const categoryRoutes = routeDirectories(join(dist, "blog/categories"));
 const isCategoryRedirect = (name) => readFileSync(join(dist, "blog/categories", name, "index.html"), "utf8").includes('http-equiv="refresh"');
 const categoryPages = categoryRoutes.filter((name) => !isCategoryRedirect(name));
-const categoryRedirects = categoryRoutes.filter(isCategoryRedirect).sort();
+const builtCategoryRedirects = categoryRoutes.filter(isCategoryRedirect).sort();
 
 const formatSet = (values) => (values.length > 0 ? values.join(", ") : "(none)");
 const caseStudySources = filesBelow(join(portfolioRoot, "content/case-studies")).filter((path) => basename(path) === "index.md");
@@ -138,10 +138,10 @@ if (postPages.length !== expectedPosts) throw new Error(`Expected ${expectedPost
 if (postRedirects.join("\n") !== expectedPostAliases.join("\n")) throw new Error(`Post alias redirects diverge from the aliases declared in frontmatter.\nExpected: ${formatSet(expectedPostAliases)}\nActual:   ${formatSet(postRedirects)}`);
 const builtCategories = [...categoryPages].sort();
 if (builtCategories.join("\n") !== expectedCategories.join("\n")) throw new Error(`Built blog category pages diverge from post frontmatter categories.\nExpected: ${formatSet(expectedCategories)}\nActual:   ${formatSet(builtCategories)}`);
-/* Every renamed category (categories.mjs) is a redirect page, and nothing
-   else under /blog/categories/ redirects. */
-const expectedCategoryRedirects = Object.keys(categoryAliases).sort();
-if (categoryRedirects.join("\n") !== expectedCategoryRedirects.join("\n")) throw new Error(`Category redirects diverge from categoryAliases.\nExpected: ${formatSet(expectedCategoryRedirects)}\nActual:   ${formatSet(categoryRedirects)}`);
+/* Every renamed category (categories.mjs) whose rename the content carries
+   is a redirect page, and nothing else under /blog/categories/ redirects. */
+const expectedCategoryRedirects = categoryRedirects(expectedCategories, categoryAliases).map(([from]) => from).sort();
+if (builtCategoryRedirects.join("\n") !== expectedCategoryRedirects.join("\n")) throw new Error(`Category redirects diverge from categoryAliases.\nExpected: ${formatSet(expectedCategoryRedirects)}\nActual:   ${formatSet(builtCategoryRedirects)}`);
 
 const docsSourceDir = join(dotfilesRoot, "docs/content");
 const markdownSources = [
@@ -356,4 +356,4 @@ for (const name of builtCards) {
   if (header.readUInt32BE(16) !== 1200 || header.readUInt32BE(20) !== 630) throw new Error(`og/${name} is not 1200×630`);
 }
 
-console.log(`Verified one Astro build: ${canonicalCaseStudies.length} case studies, ${aliasRedirects.length + workRedirects.length + postRedirects.length + categoryRedirects.length} compatibility redirects, ${postPages.length} posts, ${categoryPages.length} categories, ${expectedDocSlugs.length} Dotfiles manuals, one shared Contact page, ${builtCards.length} Open Graph cards, RSS, global cross-product search, interactions, shared syntax themes, and all internal links/assets.`);
+console.log(`Verified one Astro build: ${canonicalCaseStudies.length} case studies, ${aliasRedirects.length + workRedirects.length + postRedirects.length + builtCategoryRedirects.length} compatibility redirects, ${postPages.length} posts, ${categoryPages.length} categories, ${expectedDocSlugs.length} Dotfiles manuals, one shared Contact page, ${builtCards.length} Open Graph cards, RSS, global cross-product search, interactions, shared syntax themes, and all internal links/assets.`);

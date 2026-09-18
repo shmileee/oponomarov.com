@@ -792,12 +792,15 @@ valid continuations for readability, but never to avoid a scroll.
 The column holds about 71 monospace characters at the desktop measure, and
 `scripts/qa/code-width.mjs` lists every built block that is wider, with the
 cause of the width: a comment carrying a URL (`url-in-comment`: the link
-belongs in the prose, and `npm run verify` fails on one), a comment or
-transcript annotation that could be trimmed (`comment`), or code proper
-(`code`: a literal, an output line, a long name, reported and left to the
-author, since real output is never reflowed to avoid a scrollbar). The
-measurement is static; re-measure the column and update the default when the
-type scale or the column changes.
+belongs in the prose), a comment or transcript annotation that could be
+trimmed (`comment`), or code proper (`code`: a literal, an output line, a
+long name, left to the author, since real output is never reflowed to avoid
+a scrollbar). `npm run verify` prints the report; `npm run qa:code` runs it
+strictly and fails on a URL in a comment, the authoring check to run before a
+content commit. The deploy does not fail on it: a comment in a note is the
+content repository's to fix, and the engine builds against whatever revision
+of the content is live. The measurement is static; re-measure the column and
+update the default when the type scale or the column changes.
 
 A frame title is a file path and is set verbatim: original case (a path's case
 is part of it), no tracking, one line. A path the header cannot hold is cut
@@ -1205,9 +1208,9 @@ direnv exec . npm run qa
 direnv exec . npm run qa:full
 ```
 
-`verify` runs the build and design verifiers and the code-column report in
-strict mode (§10; `npm run qa:code` prints the report on its own); `test`
-aggregates the required gates. `npm run shots:iphone` (after a build)
+`verify` runs the build and design verifiers and prints the code-column
+report (§10; `npm run qa:code` runs it strictly); `test` aggregates the
+required gates. `npm run shots:iphone` (after a build)
 captures every route, the 404 page and the reader and search states as an
 iPhone 14 Pro renders them — 393×660 under Safari's bars, 3× pixels, iOS user
 agent — into `.omo/screenshots/iphone-14-pro/` with a gallery `index.html`;

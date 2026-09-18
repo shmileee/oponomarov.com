@@ -38,8 +38,11 @@ export const readPostCategories = (dirPath) =>
 /**
  * Old category slugs and the slug each now lives at. A renamed category
  * keeps its URL working: the categories page renders a redirect for every
- * key, and verify-build checks that each target is a live category and
- * that no key is itself a category.
+ * alias whose old slug no longer names a live category and whose new slug
+ * does. An alias that does not yet apply — the content repository has not
+ * renamed the category, or has not been deployed with the rename — is
+ * skipped, so the engine builds against any content revision and the
+ * redirect appears the moment the content catches up.
  *
  * @type {Readonly<Record<string, string>>}
  */
@@ -48,16 +51,12 @@ export const categoryAliases = Object.freeze({
 });
 
 /**
- * Alias routes for the categories that exist: [oldSlug, newSlug] pairs,
- * failing on an alias that points at a category no post carries or that
- * collides with a real one.
+ * The alias routes that apply to a set of live categories: [oldSlug,
+ * newSlug] pairs whose old slug is not itself live and whose new slug is.
  *
  * @param {readonly string[]} categories
+ * @param {Readonly<Record<string, string>>} [aliases]
  * @returns {[string, string][]}
  */
-export const categoryRedirects = (categories) =>
-  Object.entries(categoryAliases).map(([from, to]) => {
-    if (categories.includes(from)) throw new Error(`Category alias "${from}" is also a live category; drop the alias or rename the posts.`);
-    if (!categories.includes(to)) throw new Error(`Category alias "${from}" points at "${to}", which no post carries.`);
-    return [from, to];
-  });
+export const categoryRedirects = (categories, aliases = categoryAliases) =>
+  Object.entries(aliases).filter(([from, to]) => !categories.includes(from) && categories.includes(to));
