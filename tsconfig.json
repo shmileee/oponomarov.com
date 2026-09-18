@@ -1,3 +1,9 @@
 {
-  "extends": "astro/tsconfigs/strict"
+  "extends": "astro/tsconfigs/strict",
+  // The base config includes `**/*`, which would reach into content/ when the
+  // content repositories are checked out there (the default and the CI
+  // layout). Whatever TypeScript they carry — a dotfiles editor plugin with
+  // its own dependencies, say — is theirs to check, not the engine's.
+  // Setting `exclude` replaces the base list, so `dist` is repeated here.
+  "exclude": ["dist", "content"]
 }

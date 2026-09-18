@@ -75,7 +75,8 @@ mise run dev
 
 Without `.envrc.local`, the defaults apply — place checkouts of the three
 content repos inside the engine at `content/{portfolio,blog,dotfiles}`
-(git-ignored).
+(git-ignored, and excluded from `astro check` in `tsconfig.json`: any
+TypeScript a content repo carries is checked by that repo, not here).
 
 `npm run dev` and `npm run build` automatically run `scripts/sync-content.mjs`
 first (`predev`/`prebuild`): it validates the content roots (fails loudly if a
