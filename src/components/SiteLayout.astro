@@ -49,8 +49,20 @@ const products = { portfolio: "Portfolio", blog: "Notes", dotfiles: "Dotfiles", 
 const articleTypes = { portfolio: "Case study", blog: "Note", dotfiles: "Documentation", contact: "Contact" } as const;
 const searchProduct = Astro.props.searchProduct ?? products[activeApp];
 const searchType = Astro.props.searchType ?? (article || activeApp === "dotfiles" || activeApp === "contact" ? articleTypes[activeApp] : "Overview");
-const documentTitle = formatDocumentTitle(activeApp, Astro.url.pathname === roots[activeApp] ? undefined : title);
+const isSectionRoot = Astro.url.pathname === roots[activeApp];
+const documentTitle = formatDocumentTitle(activeApp, isSectionRoot ? undefined : title);
 const plainTitle = title ?? products[activeApp];
+/* The card a link unfurls into leads with the page's own title: LinkedIn
+   shows about 70 characters of og:title and Telegram little more, so the
+   " - Engineering Notes - Oleksandr Ponomarov" suffix the browser tab
+   carries would cost the words that matter. og:site_name carries the name
+   instead; a section root keeps its branded title, which is short. */
+const socialTitle = isSectionRoot ? documentTitle : plainTitle;
+/* A page that asks not to be indexed (the 404) names no canonical: a
+   canonical to an address that does not exist is a signal about nothing. A
+   redirect page does name one, its target, so an old link shared anywhere
+   unfurls into the target's card and scrapers that follow og:url land on it. */
+const namesCanonical = indexable || canonicalPath !== Astro.url.pathname;
 const canonical = new URL(canonicalPath, canonicalOrigin);
 const image = new URL(ogImage, canonicalOrigin);
 ---
@@ -93,23 +105,25 @@ if (themeColor) themeColor.content = themeColor.dataset[document.documentElement
     <link rel="preload" href="/assets/fonts/bricolage-grotesque-latin.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
     <link rel="preload" href="/assets/fonts/ibm-plex-mono-latin-400.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
     <link rel="preload" href="/assets/fonts/ibm-plex-mono-latin-500.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
-    {/* A page that asks not to be indexed (the 404) names no canonical: a
-        canonical to an address that does not exist is a signal about nothing. */}
-    {indexable && <link rel="canonical" href={canonical} />}
+    {namesCanonical && <link rel="canonical" href={canonical} />}
     <SiteFavicons />
     {rssHref && <link rel="alternate" type="application/rss+xml" title="Engineering notes" href={rssHref} />}
-    <meta property="og:title" content={documentTitle} />
+    <meta property="og:site_name" content={ownerName} />
+    <meta property="og:locale" content="en_GB" />
+    <meta property="og:title" content={socialTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content={article ? "article" : "website"} />
-    {indexable && <meta property="og:url" content={canonical} />}
+    {namesCanonical && <meta property="og:url" content={canonical} />}
     <meta property="og:image" content={image} />
+    <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content={`${plainTitle} — ${ownerName}`} />
     {publishedTime && <meta property="article:published_time" content={publishedTime.toISOString()} />}
+    {article && <meta property="article:author" content={ownerName} />}
     {tags.map((tag) => <meta property="article:tag" content={tag} data-pagefind-filter="tag[content]" />)}
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content={documentTitle} />
+    <meta name="twitter:title" content={socialTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={image} />
     {activeApp === "blog" && <meta name="twitter:creator" content="@sqrt16bit" />}

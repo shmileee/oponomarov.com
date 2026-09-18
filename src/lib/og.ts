@@ -8,6 +8,7 @@ import { uniqueCategories } from "./categories.mjs";
 import { loadDocs } from "./docs";
 import { plainText } from "./inline-markdown";
 import { ogSlug } from "./og-path";
+import { fitText } from "./og-text.mjs";
 import { formatDate, slugForPost, sortPosts } from "./posts";
 import { categoryDescription, ownerName, pageDescriptions, sectionPath, siteHost, type SiteSection } from "./site-metadata";
 import { topicLabel } from "./topic-labels";
@@ -108,7 +109,14 @@ const palette = {
   cursor: "#f9423a",
 };
 
-const clip = (value: string, max: number) => (value.length > max ? `${value.slice(0, max - 1).trimEnd()}…` : value);
+/* What the card can hold: three lines of title at the smallest step and
+   four lines of dek at 30px on the 1000px measure (about 64 characters a
+   line, less what word wrapping loses), which still clears the 630px frame
+   under a three-line title. The dek is cut at a sentence or a word
+   (og-text.mjs), never inside one; a shared card is read in a glance and
+   "at a tim…" reads as a typo. */
+const TITLE_MAX = 110;
+const DESCRIPTION_MAX = 230;
 
 type Node = { type: string; props: Record<string, unknown> };
 const h = (type: string, style: Record<string, unknown>, ...children: (Node | string)[]): Node => ({
@@ -123,7 +131,8 @@ export async function renderOgCard(card: OgCard): Promise<Uint8Array<ArrayBuffer
     { name: "Public Sans", data: font("public-sans-400.ttf"), weight: 400, style: "normal" },
     { name: "IBM Plex Mono", data: font("plex-mono-500.ttf"), weight: 500, style: "normal" },
   ];
-  const title = clip(card.title, 110);
+  const title = fitText(card.title, TITLE_MAX);
+  const description = fitText(card.description, DESCRIPTION_MAX);
   /* The display size steps down with the title's length so a long note title
      keeps to three lines and a short one fills the card. */
   const titleSize = title.length > 70 ? 54 : title.length > 44 ? 62 : title.length > 26 ? 70 : 82;
@@ -152,7 +161,7 @@ export async function renderOgCard(card: OgCard): Promise<Uint8Array<ArrayBuffer
       ),
     ),
     h("div", { flexDirection: "column", gap: "36px" },
-      h("div", { fontSize: "30px", lineHeight: 1.4, color: palette.muted, maxWidth: "1000px" }, clip(card.description, 150)),
+      h("div", { fontSize: "30px", lineHeight: 1.4, color: palette.muted, maxWidth: "1000px" }, description),
       h("div", {
         justifyContent: "space-between", alignItems: "center", paddingTop: "28px",
         borderTop: `2px solid ${palette.border}`, fontFamily: "IBM Plex Mono", fontSize: "22px", color: palette.muted,

@@ -351,6 +351,16 @@ for (const htmlPath of htmlFiles) {
   if (canonicalHref && sitemapPaths.includes(canonicalHref) && image !== `/og/${ogSlug(canonicalHref)}.png`) {
     throw new Error(`${route} carries the card of another page: ${image} for ${canonicalHref}`);
   }
+  /* The unfurled card leads with the page's own title: LinkedIn shows about
+     70 characters of og:title, so the browser-tab suffix would cost the
+     words that matter. The site name travels in og:site_name instead, and
+     an article page (a study, a note, a manual) never repeats it in og:title. */
+  const ogTitle = html.match(/<meta property="og:title" content="([^"]*)"/)?.[1] ?? "";
+  if (!html.includes('<meta property="og:site_name" content="Oleksandr Ponomarov"')) throw new Error(`${route} has no og:site_name`);
+  if (!ogTitle) throw new Error(`${route} has no og:title`);
+  const isHub = ["index.html", "blog/index.html", "dotfiles/index.html", "contact/index.html", "404.html"].includes(route);
+  if (!isHub && ogTitle.includes(" - Oleksandr Ponomarov")) throw new Error(`${route} og:title still carries the document-title suffix: ${ogTitle}`);
+  if (canonicalHref && !html.includes(`<meta property="og:url" content="https://oponomarov.com${canonicalHref}"`)) throw new Error(`${route} names a canonical but no matching og:url`);
 }
 for (const name of builtCards) {
   const header = readFileSync(join(dist, "og", name)).subarray(0, 24);

@@ -51,7 +51,12 @@ Every canonical page also gets its own Open Graph card (`/og/<path>.png`,
 1200×630) drawn at build time from the same frontmatter — section, kicker,
 title and dek in the site's own faces — so a shared study, note, topic or
 manual previews as itself. `src/lib/og.ts` lists the cards; `verify` fails
-when a page's `og:image` points nowhere or a card has no page.
+when a page's `og:image` points nowhere or a card has no page. The unfurled
+link leads with the page's own title in `og:title` (LinkedIn shows about 70
+characters of it) and carries the name in `og:site_name`; the card's dek is
+cut at a sentence or a word, never inside one (`src/lib/og-text.mjs`); and a
+redirect page carries its target's title, description, card and `og:url`, so
+a link shared before a rename still unfurls into the right preview.
 
 In CI, the deploy workflow (`.github/workflows/deploy.yaml`) checks the three
 public repos out tokenlessly into `content/{portfolio,blog,dotfiles}` — the
