@@ -49,6 +49,12 @@ export default defineConfig({
        be its own scroll container. */
     defaultProps: { wrap: false, preserveIndent: true },
     useThemedScrollbars: false,
+    /* A frame's title comes from the fence's `title=` and nowhere else. Left
+       on, EC's frames plugin reads a title out of a code block's first line
+       when that line resembles a file name, and deletes the line: a
+       transcript beginning `markdownlint....Failed` lost that line to the
+       toolbar, and `docker pull …/python:3.12` was titled "3.12". */
+    frames: { extractFileNameFromCode: false },
     /* Frame titles are file paths: split at the last slash so prose.css can
        keep the file name whole and cut the directory when the header is
        narrow (src/lib/expressive-code-frame-title.mjs). */

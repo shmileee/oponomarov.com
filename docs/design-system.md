@@ -789,6 +789,16 @@ Every frame carries the toolbar — the three window dots, the title when the
 block has one, the copy control. Authors may still reflow long commands with
 valid continuations for readability, but never to avoid a scroll.
 
+The column holds about 71 monospace characters at the desktop measure, and
+`scripts/qa/code-width.mjs` lists every built block that is wider, with the
+cause of the width: a comment carrying a URL (`url-in-comment`: the link
+belongs in the prose, and `npm run verify` fails on one), a comment or
+transcript annotation that could be trimmed (`comment`), or code proper
+(`code`: a literal, an output line, a long name, reported and left to the
+author, since real output is never reflowed to avoid a scrollbar). The
+measurement is static; re-measure the column and update the default when the
+type scale or the column changes.
+
 A frame title is a file path and is set verbatim: original case (a path's case
 is part of it), no tracking, one line. A path the header cannot hold is cut
 with an ellipsis rather than wrapped, and the cut falls on the directory, never
@@ -1195,7 +1205,9 @@ direnv exec . npm run qa
 direnv exec . npm run qa:full
 ```
 
-`verify` runs build and design verifiers; `test` aggregates the required gates.
+`verify` runs the build and design verifiers and the code-column report in
+strict mode (§10; `npm run qa:code` prints the report on its own); `test`
+aggregates the required gates.
 CI installs Playwright Chromium and runs check, CSS lint, verification, and QA
 between build and artifact upload. Keep content-derived route counts, redirects,
 search indexing, RSS, and sitemap checks in `verify-build.mjs`.

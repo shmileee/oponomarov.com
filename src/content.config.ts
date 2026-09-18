@@ -70,6 +70,10 @@ const posts = defineCollection({
     description: z.string(),
     date: z.coerce.date(),
     categories: z.union([z.string(), z.array(z.string())]).transform((value) => Array.isArray(value) ? value : [value]),
+    /* Old slugs that redirect to this post. A post's slug is its file name
+       without the date, so renaming the file changes the URL; the old name
+       goes here and keeps resolving (src/lib/posts.ts, postRoutes). */
+    aliases: z.array(slug).default([]),
   }),
 });
 

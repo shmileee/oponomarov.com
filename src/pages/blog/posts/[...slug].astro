@@ -5,23 +5,46 @@ import PageToc from "../../../components/PageToc.astro";
 import SiteLayout from "../../../components/SiteLayout.astro";
 import { inlineContexts, plainText, renderInline } from "../../../lib/inline-markdown";
 import { topicTag } from "../../../lib/topic-labels";
-import { slugForPost, sortPosts } from "../../../lib/posts";
+import { postRoutes, slugForPost, sortPosts } from "../../../lib/posts";
 import { readingMinutes } from "../../../lib/reading-time";
 
 export async function getStaticPaths() {
   const posts = sortPosts(await getCollection("posts"));
-  return posts.map((post, index) => ({
-    params: { slug: slugForPost(post) },
-    props: { post, older: posts[index + 1], newer: posts[index - 1] },
-  }));
+  /* One route per post and one per alias it declares; an alias route is a
+     redirect page to the canonical slug (postRoutes fails the build on a
+     collision). Comments are keyed by pathname (giscus below), so a rename
+     moves a note's thread: the alias keeps the link working, not the thread. */
+  return postRoutes(posts).map(({ slug, post, redirect }) => {
+    const index = posts.indexOf(post);
+    return { params: { slug }, props: { post, older: posts[index + 1], newer: posts[index - 1], redirect } };
+  });
 }
 
-const { post, older, newer } = Astro.props;
+const { post, older, newer, redirect } = Astro.props;
 const { Content, headings } = await render(post);
 const minutes = readingMinutes(post.body);
+const href = `/blog/posts/${slugForPost(post)}/`;
 ---
 
-<SiteLayout
+{redirect ? (
+  <SiteLayout
+    activeApp="blog"
+    canonicalOrigin="https://oponomarov.com"
+    canonicalPath={href}
+    title="Note moved"
+    description={plainText(post.data.description)}
+    robots="noindex,follow"
+    indexable={false}
+  >
+    <Fragment slot="head">
+      <meta http-equiv="refresh" content={`0; url=${href}`} />
+      <script is:inline define:vars={{ target: href }}>location.replace(target + location.search + location.hash);</script>
+    </Fragment>
+    <main id="main-content" class="content-grid" tabindex="-1">
+      <div class="prose"><p>Moved to <a href={href}>{post.data.title}</a>.</p></div>
+    </main>
+  </SiteLayout>
+) : <SiteLayout
   activeApp="blog"
   canonicalOrigin="https://oponomarov.com"
   title={post.data.title}
@@ -96,4 +119,4 @@ const minutes = readingMinutes(post.body);
       }
     })();
   </script>
-</SiteLayout>
+</SiteLayout>}

@@ -98,7 +98,12 @@ const caseStudies = routeDirectories(join(dist, "case-studies"));
 const isRedirectRoute = (name) => readFileSync(join(dist, "case-studies", name, "index.html"), "utf8").includes('http-equiv="refresh"');
 const canonicalCaseStudies = caseStudies.filter((name) => !isRedirectRoute(name));
 const workRedirects = routeDirectories(join(dist, "work"));
-const postPages = routeDirectories(join(dist, "blog/posts"));
+const postRoutes = routeDirectories(join(dist, "blog/posts"));
+const isPostRedirect = (name) => readFileSync(join(dist, "blog/posts", name, "index.html"), "utf8").includes('http-equiv="refresh"');
+/* A post's canonical route plus one redirect per alias it declares, the same
+   split the case studies get below. */
+const postPages = postRoutes.filter((name) => !isPostRedirect(name));
+const postRedirects = postRoutes.filter(isPostRedirect).sort();
 const categoryPages = routeDirectories(join(dist, "blog/categories"));
 
 const formatSet = (values) => (values.length > 0 ? values.join(", ") : "(none)");
@@ -109,7 +114,15 @@ const expectedCaseStudies = caseStudyFrontmatter.map(({ folder }) => folder).sor
    every study also keeps its /work/ compatibility page. */
 const expectedAliases = caseStudyFrontmatter.flatMap(({ folder, data }) => (Array.isArray(data.aliases) ? data.aliases : []).filter((alias) => alias !== folder)).sort();
 const postsSourceDir = join(blogRoot, "content/posts");
-const expectedPosts = readdirSync(postsSourceDir).filter((name) => name.endsWith(".md")).length;
+const postSources = readdirSync(postsSourceDir).filter((name) => name.endsWith(".md")).sort();
+const expectedPosts = postSources.length;
+const postSlug = (name) => name.replace(/^\d{4}-\d{2}-\d{2}-/, "").replace(/\.md$/, "");
+const expectedPostAliases = postSources
+  .flatMap((name) => {
+    const { aliases } = readFrontmatter(join(postsSourceDir, name));
+    return (Array.isArray(aliases) ? aliases : []).filter((alias) => alias !== postSlug(name));
+  })
+  .sort();
 const expectedCategories = uniqueCategories(readPostCategories(postsSourceDir));
 
 if (canonicalCaseStudies.sort().join("\n") !== expectedCaseStudies.join("\n")) throw new Error(`Canonical case-study routes diverge from the folders under ${relative(root, join(portfolioRoot, "content/case-studies"))}.\nExpected: ${formatSet(expectedCaseStudies)}\nActual:   ${formatSet(canonicalCaseStudies)}`);
@@ -119,6 +132,7 @@ const unexpectedRoutes = caseStudies.filter((name) => !expectedCaseStudies.inclu
 if (unexpectedRoutes.length > 0) throw new Error(`Case-study routes exist that no folder or alias declares: ${formatSet(unexpectedRoutes)}`);
 if (workRedirects.sort().join("\n") !== expectedCaseStudies.join("\n")) throw new Error(`/work compatibility redirects diverge from the case-study folders.\nExpected: ${formatSet(expectedCaseStudies)}\nActual:   ${formatSet(workRedirects)}`);
 if (postPages.length !== expectedPosts) throw new Error(`Expected ${expectedPosts} blog routes (*.md posts under ${relative(root, postsSourceDir)}), found ${postPages.length}`);
+if (postRedirects.join("\n") !== expectedPostAliases.join("\n")) throw new Error(`Post alias redirects diverge from the aliases declared in frontmatter.\nExpected: ${formatSet(expectedPostAliases)}\nActual:   ${formatSet(postRedirects)}`);
 const builtCategories = [...categoryPages].sort();
 if (builtCategories.join("\n") !== expectedCategories.join("\n")) throw new Error(`Built blog category pages diverge from post frontmatter categories.\nExpected: ${formatSet(expectedCategories)}\nActual:   ${formatSet(builtCategories)}`);
 
@@ -177,6 +191,15 @@ const renderedTitle = (filename) => {
 for (const [filename, expected] of expectedCodeTitles) {
   const occurrences = allArticleHtml.split(renderedTitle(filename)).length - 1;
   if (occurrences !== expected) throw new Error(`Expected ${expected} code frame(s) titled ${filename} (${expected} titled fence(s) in the content), found ${occurrences}`);
+}
+/* And no frame carries a title the content did not write: EC's frames plugin
+   can lift a title out of a block's first line (astro.config.mjs turns that
+   off), which retitled a transcript and swallowed its first line. */
+const renderedTitles = [...allArticleHtml.matchAll(/<span class="title" title="([^"]*)"/g)].map((match) => match[1]);
+const expectedTitleCount = [...expectedCodeTitles.values()].reduce((sum, count) => sum + count, 0);
+if (renderedTitles.length !== expectedTitleCount) {
+  const unexpected = renderedTitles.filter((title) => !expectedCodeTitles.has(title));
+  throw new Error(`Rendered ${renderedTitles.length} code frame titles for ${expectedTitleCount} titled fences; titles no fence declares: ${formatSet(unexpected)}`);
 }
 if (portfolioHtml.includes('class="code-exhibit"')) throw new Error("A legacy portfolio code wrapper would create a nested code frame");
 /* The index and reader are bundled from src/scripts: the homepage loads one
@@ -326,4 +349,4 @@ for (const name of builtCards) {
   if (header.readUInt32BE(16) !== 1200 || header.readUInt32BE(20) !== 630) throw new Error(`og/${name} is not 1200×630`);
 }
 
-console.log(`Verified one Astro build: ${canonicalCaseStudies.length} case studies, ${aliasRedirects.length + workRedirects.length} compatibility redirects, ${postPages.length} posts, ${categoryPages.length} categories, ${expectedDocSlugs.length} Dotfiles manuals, one shared Contact page, ${builtCards.length} Open Graph cards, RSS, global cross-product search, interactions, shared syntax themes, and all internal links/assets.`);
+console.log(`Verified one Astro build: ${canonicalCaseStudies.length} case studies, ${aliasRedirects.length + workRedirects.length + postRedirects.length} compatibility redirects, ${postPages.length} posts, ${categoryPages.length} categories, ${expectedDocSlugs.length} Dotfiles manuals, one shared Contact page, ${builtCards.length} Open Graph cards, RSS, global cross-product search, interactions, shared syntax themes, and all internal links/assets.`);
