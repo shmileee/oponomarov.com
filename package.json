@@ -13,6 +13,7 @@
     "preview": "astro preview --port 4325",
     "verify": "node scripts/verify-build.mjs && node scripts/verify-design.mjs && node scripts/qa/code-width.mjs --strict",
     "qa:code": "node scripts/qa/code-width.mjs",
+    "shots:iphone": "node scripts/qa/shots-iphone.mjs",
     "qa": "node scripts/qa/measure.mjs --out=.omo/qa/current && node scripts/qa/contract.mjs .omo/qa/current/raw.json",
     "qa:full": "node scripts/qa/measure.mjs --all-viewports --shots --out=.omo/qa/current && node scripts/qa/contract.mjs .omo/qa/current/raw.json",
     "qa:report": "node scripts/qa/report.mjs .omo/qa/current/raw.json",

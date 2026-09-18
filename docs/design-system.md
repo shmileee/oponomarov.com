@@ -1207,7 +1207,14 @@ direnv exec . npm run qa:full
 
 `verify` runs the build and design verifiers and the code-column report in
 strict mode (§10; `npm run qa:code` prints the report on its own); `test`
-aggregates the required gates.
+aggregates the required gates. `npm run shots:iphone` (after a build)
+captures every route, the 404 page and the reader and search states as an
+iPhone 14 Pro renders them — 393×660 under Safari's bars, 3× pixels, iOS user
+agent — into `.omo/screenshots/iphone-14-pro/` with a gallery `index.html`;
+`--browser=webkit` uses Safari's engine where Playwright's WebKit build runs,
+Chromium under the same emulation otherwise, and pages taller than 9 000 CSS
+px are captured in strips and stitched, past the height at which Chromium
+returns a blank full-page capture.
 CI installs Playwright Chromium and runs check, CSS lint, verification, and QA
 between build and artifact upload. Keep content-derived route counts, redirects,
 search indexing, RSS, and sitemap checks in `verify-build.mjs`.
