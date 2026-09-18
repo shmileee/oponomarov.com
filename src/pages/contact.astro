@@ -42,7 +42,11 @@ const structuredData = JSON.stringify({
         {/* The two things a first message wants to know before it is written:
             where the reply comes from and roughly when. */}
         <p class="contact-meta">
-          <span>Wrocław, Poland</span><span>CET</span><span>Replies within a few days</span>
+          {/* The English spelling: the self-hosted mono face is a Latin
+              subset without Ł, and the uppercase meta line drew the one
+              letter in a fallback font. The structured data above keeps the
+              Polish spelling, which is never rendered. */}
+          <span>Wroclaw, Poland</span><span>CET</span><span>Replies within a few days</span>
         </p>
       </section>
 

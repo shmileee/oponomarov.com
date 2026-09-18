@@ -100,7 +100,17 @@ export function setupReader({ signal } = {}) {
     const next = manifest.byId.get(manifest.ids[(current + 1) % manifest.ids.length]);
     activeId = entry.id;
     metaNumber.textContent = `Case study ${String(entry.number).padStart(2, "0")}`;
-    metaTopics.textContent = ` · ${entry.topics.join(" · ")}`;
+    /* One span per topic, the dot inside it with a no-break space: a line
+       can break only before a topic, never between a dot and its tag or at
+       the hyphen inside "developer-experience". */
+    metaTopics.replaceChildren(
+      ...entry.topics.flatMap((topic) => {
+        const item = document.createElement("span");
+        item.className = "reader-meta-topic";
+        item.textContent = `\u00B7\u00A0${topic}`;
+        return [document.createTextNode(" "), item];
+      }),
+    );
     title.textContent = entry.title;
     if (permalink) {
       permalink.href = entry.url;

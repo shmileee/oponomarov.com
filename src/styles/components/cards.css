@@ -591,10 +591,11 @@
   }
 
   .topic-directory a {
+    position: relative;
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
-    min-inline-size: var(--tap-size);
+    min-inline-size: 0; /* base.css floors every non-prose link at 44px */
     min-block-size: var(--tap-size);
     max-inline-size: 100%;
     color: var(--color-text-muted);
@@ -605,6 +606,18 @@
     text-decoration: none;
     overflow-wrap: anywhere;
     transition: color var(--dur-fast) var(--ease-out);
+  }
+
+  /* The 44px hit area for a short entry ("ecr 1") sits on a pseudo-element
+     centred on the text, as for .topic-list, so the wrapped row keeps even
+     gaps between entries; S7 measures the pseudo-element with the box. */
+  .topic-directory a::after {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 50%;
+    inline-size: max(100%, var(--tap-size));
+    translate: -50% 0;
   }
 
   .topic-directory a:hover {

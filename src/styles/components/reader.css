@@ -198,6 +198,12 @@
     text-transform: lowercase;
   }
 
+  /* A topic and the dot before it are one unit (reader.js writes the dot
+     into the span): the row wraps between topics, never inside one. */
+  .reader-meta-topic {
+    white-space: nowrap;
+  }
+
   .reader-title {
     color: var(--color-text);
     font-family: var(--font-display);
