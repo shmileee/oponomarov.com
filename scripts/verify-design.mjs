@@ -311,6 +311,32 @@ for (const page of pages) {
   }
 }
 
+// V16 - authored SVG paints with semantic tokens. Every fill and stroke in the
+//       built HTML is `none`, `currentColor`, a `url(#…)` reference, or exactly
+//       one `var(--color-…)` naming a token the token file declares. A legacy
+//       alias (`--w88`, `--ab4`, `--bg`) would render only while tokens.css
+//       keeps its shim; a malformed value (`var(--color-text))`, a stray
+//       parenthesis from a rewrite) is invalid and paints black text and no
+//       border, which passes unnoticed in the light theme and fails in the
+//       dark one.
+{
+  const tokens = readFileSync(join(styles, "tokens.css"), "utf8");
+  const declared = new Set([...tokens.matchAll(/--(color-[a-z0-9-]+):/g)].map((match) => match[1]));
+  const allowed = /^(?:none|currentColor|url\(#[^)]+\)|var\(--(color-[a-z0-9-]+)\))$/;
+  const offences = [];
+  for (const page of pages) {
+    for (const match of page.html.matchAll(/\s(?:fill|stroke)="([^"]*)"/g)) {
+      const value = match[1];
+      const ok = allowed.exec(value);
+      if (!ok) offences.push(`${named(page)}: ${value}`);
+      else if (ok[1] && !declared.has(ok[1])) offences.push(`${named(page)}: var(--${ok[1]}) is not declared in tokens.css`);
+    }
+  }
+  if (offences.length) {
+    throw new Error(`SVG paint attributes must be none, currentColor, a url(#…) reference, or one declared var(--color-…):\n  ${[...new Set(offences)].slice(0, 12).join("\n  ")}`);
+  }
+}
+
 console.log(
   `Verified the design system: ${pages.length} pages on one stylesheet set and one theme script, ` +
   `${cssSources.length} fully layered stylesheets with no !important and no stray colours, ` +

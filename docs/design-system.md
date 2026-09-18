@@ -1127,6 +1127,7 @@ verification until all four repositories adopt the contract.
 | V13 | No Astro `<style>` blocks except V1's exact layer-order-only head prelude | Scoped/page CSS outside the central entry |
 | V14 | Every `font-size` on a `kbd` rule in `prose.css`/`primitives.css` is `var(--code-inline-size)` | Keycaps pinned to a fixed step, rendering one cap at two sizes on one page |
 | V15 | Built bytes stay inside four budgets: author CSS 128KB, syntax-theme CSS 24KB, scripts 64KB, web fonts 200KB (uncompressed; about 15% over the build they were set against) | A fix that adds a subsystem rather than a rule; a design system that grows unnoticed |
+| V16 | Every `fill`/`stroke` attribute in built HTML is `none`, `currentColor`, a `url(#…)` reference, or exactly one declared `var(--color-…)` | Legacy `--w88`/`--ab4`/`--bg` aliases in authored SVG; a malformed value (`var(--color-text))`) that paints black text and no border, invisible in the light theme and broken in the dark one |
 
 V9 reads raw content HTML, not code examples or EC-generated highlighting
 classes. At migration-audit time every old class must occur in `classes`,
