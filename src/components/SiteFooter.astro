@@ -24,6 +24,12 @@ const { activeApp } = Astro.props;
       <a href="https://www.linkedin.com/in/aleksandr-ponomarov" rel="me" aria-label="LinkedIn profile" title="LinkedIn profile">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.34V8.98h3.42v1.57h.05c.48-.9 1.64-1.85 3.37-1.85 3.61 0 4.27 2.37 4.27 5.46v6.29ZM5.32 7.41a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12ZM7.1 20.45H3.54V8.98H7.1v11.47Z"></path></svg>
       </a>
+      {/* The CV is a document, not a profile, so no rel="me": it is built and
+          published by shmileee/cv and only linked from here. evenodd cuts the
+          two rules out of the page rather than painting them over it. */}
+      <a href="https://cv.oponomarov.com/cv.pdf" aria-label="Curriculum vitae (PDF)" title="Curriculum vitae (PDF)">
+        <svg viewBox="0 0 24 24" fill-rule="evenodd" aria-hidden="true"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9h-4.5A2.5 2.5 0 0 1 13 6.5V2Zm1.8.6V6.5c0 .94.76 1.7 1.7 1.7h3.9L14.8 2.6ZM8 12.4h8v1.8H8v-1.8Zm0 3.8h8v1.8H8v-1.8Z"></path></svg>
+      </a>
     </nav>
   </div>
 </footer>

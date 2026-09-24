@@ -5,6 +5,9 @@ import { ownerName, pageDescriptions } from "../lib/site-metadata";
 const email = "ponomarov.aleksandr@gmail.com";
 const github = "https://github.com/shmileee";
 const linkedin = "https://www.linkedin.com/in/aleksandr-ponomarov";
+/* Built and published by shmileee/cv, not by this engine: the LaTeX is the
+   only source and the PDF is the only artefact. Linked, never mirrored. */
+const cv = "https://cv.oponomarov.com/cv.pdf";
 
 /* The one place the site says who the person behind it is in a form a
    search engine can read: the two profiles the cards link (and mark rel="me")
@@ -48,6 +51,12 @@ const structuredData = JSON.stringify({
               Polish spelling, which is never rendered. */}
           <span>Wroclaw, Poland</span><span>CET</span><span>Replies within a few days</span>
         </p>
+        {/* The one thing a reader evaluating him wants before writing: the
+            CV itself. Secondary to the channels below, which are what the
+            page is for. */}
+        <div class="hero-actions">
+          <a class="secondary-link" href={cv}>Download the CV (PDF) ↓</a>
+        </div>
       </section>
 
       {/* Each card is one link, named by its heading and stretched over the
