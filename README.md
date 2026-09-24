@@ -68,8 +68,26 @@ template (per-repo: `portfolio-updated` + `main`, `blog-updated` + `main`,
 ## Local development
 
 Environment is managed with [mise](https://mise.jdx.dev/) (node) and
-[direnv](https://direnv.net/) (content roots). Machine-specific paths live in
-`.envrc.local`, which is git-ignored:
+[direnv](https://direnv.net/) (content roots). In a checkout where nothing is
+set up yet — a fresh clone, or a new git worktree — one command does all of it:
+
+```sh
+mise run up
+```
+
+It finds the three content repos, writes `.envrc.local` with what it found,
+installs dependencies, then builds, verifies and serves `dist/`. Run `direnv
+allow` afterwards so the other tasks read the same roots.
+
+Each root is resolved from the environment first, then from a checkout inside
+`content/` (what CI creates), then from a sibling checkout beside the engine,
+searching upwards so a worktree one level below the main clone still finds
+them. A candidate counts only when it holds that repo's marker directory
+(`content/case-studies`, `content/posts`, `docs/content`), so an override
+pointing somewhere wrong fails by name rather than deeper in the build.
+
+Machine-specific paths live in `.envrc.local`, which is git-ignored and can be
+written by hand instead:
 
 ```sh
 cp .envrc.local.example .envrc.local  # edit paths to your checkouts
@@ -78,10 +96,9 @@ npm install
 mise run dev
 ```
 
-Without `.envrc.local`, the defaults apply — place checkouts of the three
-content repos inside the engine at `content/{portfolio,blog,dotfiles}`
-(git-ignored, and excluded from `astro check` in `tsconfig.json`: any
-TypeScript a content repo carries is checked by that repo, not here).
+Content repos checked out inside the engine at `content/{portfolio,blog,dotfiles}`
+are git-ignored, and excluded from `astro check` in `tsconfig.json`: any
+TypeScript a content repo carries is checked by that repo, not here.
 
 `npm run dev` and `npm run build` automatically run `scripts/sync-content.mjs`
 first (`predev`/`prebuild`): it validates the content roots (fails loudly if a
@@ -89,11 +106,16 @@ root is missing) and idempotently materializes binary assets into
 `public/case-studies/` and `public/blog-static/` (both git-ignored,
 regenerated on every build).
 
-| Command            | Port | Purpose                                     |
-| ------------------ | ---- | ------------------------------------------- |
-| `mise run dev`     | 4321 | sync content + dev server with live reload  |
-| `mise run preview` | 4325 | sync + build + verify + serve `dist/`       |
-| `mise run sync`    | —    | validate roots + materialize assets only    |
+| Command            | Port | Purpose                                                 |
+| ------------------ | ---- | ------------------------------------------------------- |
+| `mise run up`      | 4325 | resolve roots + install + build + verify + serve `dist/` |
+| `mise run dev`     | 4321 | sync content + dev server with live reload              |
+| `mise run preview` | 4325 | sync + build + verify + serve `dist/`                   |
+| `mise run sync`    | —    | validate roots + materialize assets only                |
+
+`astro preview` runs as a daemon and takes the next free port when 4325 is
+busy, printing the address it actually bound; `npx astro preview status` and
+`npx astro preview stop` manage a running one.
 
 Verification: `npm run check` (astro check — only meaningful with valid
 content roots), `npm run build`, `npm run verify` (`scripts/verify-build.mjs`,
