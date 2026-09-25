@@ -21,22 +21,22 @@
     "lint:css": "stylelint \"src/styles/**/*.css\""
   },
   "dependencies": {
-    "@astrojs/markdown-remark": "7.3.0",
+    "@astrojs/markdown-remark": "7.3.1",
     "@astrojs/rss": "4.0.19",
-    "astro": "7.2.10",
+    "astro": "7.3.4",
     "astro-expressive-code": "0.44.2",
-    "satori": "0.33.4",
+    "satori": "0.33.5",
     "sharp": "0.35.4"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.10",
-    "@types/node": "24.13.3",
-    "js-yaml": "4.3.2",
+    "@types/node": "26.6.2",
+    "js-yaml": "5.4.2",
     "pagefind": "1.5.2",
     "playwright": "^1.63.0",
-    "stylelint": "^16.26.1",
-    "stylelint-config-standard": "^39.0.1",
-    "typescript": "5.9.2"
+    "stylelint": "^17.15.0",
+    "stylelint-config-standard": "^40.0.0",
+    "typescript": "7.0.2"
   },
   "engines": {
     "node": ">=22.12.0"
