@@ -145,11 +145,40 @@
     text-underline-offset: 0.45rem;
   }
 
+  /* The CV: the fourth destination, drawn as a label and not as a control.
+     It was a 44px capsule, which at the end of the row was a third circle
+     beside the search and theme buttons and read as a tool. So it keeps the
+     nav's own label treatment and takes the site's link blue, the colour
+     prose links already carry; the bar's other blue is the 2px rule under
+     the current section, so a blue word cannot be mistaken for "you are
+     here". The arrow says the destination is off this site.
+     The element selector is carried here (and on the hover rule) because the
+     muted ink is set on `.op-app-nav a`, which a class on its own loses to;
+     the transition comes from that rule too. */
+  .op-app-nav a.op-app-nav__cv {
+    gap: var(--space-1);
+    color: var(--color-accent-soft);
+  }
+
+  .op-app-nav__out {
+    inline-size: 0.625rem;
+    block-size: 0.625rem;
+    flex: none;
+    /* Optically on the cap line: the glyph is a diagonal in a square box,
+       so centring it on the x-height sits it low beside two capitals. */
+    margin-block-start: -0.15em;
+  }
+
   /* Hover is an enhancement: a coarse pointer never sees it, so it may
      never be the only signal of an affordance. */
   @media (hover: hover) and (pointer: fine) {
-    .op-app-nav a:hover {
+    .op-app-nav a:not(.op-app-nav__cv):hover {
       color: var(--color-text);
+    }
+
+    /* Already blue; hover takes it the rest of the way to the accent. */
+    .op-app-nav a.op-app-nav__cv:hover {
+      color: var(--color-accent);
     }
   }
 
@@ -227,10 +256,10 @@
     /* The row's own gaps close up: the nav's auto margin already takes the
        slack wherever there is any, so these only bite when the bar is tight.
        The two tools are outlined circles, so they keep 4px between them
-       rather than touching. That is what lets the 360px Android bar (brand
-       45, three labels 179, two tools 92, inside a 328px row) hold one line;
-       it used to wrap into a stray second row holding two icons. 320px
-       still wraps. */
+       rather than touching. Measured on the built bar at 375px: three labels
+       167, the CV 44, the nav's own gaps 24 and two tools 92, inside a 335px
+       row — one line, which is what the brand gives way for below 40rem.
+       360px and 320px still wrap, the tools taking the second row. */
     .op-header__inner {
       gap: var(--space-1);
     }
@@ -248,6 +277,38 @@
 
     .op-app-nav a {
       letter-spacing: 0;
+    }
+  }
+
+  /* The glyph is the first thing to go when the row runs out. Below 40rem the
+     bar cannot hold the brand, three sections, the CV and both tools at the
+     44px floor (381px of a 335px row at 375px), and the glyph is the only
+     thing in it that repeats a destination: Portfolio is `/`, the page the
+     brand links. So it goes, the sections take the site's left axis and the
+     tools keep the right edge. It returns at 40rem, where the whole row fits
+     with room to spare, and spells the full path from 48rem. */
+  @media (width < 40rem) {
+    .op-brand {
+      display: none;
+    }
+
+    .op-app-nav {
+      margin-inline-start: 0;
+    }
+
+    .op-header__tools {
+      margin-inline-start: auto;
+    }
+  }
+
+  /* The hairline that separates this site from the document beside it. The
+     phone row has four pixels to spare, so the rule and its padding wait for
+     the width that also brings the brand back. */
+  @media (width >= 40rem) {
+    .op-app-nav__cv {
+      margin-inline-start: var(--space-1);
+      padding-inline-start: var(--space-3);
+      border-inline-start: var(--border-width) solid var(--color-border);
     }
   }
 

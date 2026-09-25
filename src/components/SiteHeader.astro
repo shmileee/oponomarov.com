@@ -38,6 +38,14 @@ const apps = [
           {app.label}
         </a>
       ))}
+      {/* The CV closes the row. It is not a section of this site — the PDF is
+          built and published by shmileee/cv — so it stays out of `apps` and
+          never carries an active state, and it is the nav's own label with
+          the outbound arrow beside it: a fourth destination, not a third
+          control. The arrow is drawn, not typed — the self-hosted mono face
+          is a Latin subset and would hand ↗ to a system font next to the
+          letters. */}
+      <a class="op-app-nav__cv" href="https://cv.oponomarov.com/" title="Curriculum vitae (PDF)">CV<svg class="op-app-nav__out" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.6 7.4 7.4 2.6M3.6 2.6h3.8v3.8" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path></svg></a>
     </nav>
     <div class="op-header__tools">
       <GlobalSearch />
