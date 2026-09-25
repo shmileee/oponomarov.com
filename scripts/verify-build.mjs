@@ -286,6 +286,7 @@ for (const [section, html] of [
     if (!html.includes(href)) throw new Error(`${section} is missing shared path navigation ${href}`);
   }
   if (!html.includes('href="/contact/"')) throw new Error(`${section} is missing the shared Contact destination`);
+  if (!html.includes('href="https://cv.oponomarov.com/"')) throw new Error(`${section} is missing the shared CV destination`);
   if (!html.includes("data-back-to-top")) throw new Error(`${section} is missing the shared back-to-top control`);
   if (!html.includes('aria-label="Contact"') || !html.includes('aria-label="GitHub profile"') || !html.includes('aria-label="LinkedIn profile"')) throw new Error(`${section} is missing the shared contact or social-profile controls`);
 }
