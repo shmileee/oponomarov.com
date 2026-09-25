@@ -11,7 +11,7 @@ const NAMES = [
   'STYLESHEET PARITY', 'NO CLIPPING', 'HYGIENE', 'ZOOM', 'READER DIALOG', 'SKIP LINK',
   'CONTRAST', 'WIDE TRACKS',
   'SECTION HEADINGS', 'COMMENTS HEADING', 'TABLE HEADERS', 'KEYCAPS', 'PROSE PARAGRAPHS',
-  'GUTTER PARITY', 'ATOMIC TOKENS', 'BLOCK EDGES', 'LAYOUT SHIFT',
+  'GUTTER PARITY', 'INLINE CODE REFLOW', 'BLOCK EDGES', 'LAYOUT SHIFT',
 ];
 const THEMES = ['light', 'dark'];
 const key = (r) => JSON.stringify([r.route, r.viewport, r.colorScheme]);
@@ -137,7 +137,13 @@ export function evaluateContract(raw) {
         const expected = tuple(h2s[0]?.sample ?? {}, H2), actual = tuple(r.sample, H2);
         if (!h2s.length || JSON.stringify(actual) !== JSON.stringify(expected)) fail(17, r, `comments h2 vs section h2 (reference ${h2s[0]?.route})`, actual, expected);
       }
-      parity(18, samples((r) => r.parity?.th), (r) => tuple(r.sample, ['fontFamily', 'fontSize', 'fontWeight', 'letterSpacing', 'textTransform', 'textAlign']), `th ${label}`);
+      const headers = samples((r) => r.parity?.th);
+      parity(18, headers, (r) => tuple(r.sample, ['fontFamily', 'fontSize', 'fontWeight', 'letterSpacing', 'textTransform']), `th ${label}`);
+      for (const r of headers) {
+        if (typeof r.sample.numericTable !== 'boolean') fail(18, r, 'th table role evidence', r.sample.numericTable, 'whether the header belongs to .numeric-table');
+        const expected = r.sample.numericTable ? 'center' : 'start';
+        if (r.sample.textAlign !== expected) fail(18, r, `th alignment ${r.sample.path ?? ''}`, r.sample.textAlign, expected);
+      }
       const kbds = samples((r) => r.code?.kbds);
       for (const r of kbds) if (ratioToParent(r.sample) === null) fail(19, r, `kbd ${r.sample.path ?? ''} size evidence`, tuple(r.sample, ['fontSize', 'parentFontSize']), 'computed fontSize and parentFontSize');
       const kbdsRatio = kbds.filter((r) => ratioToParent(r.sample) !== null);
@@ -376,16 +382,19 @@ export function evaluateContract(raw) {
     }
   }
 
-  /* S22 - a token is one thing. Inline code never paints on more than one
-     line: `pre-commit` does not split at its hyphen, `terraform apply` does
-     not leave `apply` on the next line. The build marks spans too long to
-     hold unbroken on a phone (data-long, src/lib/inline-code.mjs); only
-     those may wrap, and only at a width where the span is wider than its
-     line. Samples without the fragment count are missing evidence. */
+  /* S22 - prose tokens reflow with enlarged text and retain a capsule on
+     every fragment. Table cells may keep tokens atomic inside their named
+     scroll region; stacked mobile cells release them. S5/S9/S11 separately
+     enforce containment, clipping and zoom. Missing evidence never passes. */
   for (const r of good) {
     for (const sample of r.code?.inlines ?? []) {
       if (!Number.isFinite(sample.lines)) { fail(22, r, `inline code ${sample.path ?? ''} fragment evidence`, sample.lines, 'a count of painted lines'); continue; }
-      if (sample.lines > 1 && !sample.long) fail(22, r, `inline code «${sample.text}» ${sample.path ?? ''}`, `${sample.lines} lines`, 'one line (a span under the threshold never wraps)');
+      const label = `inline code «${sample.text}» ${sample.path ?? ''}`;
+      if (typeof sample.inTable !== 'boolean') fail(22, r, `${label} context evidence`, sample.inTable, 'whether the token is inside a table cell');
+      if (sample.whiteSpace !== 'normal' && !(sample.inTable && sample.whiteSpace === 'nowrap')) fail(22, r, `${label} white-space`, sample.whiteSpace, 'normal (nowrap permitted only inside table cells)');
+      if (sample.whiteSpace === 'nowrap' && sample.lines > 1) fail(22, r, `${label} atomic table token`, sample.lines, 'one painted line');
+      if (sample.overflowWrap !== 'anywhere') fail(22, r, `${label} overflow-wrap`, sample.overflowWrap, 'anywhere');
+      if (sample.boxDecorationBreak !== 'clone') fail(22, r, `${label} fragment decoration`, sample.boxDecorationBreak, 'clone');
     }
   }
 

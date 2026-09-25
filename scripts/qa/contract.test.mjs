@@ -11,9 +11,9 @@ function fixture() {
   const viewports = [320, 375, 768, 1024, 1440].map((width) => ({ width, name: `vp-${width}` }));
   const fp = { fontFamily: 'sans-serif', fontSize: '16px', lineHeight: '24px', color: 'rgb(0, 0, 0)', backgroundColor: 'rgb(240, 240, 240)', borderRadius: '4px', padding: '2px' };
   /* Inline code carries the size of the text it sits in: S3 compares the ratio. */
-  const inlineFp = { ...fp, fontSize: '14px', parentFontSize: '16px', ratio: 0.875, lines: 1, long: false, text: 'terraform apply' };
+  const inlineFp = { ...fp, fontSize: '14px', parentFontSize: '16px', ratio: 0.875, lines: 1, long: false, text: 'terraform apply', inTable: false, whiteSpace: 'normal', overflowWrap: 'anywhere', boxDecorationBreak: 'clone' };
   const h2 = { fontFamily: 'sans-serif', fontSize: '36.1px', fontWeight: '650', lineHeight: '43.32px', letterSpacing: '-0.722px' };
-  const th = { fontFamily: 'sans-serif', fontSize: '13.4px', fontWeight: '500', letterSpacing: '2.144px', textTransform: 'uppercase', textAlign: 'left' };
+  const th = { fontFamily: 'sans-serif', fontSize: '13.4px', fontWeight: '500', letterSpacing: '2.144px', textTransform: 'uppercase', textAlign: 'start', numericTable: false };
   /* S14: one sample of every required kind, ink and painted background as
      opaque hex. #595959 on white is 7:1; the probe's own ratio is ignored. */
   const contrast = CONTRAST_KINDS.map((kind) => ({
@@ -111,8 +111,8 @@ const violations = [
   (raw) => { raw.results[0].parity.proseParagraphs.push({ ...raw.results[0].parity.proseParagraphs[0], fontSize: '15.4px' }); },
   /* S21: a hub shell 20px in from the header edge. */
   (raw) => { raw.results[0].gutter.blocks[1].left = 40; },
-  /* S22: `pre-commit` painted on two lines without the build's long mark. */
-  (raw) => { raw.results[0].code.inlines.push({ ...raw.results[0].code.inlines[0], lines: 2, text: 'pre-commit' }); },
+  /* S22: a prose token cannot reflow when the reader enlarges the text. */
+  (raw) => { raw.results[0].code.inlines[0].whiteSpace = 'nowrap'; },
   /* S23: a table region centred in its wrapper, 22px off the text edge. */
   (raw) => { const r = raw.results.find((r) => r.route === '/article/'); r.blockEdges.push({ sel: 'div.table-scroll', left: 42, right: r.viewportWidth + 2, expectedLeft: 20, expectedRight: r.viewportWidth - 20, optIn: 'wide', inItem: false }); },
 ];
@@ -307,13 +307,49 @@ test('S24 fails a page that shifts after first paint and never passes on a missi
   assert.ok(evaluateContract(blind)[24].failures.some((f) => f.field === 'layout shift probe'));
 });
 
-test('S22 lets only a build-marked long span wrap, and never passes on a missing fragment count', () => {
+test('S18 shares table typography while enforcing alignment by table role', () => {
   const raw = fixture();
+  raw.results[0].parity.th.push({ ...raw.results[0].parity.th[0], numericTable: true, textAlign: 'center' });
+  assert.equal(evaluateContract(raw)[18].failures.length, 0);
+  for (const change of [
+    { numericTable: true, textAlign: 'start' },
+    { numericTable: false, textAlign: 'center' },
+    { numericTable: true, textAlign: 'center', fontFamily: 'monospace' },
+    { numericTable: undefined },
+  ]) {
+    const broken = fixture();
+    Object.assign(broken.results[0].parity.th[0], change);
+    assert.ok(evaluateContract(broken)[18].failures.length > 0, JSON.stringify(change));
+  }
+});
+
+test('S22 lets prose tokens reflow, with a capsule on every fragment', () => {
+  const raw = fixture();
+  raw.results[0].code.inlines.push({ ...raw.results[0].code.inlines[0], lines: 2, text: 'pre-commit' });
   raw.results[0].code.inlines.push({ ...raw.results[0].code.inlines[0], lines: 2, long: true, text: '~/.config/opencode/plugins/tmux-window-notification.ts' });
   assert.equal(evaluateContract(raw)[22].failures.length, 0);
-  const blind = fixture();
-  delete blind.results[0].code.inlines[0].lines;
-  assert.ok(evaluateContract(blind)[22].failures.some((f) => /fragment evidence/.test(f.field)));
+  for (const change of [
+    { whiteSpace: 'nowrap' },
+    { overflowWrap: 'normal' },
+    { boxDecorationBreak: 'slice' },
+    { lines: undefined },
+    { inTable: undefined },
+  ]) {
+    const broken = fixture();
+    Object.assign(broken.results[0].code.inlines[0], change);
+    assert.ok(evaluateContract(broken)[22].failures.length > 0, JSON.stringify(change));
+  }
+});
+
+test('S22 permits atomic table tokens but rejects a wrapped nowrap token', () => {
+  for (const whiteSpace of ['nowrap', 'normal']) {
+    const raw = fixture();
+    Object.assign(raw.results[0].code.inlines[0], { inTable: true, whiteSpace });
+    assert.equal(evaluateContract(raw)[22].failures.length, 0);
+  }
+  const broken = fixture();
+  Object.assign(broken.results[0].code.inlines[0], { inTable: true, whiteSpace: 'nowrap', lines: 2 });
+  assert.ok(evaluateContract(broken)[22].failures.length > 0);
 });
 
 test('S15 lets a table region that is its own grid item sit on the text edge, not on the grid root', () => {

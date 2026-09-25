@@ -1,20 +1,12 @@
 /**
- * Inline code is one token: `pre-commit` must never split at its hyphen,
- * `terraform apply` must never leave `apply` on the next line, a path must
- * not break after a slash that happens to land at the line end. prose.css
- * therefore sets every capsule to `white-space: nowrap`.
+ * Legacy length estimate for the informational `data-long` attribute.
+ * Rehype and frontmatter rendering keep this metadata, but prose.css now
+ * lets every inline token reflow with its available space and text size.
+ * Table cells follow their own scroll/stack policy. Neither relies on this
+ * estimate to decide whether wrapping is safe.
  *
- * That is safe only while the token fits the narrowest line the site lays
- * out, which is the 320px viewport: a 280px column, less whatever the
- * token's context indents (a list item's 36px, an admonition's padding, a
- * card's padding), at the capsule size of the text around it (0.85 of the
- * body's 17px in a paragraph, of a card's 14px copy, of a 22px h3; the
- * scale is tokens.css's --code-inline-scale, kept in step by hand). The
- * build works that out per span (rehype-inline-code for Markdown and
- * authored HTML, inline-markdown.ts for frontmatter strings) and marks
- * every span that would not fit with `data-long`; those wrap the way a long
- * URL in running text does — at spaces, slashes and hyphens first, anywhere
- * as the last resort. Everything here is in CSS pixels at 320px.
+ * The constants below retain the original 320px layout model; they are
+ * diagnostic estimates, not the current CSS typography contract.
  */
 
 /** The reading column at 320px: the viewport less the two 20px gutters. */
@@ -64,5 +56,5 @@ export function fitsInline(text, { insets = [], size = "body" } = {}) {
   return characters * (CHAR_WIDTH[size] ?? CHAR_WIDTH.body) + CAPSULE_CHROME <= available;
 }
 
-/** True when a span's text is too long to be held unbroken on a phone in its context. */
+/** True when the legacy model estimates a span would exceed its phone column. */
 export const isLongInlineCode = (text, context) => !fitsInline(text, context);

@@ -56,10 +56,8 @@
 
   .article-header > h1 {
     margin: 0;
-    /* Between the section heading and the hero display: the published
-       article title (2.5rem–4.5rem) is the midpoint of the two steps. */
-    font-size: calc((var(--text-3xl) + var(--text-4xl)) / 2);
-    line-height: var(--leading-display);
+    font-size: var(--text-3xl);
+    line-height: var(--leading-tight);
     letter-spacing: -0.025em;
     /* Titles carry long unhyphenated product names; wrapping beats
        widening the grid track. */
@@ -76,8 +74,7 @@
 
   /* ------------------------------------------------------------------ */
   /* Metadata line.                                                       */
-  /* Date and reading time rendered identically for posts, case studies    */
-  /* and manuals: a tracked, uppercase mono label.                         */
+  /* Date and reading time share the reading face, at the smaller step.   */
   /* ------------------------------------------------------------------ */
 
   .article-meta {
@@ -86,11 +83,9 @@
     align-items: center;
     gap: var(--space-2);
     margin: var(--space-6) 0 0;
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
     line-height: var(--leading-body);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
     color: var(--color-text-subtle);
   }
 
@@ -100,6 +95,14 @@
 
   .article-header > .case-proof {
     align-self: stretch;
+  }
+
+  .article-header > .case-proof dt {
+    color: var(--color-text);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    letter-spacing: normal;
+    text-transform: none;
   }
 
   /* The tags themselves are the shared row (components/navigation.css);
@@ -203,13 +206,12 @@
 
   .comments-region h2 {
     margin-block-end: var(--space-8);
-    /* The same derived section size, weight and tracking as a prose h2. The
-       region sits outside `.prose`, so nothing there reaches it and base's
-       bold h2 won: "Comments" rendered heavier than the section headings
-       directly above it. */
-    font-size: calc((var(--text-xl) + var(--text-2xl)) / 2);
-    font-weight: calc((var(--weight-semibold) + var(--weight-bold)) / 2);
-    letter-spacing: -0.02em;
+    /* This region sits outside prose but shares its section hierarchy. */
+    font-family: var(--font-body);
+    font-size: var(--text-xl);
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-snug);
+    letter-spacing: -0.015em;
   }
 
   /* Reserve the room the widget will take, so the footer does not jump

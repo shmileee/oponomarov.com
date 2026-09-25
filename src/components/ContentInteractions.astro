@@ -109,6 +109,91 @@
       });
     };
     if (diagrams.length > 0) {
+      let viewer = document.querySelector<HTMLDialogElement>("[data-diagram-viewer]");
+      if (!viewer) {
+        viewer = document.createElement("dialog");
+        viewer.className = "diagram-viewer";
+        viewer.setAttribute("data-diagram-viewer", "");
+        viewer.setAttribute("data-pagefind-ignore", "");
+        viewer.setAttribute("aria-label", "Enlarged diagram");
+        viewer.innerHTML = '<header class="diagram-viewer__toolbar"><p data-diagram-title></p><button type="button" data-diagram-out aria-label="Zoom out">−</button><button type="button" data-diagram-in aria-label="Zoom in">+</button><button type="button" data-diagram-fit>Fit</button><button type="button" data-diagram-close>Close</button></header><div class="diagram-viewer__viewport" tabindex="0" role="region" aria-label="Diagram; scroll to explore"></div>';
+        document.body.append(viewer);
+      }
+      const viewport = viewer.querySelector<HTMLElement>(".diagram-viewer__viewport")!;
+      const zoomOut = viewer.querySelector<HTMLButtonElement>("[data-diagram-out]")!;
+      const zoomIn = viewer.querySelector<HTMLButtonElement>("[data-diagram-in]")!;
+      const closeButton = viewer.querySelector<HTMLButtonElement>("[data-diagram-close]")!;
+      let opener: HTMLButtonElement | undefined;
+      let shown: SVGSVGElement | undefined;
+      let readableWidth = 0;
+      let width = 0;
+      const zoom = (nextWidth: number) => {
+        if (!shown) return;
+        const viewBox = shown.viewBox.baseVal;
+        const fit = Math.min(readableWidth, viewport.clientWidth, viewport.clientHeight * viewBox.width / viewBox.height);
+        width = Math.max(fit, Math.min(readableWidth * 2, nextWidth));
+        shown.style.width = `${width}px`;
+        zoomOut.disabled = width <= fit;
+        zoomIn.disabled = width >= readableWidth * 2;
+      };
+      diagrams.forEach((exhibit) => {
+        const svg = exhibit.querySelector<SVGSVGElement>(":scope > svg");
+        if (!svg || !svg.viewBox.baseVal.width) return;
+        const label = exhibit.querySelector(".diagram-exhibit-label, p")?.textContent?.replace(/\s+/g, " ").trim() || "Diagram";
+        const fontSizes = [...svg.querySelectorAll("text")].map((text) => parseFloat(getComputedStyle(text).fontSize)).filter((size) => size > 0);
+        const smallestFont = fontSizes.length ? Math.min(...fontSizes) : 12;
+        /* Scale the whole drawing: changing text alone can break its layout. */
+        exhibit.style.setProperty("--diagram-readable-width", `${svg.viewBox.baseVal.width * Math.max(1, 12 / smallestFont)}px`);
+        let trigger = exhibit.nextElementSibling;
+        if (!(trigger instanceof HTMLButtonElement) || !trigger.matches("[data-diagram-open]")) {
+          trigger = document.createElement("button");
+          trigger.setAttribute("type", "button");
+          trigger.setAttribute("data-diagram-open", "");
+          trigger.setAttribute("data-pagefind-ignore", "");
+          trigger.className = "diagram-enlarge";
+          trigger.textContent = "Enlarge diagram";
+          exhibit.after(trigger);
+        }
+        const button = trigger as HTMLButtonElement;
+        button.setAttribute("aria-label", `Enlarge diagram: ${label}`);
+        button.addEventListener("click", () => {
+          opener = button;
+          shown = svg.cloneNode(true) as SVGSVGElement;
+          /* The original stays in the page; its marker and label IDs must
+             remain distinct from those in the enlarged drawing. */
+          const prefix = `diagram-${crypto.randomUUID()}-`;
+          const elements = [shown, ...shown.querySelectorAll("*")];
+          const ids = new Map(elements.filter((element) => element.id).map((element) => [element.id, prefix + element.id]));
+          elements.forEach((element) => {
+            for (const attribute of [...element.attributes]) {
+              let value = attribute.value;
+              if (attribute.name === "id") value = ids.get(value) || value;
+              else if (attribute.name === "aria-labelledby" || attribute.name === "aria-describedby") value = value.split(/\s+/).map((id) => ids.get(id) || id).join(" ");
+              else if (attribute.name === "href" || attribute.name === "xlink:href") value = value.startsWith("#") && ids.has(value.slice(1)) ? `#${ids.get(value.slice(1))}` : value;
+              else for (const [id, replacement] of ids) value = value.replaceAll(`url(#${id})`, `url(#${replacement})`);
+              element.setAttribute(attribute.name, value);
+            }
+          });
+          viewport.replaceChildren(shown);
+          viewer!.querySelector("[data-diagram-title]")!.textContent = label;
+          readableWidth = svg.viewBox.baseVal.width * Math.max(1, 16 / smallestFont);
+          viewer!.showModal();
+          zoom(readableWidth);
+          viewport.scrollTo(Math.max(0, (readableWidth - viewport.clientWidth) / 2), 0);
+          closeButton.focus();
+        }, { signal });
+      });
+      zoomOut.addEventListener("click", () => zoom(width / 1.25), { signal });
+      zoomIn.addEventListener("click", () => zoom(width * 1.25), { signal });
+      viewer.querySelector("[data-diagram-fit]")!.addEventListener("click", () => zoom(0), { signal });
+      closeButton.addEventListener("click", () => viewer!.close(), { signal });
+      viewer.addEventListener("close", () => {
+        // A queued close event can arrive after another diagram has opened.
+        if (viewer!.open) return;
+        viewport.replaceChildren();
+        shown = undefined;
+        opener?.focus();
+      }, { signal });
       syncDiagramRegions();
       addEventListener("resize", syncDiagramRegions, { signal });
     }

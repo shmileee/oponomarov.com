@@ -6,6 +6,102 @@
    control in the corner. A click anywhere closes it, so the whole surface
    says so with the cursor. */
 @layer components {
+  .diagram-enlarge,
+  .diagram-viewer__toolbar button {
+    min-inline-size: var(--tap-size);
+    min-block-size: var(--tap-size);
+    padding: var(--space-2) var(--space-3);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    cursor: pointer;
+  }
+
+  .diagram-enlarge {
+    display: block;
+    margin-block: var(--space-2);
+  }
+
+  .diagram-enlarge:hover,
+  .diagram-viewer__toolbar button:hover:not(:disabled) {
+    border-color: var(--color-accent);
+  }
+
+  .diagram-enlarge:focus-visible,
+  .diagram-viewer :focus-visible {
+    outline: var(--focus-width) solid var(--color-focus);
+    outline-offset: var(--focus-offset);
+  }
+
+  .diagram-viewer {
+    position: fixed;
+    inset: 0;
+    inline-size: 100%;
+    max-inline-size: 100%;
+    block-size: 100%;
+    max-block-size: 100%;
+    margin: 0;
+    padding: var(--space-3);
+    border: 0;
+    background: var(--color-bg);
+    color: var(--color-text);
+  }
+
+  .diagram-viewer[open] {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: var(--space-3);
+  }
+
+  .diagram-viewer__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .diagram-viewer__toolbar p {
+    flex: 1 1 15rem;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    overflow-wrap: anywhere;
+  }
+
+  .diagram-viewer__toolbar button:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  .diagram-viewer__toolbar [data-diagram-close] {
+    margin-inline-start: auto;
+  }
+
+  @media (width < 40rem) {
+    .diagram-viewer__toolbar p {
+      flex-basis: 100%;
+    }
+  }
+
+  .diagram-viewer__viewport {
+    min-inline-size: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--code-bg);
+  }
+
+  .diagram-viewer__viewport > svg {
+    display: block;
+    max-inline-size: none;
+    block-size: auto;
+    margin-inline: auto;
+  }
+
   [data-zoomable] {
     cursor: zoom-in;
   }

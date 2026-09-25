@@ -1542,11 +1542,8 @@
     color: var(--color-accent);
   }
 
-  /* Inline-SVG diagram or semantic process diagram (the former
-     teardown-exhibit). The SVG palette namespace (--bg, --w88, --ab4, ...)
-     is defined in tokens.css; the diagram scales instead of scrolling so no
-     unlabelled scroll region is created. Rhythm comes from the prose flow,
-     as for the media exhibit above. */
+  /* Inline-SVG or semantic process diagram. Geometry stays with the SVG;
+     sizing and the named mobile scroll region belong to the engine. */
   .diagram-exhibit {
     min-inline-size: 0;
     padding: var(--space-5) var(--space-6);
@@ -1564,13 +1561,9 @@
     margin-inline: auto;
   }
 
-  /* A diagram scales with its column down to a floor. Scaled into a 350px
-     phone column, an 800px flowchart set its labels at four pixels; the
-     floor keeps them legible and the exhibit pans sideways instead, the
-     one place on the site a horizontal scroll is the lesser evil.
-     ContentInteractions makes the exhibit a named, focusable region only
-     while it actually overflows, so a desktop reader gets no extra tab
-     stop. */
+  /* ContentInteractions derives a floor from the smallest SVG label so
+     mobile annotations stay at least 12px. The drawing pans as one unit;
+     an enlargement control opens a larger, independently scrollable view. */
   @media (width < 40rem) {
     .diagram-exhibit:has(> svg) {
       overflow-x: auto;
@@ -1578,7 +1571,7 @@
     }
 
     .diagram-exhibit > svg {
-      min-inline-size: 36rem;
+      min-inline-size: var(--diagram-readable-width, 54rem);
     }
 
     .diagram-exhibit:focus-visible {
@@ -1730,5 +1723,51 @@
     inline-size: auto;
     min-inline-size: 100%;
     max-inline-size: max(100%, var(--measure-page));
+  }
+  /* Numeric comparisons keep their column relationships on phones. The
+     shared table typography supplies everything except this layout choice. */
+  .numeric-table table {
+    font-size: var(--text-numeric);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .numeric-table :is(th, td) {
+    padding-inline: var(--space-4);
+    text-align: center;
+  }
+
+  @media (width < 40rem) {
+    .numeric-table table {
+      display: table;
+      font-size: var(--text-sm);
+    }
+
+    .numeric-table thead {
+      display: table-header-group;
+    }
+
+    .numeric-table tbody {
+      display: table-row-group;
+    }
+
+    .numeric-table :is(thead, tbody) tr {
+      display: table-row;
+      padding: 0;
+    }
+
+    .numeric-table :is(th, td),
+    .numeric-table tbody tr:last-child > td {
+      display: table-cell;
+      padding: var(--space-3) var(--space-2);
+      text-align: center;
+    }
+
+    .numeric-table th + th::before {
+      content: none;
+    }
+
+    .numeric-table tbody tr + tr > td {
+      border-block-start: var(--border-width) solid var(--color-border-subtle);
+    }
   }
 }

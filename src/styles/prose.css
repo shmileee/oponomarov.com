@@ -33,7 +33,7 @@
   }
 
   /* The reading measure is a cap, not a centred column: text starts at the
-     page gutter and stops at 46rem, which is what produces the wide right
+     page gutter and stops at 42rem, which is what produces the wide right
      gutter the design is built around. A plain `.prose` block caps itself.
      When `.prose` is itself the content grid (article bodies) the root must
      stay uncapped so `wide` and `full-bleed` can reach the wider tracks, and
@@ -79,13 +79,6 @@
     margin-block-end: calc(var(--prose-flow) / 2);
     color: var(--color-text);
     text-wrap: balance;
-  }
-
-  .prose :is(h1, h2, h3, h4) {
-    font-family: var(--font-display);
-  }
-
-  .prose :is(h5, h6) {
     font-family: var(--font-body);
   }
 
@@ -96,25 +89,21 @@
     letter-spacing: var(--tracking-heading);
   }
 
-  /* The published article headings sit at 650, between the two weight
-     tokens; the midpoint keeps that without a third weight token. */
+  /* Article headings belong to the reading face. Weight and spacing,
+     rather than another font or decoration, establish the hierarchy. */
   .prose :is(h2, h3) {
-    font-weight: calc((var(--weight-semibold) + var(--weight-bold)) / 2);
+    font-weight: var(--weight-semibold);
   }
 
-  /* Section heading: the original clamp (1.7rem–2.3rem) falls midway between
-     the xl and 2xl steps of the ramp at every width, so it is derived from
-     both rather than given a size of its own. */
+  /* A section is one step above the body, with more space above than below. */
   .prose h2 {
-    padding-block-end: var(--space-3);
-    border-block-end: var(--border-width) solid var(--color-border-subtle);
-    font-size: calc((var(--text-xl) + var(--text-2xl)) / 2);
-    line-height: var(--leading-tight);
-    letter-spacing: -0.02em;
+    font-size: var(--text-xl);
+    line-height: var(--leading-snug);
+    letter-spacing: -0.015em;
   }
 
   .prose h3 {
-    font-size: var(--text-xl);
+    font-size: var(--text-lg);
     line-height: var(--leading-snug);
     letter-spacing: -0.01em;
   }
@@ -201,10 +190,9 @@
     font-size: var(--text-sm);
   }
 
-  /* Heading rhythm is em-based like the flow itself: two flows above a
-     section heading, both scaling with the heading's own size. */
+  /* Explicit spacing prevents a large heading from multiplying the gap. */
   .prose :is(h2, h3):not(:first-child) {
-    margin-block-start: calc(var(--prose-flow) * 2);
+    margin-block-start: var(--space-12);
   }
 
   .prose :is(h4, h5, h6):not(:first-child) {
@@ -215,62 +203,18 @@
     margin-block-start: 0;
   }
 
-  /* An article body that opens with a section heading (every case study)
-     sits a little lower than one that opens with a paragraph: the published
-     heading margin collapsed through the header gap and won. */
+  /* The article shell already separates its header and body; an opening
+     section heading does not add a second gap. */
   .prose[data-article-body] > h2:first-child {
-    margin-block-start: var(--space-8);
+    margin-block-start: 0;
   }
 
-  /* Case-study bodies number their sections: a two-digit counter leads the
-     heading and a hairline fills the rest of the line. The portfolio app is
-     the only surface that renders these, so the counter keys off the app
-     attribute the shell already emits rather than a third prose modifier.
-     The heading keeps the section heading's own leading and tracking: a
-     second value here rendered `.prose h2` at two line-heights, and later at
-     two trackings, for one size. The homepage reader shows the same body
-     with its sections demoted to h3 under the dialog's own h2 title; those
-     h3s take the identical treatment, size included, so a study reads the
-     same in the dialog as on its page. */
-  [data-app="portfolio"] :is(.article .prose[data-article-body], .reader-prose) {
-    counter-reset: prose-section;
-  }
-
-  [data-app="portfolio"] :is(.article .prose[data-article-body] > h2, .reader-prose > h3) {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    padding-block-end: 0;
-    border-block-end: 0;
-    font-size: calc((var(--text-xl) + var(--text-2xl)) / 2);
-    line-height: var(--leading-tight);
-    letter-spacing: -0.02em;
-    counter-increment: prose-section;
-  }
-
-  [data-app="portfolio"] :is(.article .prose[data-article-body] > h2, .reader-prose > h3)::before {
-    content: counter(prose-section, decimal-leading-zero);
-    flex: none;
-    color: var(--color-accent-soft);
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    font-weight: var(--weight-semibold);
-    line-height: 1;
-    letter-spacing: 0.08em;
-  }
-
-  [data-app="portfolio"] :is(.article .prose[data-article-body] > h2, .reader-prose > h3)::after {
-    content: "";
-    flex: 1;
-    block-size: var(--border-width);
-    background: var(--color-border-subtle);
-  }
-
-  /* The heading's words are one flex item (rehype-heading-anchors wraps
-     them), so a code span or a link inside the heading wraps with the text
-     instead of standing beside it as a column of its own. */
-  [data-app="portfolio"] :is(.article .prose[data-article-body] > h2, .reader-prose > h3) > .heading-text {
-    min-inline-size: 0;
+  /* Reader sections are h3 beneath the dialog title, but retain the same
+     visual hierarchy as the h2 sections on the standalone article. */
+  .reader-prose > h3 {
+    font-size: var(--text-xl);
+    line-height: var(--leading-snug);
+    letter-spacing: -0.015em;
   }
 
   /* Task lists. The GFM checkbox is replaced at build time
@@ -502,15 +446,9 @@
 
   /* ------------------------------------------------------------------ */
   /* Inline code — the ONE rule. Expressive Code never touches inline     */
-  /* code, so this is the whole implementation: paragraph, list, link,    */
-  /* heading, admonition, card, step and table cell all render this one   */
-  /* capsule. A token is one thing: it never wraps, so `pre-commit` cannot */
-  /* split at its hyphen and `terraform apply` cannot leave `apply` on    */
-  /* the next line. A span too long to hold unbroken on a phone in its    */
-  /* context is marked `data-long` at build time (src/lib/inline-code.mjs */
-  /* holds the model; rehype-inline-code and inline-markdown.ts apply it) */
-  /* and takes the second rule below. Table cells add one more rule of    */
-  /* their own, with the tables.                                          */
+  /* code, so this is the whole implementation. Inline tokens use the     */
+  /* surrounding text's scale and may wrap when enlarged or constrained. */
+  /* Table cells keep their own token-column wrapping policy below.       */
   /* ------------------------------------------------------------------ */
 
   /* The frontmatter strings (a study's summary, role and evidence) render
@@ -544,20 +482,6 @@
        card line does not open up around a capsule. The painted capsule is
        the content area plus padding; leading does not change it. */
     line-height: var(--leading-code-inline);
-    white-space: nowrap;
-  }
-
-  /* A long span (one that would not fit the 320px column in its context)
-     wraps the way a long URL in running text does: at its spaces, slashes and
-     hyphens when the line ends there, anywhere as the last resort, each
-     fragment its own closed capsule. So a 60-character path still cannot
-     escape a 320px viewport, and the full stop after it stays on its last
-     fragment. (An inline-block box was tried: it moves whole to the next
-     line, but then takes the whole line and orphans the punctuation after
-     it.) */
-  .prose :not(pre) > code[data-long],
-  .prose:not(pre) > code[data-long],
-  :is(.case-card, .case-proof) :not(pre) > code[data-long] {
     white-space: normal;
     overflow-wrap: anywhere;
     box-decoration-break: clone;
@@ -1040,9 +964,7 @@
        rules stopped short of, so every desktop table looked one column
        short of its own border. A table that really scrolls draws its bar
        over the last column, which is what a scroll region does. */
-    border: var(--border-width) solid var(--table-border);
-    border-radius: var(--radius-md);
-    background: var(--color-surface);
+    border-block: var(--border-width) solid var(--table-border);
   }
 
   .table-scroll:focus-visible {
@@ -1115,23 +1037,24 @@
   }
 
   .prose th {
-    padding-block: var(--space-4) var(--space-3);
-    color: var(--color-text-subtle);
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    font-weight: var(--weight-medium);
+    padding-block: var(--space-3);
+    color: var(--color-text);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
     line-height: var(--leading-snug);
-    letter-spacing: var(--tracking-label);
-    /* Start-aligned over start-aligned cells: a centred label over a
-       left-set column put the heading of every table off the axis its
-       own rows sit on. */
     text-align: start;
-    text-transform: uppercase;
-    /* A column heading is a label, not a sentence: it sits on one line and
-       widens its column to hold itself if it must. "TYPICAL CHANGES" broke
-       over a column one pixel too narrow for it. */
-    white-space: nowrap;
+    white-space: normal;
   }
+
+  .prose :is(th, td):first-child {
+    padding-inline-start: 0;
+  }
+
+  .prose :is(th, td):last-child {
+    padding-inline-end: 0;
+  }
+
 
   /* Row rules. A row is one unit - a name and what it means - and the eye
      needs a line to know where one ends and the next begins: rows set
@@ -1199,9 +1122,9 @@
      table into scrolling on a viewport that otherwise held it; that is the
      accepted price. The sentence around a token in a description cell
      still wraps between its words. Below 40rem the rows stack and the
-     region no longer scrolls, so --table-token-space releases the long
-     spans there (the short ones stay atomic: they fit). */
-  .prose :is(td, th) code[data-long] {
+     region no longer scrolls, so --table-token-space permits all spans to
+     wrap there, including when a reader enlarges the text. */
+  .prose :is(td, th) code {
     white-space: var(--table-token-space);
   }
 

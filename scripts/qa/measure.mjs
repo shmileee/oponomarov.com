@@ -309,6 +309,7 @@ const PROBE = () => {
       overflowX: cs.overflowX,
       overflowWrap: cs.overflowWrap,
       wordBreak: cs.wordBreak,
+      boxDecorationBreak: cs.boxDecorationBreak,
       width: Math.round(r.width),
       scrollWidth: el.scrollWidth,
       clientWidth: el.clientWidth,
@@ -324,11 +325,11 @@ const PROBE = () => {
     if (!fp) return null;
     const parentFontSize = el.parentElement ? getComputedStyle(el.parentElement).fontSize : null;
     const ratio = parentFontSize ? Math.round((parseFloat(fp.fontSize) / parseFloat(parentFontSize)) * 1000) / 1000 : null;
-    /* S22: the lines a span paints on (distinct fragment tops), whether the
-       build marked it as too long to hold on a phone (data-long), and its
-       text, so a failure names the token. */
+    /* S22: record painted lines and the table context, whose scroll region
+       permits atomic tokens. data-long remains diagnostic metadata; prose
+       wrapping follows the available space, not the build's estimate. */
     const lines = new Set([...el.getClientRects()].filter((rect) => rect.width > 0).map((rect) => Math.round(rect.top))).size;
-    return { ...fp, parentFontSize, ratio, lines, long: el.hasAttribute('data-long'), text: (el.textContent || '').trim().slice(0, 60) };
+    return { ...fp, parentFontSize, ratio, lines, inTable: Boolean(el.closest('td, th')), long: el.hasAttribute('data-long'), text: (el.textContent || '').trim().slice(0, 60) };
   };
 
   // 5. Tables.
@@ -628,7 +629,7 @@ const PROBE = () => {
   const parity = {
     proseH2: rendered('.prose h2').map(typeSample),
     commentsH2: rendered('.comments-region h2').map(typeSample),
-    th: rendered('th').map(typeSample),
+    th: rendered('th').map((el) => ({ ...typeSample(el), numericTable: Boolean(el.closest('.numeric-table')) })),
     /* Every direct prose paragraph except the lede step, which is larger by
        design (docs section 4). Unlike S1 this does NOT exclude `header`: the
        one paragraph this scenario exists to catch sits inside one

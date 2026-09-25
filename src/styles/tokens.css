@@ -120,7 +120,7 @@
        responds to root size and browser zoom, not only to viewport width. */
     --text-xs: clamp(0.75rem, 0.725rem + 0.125vw, 0.875rem);
     --text-sm: clamp(0.875rem, 0.85rem + 0.125vw, 1rem);
-    --text-base: clamp(1.0625rem, 1rem + 0.3vw, 1.1875rem);
+    --text-base: clamp(1.0625rem, 1rem + 0.2vw, 1.125rem);
     --text-lg: clamp(1.1875rem, 1.15rem + 0.1875vw, 1.375rem);
     --text-xl: clamp(1.375rem, 1.3rem + 0.375vw, 1.75rem);
     --text-2xl: clamp(1.875rem, 4vw, 2.875rem);
@@ -156,7 +156,7 @@
     --radius-lg: 0.75rem;
     --radius-pill: 999rem;
 
-    --measure-prose: 46rem;
+    --measure-prose: 42rem;
     --measure-wide: 64rem;
     --measure-page: 71.25rem;
     --toc-width: 14rem;
@@ -214,6 +214,7 @@
     --code-inline-text: light-dark(var(--p-blue-700), var(--p-blue-300));
 
     --table-border: var(--color-border);
+    --text-numeric: 1rem;
     --table-head-bg: var(--color-surface);
     --table-stripe: var(--color-border-subtle);
 

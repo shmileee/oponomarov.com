@@ -76,7 +76,7 @@ imports only; each of the other 14 files wraps its rules in its named layer.
 | `components/navigation.css` | `components` | TOC, adjacent navigation, topic list, back link, source actions |
 | `components/article.css` | `components` | Article header, dek, metadata, proof list, comments |
 | `components/reader.css` | `components` | Homepage reader dialog and its children |
-| `components/lightbox.css` | `components` | Enlarged-image dialog ContentInteractions opens from article images |
+| `components/lightbox.css` | `components` | Image lightbox and the scrollable diagram viewer opened by ContentInteractions |
 | `prose.css` | `prose` | Shared prose, admonitions, EC frame adjustments, inline code, tables, native content elements, the case-study series card the engine renders at the end of a body that continues elsewhere |
 | `primitives.css` | `primitives` | Every selector in the content-primitive contract |
 | `utilities.css` | `utilities` | `sr-only` only |
@@ -205,7 +205,7 @@ section 5. These are Tier 2 tokens, not per-component overrides.
 | `--radius-md` | `0.5rem` | Code and media frames |
 | `--radius-lg` | `0.75rem` | Cards and dialogs |
 | `--radius-pill` | `999rem` | Pills; not a content width |
-| `--measure-prose` | `44rem` | 704px readable measure at a 16px root |
+| `--measure-prose` | `42rem` | 672px readable measure at a 16px root |
 | `--measure-wide` | `64rem` | 1024px wide track |
 | `--measure-page` | `80rem` | 1280px page maximum |
 | `--toc-width` | `14rem` | TOC column |
@@ -270,7 +270,7 @@ viewport-only font ramps are prohibited. Bounds are also in `rem`.
 | --- | --- | --- | --- |
 | `--text-xs` | `clamp(0.75rem, 0.725rem + 0.125vw, 0.875rem)` | 12px | 14px |
 | `--text-sm` | `clamp(0.875rem, 0.85rem + 0.125vw, 1rem)` | 14px | 16px |
-| `--text-base` | `clamp(1.0625rem, 1rem + 0.3vw, 1.1875rem)` | 17px | 19px |
+| `--text-base` | `clamp(1.0625rem, 1rem + 0.2vw, 1.125rem)` | 17px | 18px |
 | `--text-lg` | `clamp(1.1875rem, 1.15rem + 0.1875vw, 1.375rem)` | 19px | 22px |
 | `--text-xl` | `clamp(1.375rem, 1.3rem + 0.375vw, 1.75rem)` | 22px | 28px |
 | `--text-2xl` | `clamp(1.75rem, 1.625rem + 0.625vw, 2.375rem)` | 28px | 38px |
@@ -279,7 +279,7 @@ viewport-only font ramps are prohibited. Bounds are also in `rem`.
 
 Endpoints assume `1rem = 16px`. Evaluate each as
 `max(min * 16, min(preferredRem * 16 + preferredVw * viewport / 100, max * 16))`.
-The base token is the plan's fixed 17–19px ramp; it reaches its maximum at
+The base token is a 17–18px ramp; it reaches its maximum at
 1000px, not 1920px. Do not hardcode the root font size to make these numbers
 hold when the user changes their default.
 
@@ -287,15 +287,15 @@ hold when the user changes their default.
 | --- | --- | --- |
 | Hero display `h1` | `--text-4xl` | Display / bold / tight |
 | Article or ordinary page `h1` | `--text-3xl` | Display / bold / tight |
-| `h2` | `--text-2xl` | Display / bold / tight |
-| `h3` | `--text-xl` | Display / semibold / snug |
-| `h4` | `--text-lg` | Display / semibold / snug |
+| Prose `h2`, reader section `h3` | `--text-xl` | Body / semibold / snug |
+| Prose `h3` | `--text-lg` | Body / semibold / snug |
+| Prose `h4` | `--text-lg` | Body / semibold / snug |
 | `h5` | `--text-base` | Body / semibold / snug |
 | `h6` | `--text-sm` | Body / semibold / snug |
 | Paragraph, list item, definition, normal table cell, search input | `--text-base` | Body / normal / body |
 | Hero copy, dek, `.prose--lede` | `--text-lg` | Body / normal / body |
 | Navigation, buttons, tabs, TOC | `--text-sm` | Mono / medium / snug |
-| Metadata, captions, table labels | `--text-sm` | Mono / medium / snug |
+| Article metadata and table labels | `--text-sm` | Body / normal (metadata), semibold (table) / snug |
 | Eyebrow, format badge | `--text-xs` | Mono / semibold / snug |
 | Fenced code | `--code-font-size` → `--text-sm` | Mono / normal / code |
 | Inline code and `kbd` | `--code-inline-size` | Mono / normal / inherited leading |
@@ -325,7 +325,7 @@ literal multiples, not array indexes; there are no steps 7, 9, 11, or 13–15.
 | `--space-16` | `4rem` | 64px |
 | `--space-gutter` | `clamp(1rem, 4vw, 2.5rem)` | 16px at 320px; 40px at 1920px |
 | `--space-section` | `clamp(3rem, 8vw, 6rem)` | 48px at 320px; 96px at 1920px |
-| `--prose-flow` | `1.25em` | 21.25–23.75px for 17–19px body text |
+| `--prose-flow` | `1.25em` | 21.25–22.5px for 17–18px body text |
 
 These two viewport-only preferred spacing terms are the plan's layout tokens,
 not font sizes; their rem bounds still respond to the root size. Use gutter for
@@ -336,7 +336,7 @@ adjacent content blocks. Compact prose assigns
 Retire `--space-20` and `--space-24` as separate fixed section-spacing choices.
 `--space-section` supplies that range. Replace `--page-gutter` with
 `--space-gutter`, `--page-width: 71.25rem` with `--measure-page: 80rem`, and
-`--reading-width: 46rem` with `--measure-prose: 44rem`. These width changes are
+`--reading-width: 46rem` with `--measure-prose: 42rem`. These width changes are
 the agreed consolidation, not palette changes.
 
 ## 6. Breakpoints
@@ -470,9 +470,8 @@ A GitHub-flavoured task list (`- [x]`) renders its state as a drawn mark
 
 **Headings carry their own wrapper.** `rehype-heading-anchors.mjs` wraps every
 article h2–h4's content in `span.heading-text` before appending the section
-link. The portfolio's numbered headings are flex rows (counter, text, rule):
-with the words as one item, a code span or a link inside a heading wraps with
-the text instead of standing beside it as a column.
+link. The heading text remains a single inline group, including any code
+or links; the section anchor is revealed on hover or keyboard focus.
 
 This replaces four competing wrapper arrangements:
 
@@ -561,6 +560,29 @@ Markdown nested in block HTML; do not indent it into a code block.
 | `shortcut-then` | Visible sequence separator | dotfiles | `<span class="shortcut-then">then</span>` |
 | `shortcut-mode` | Editor-mode tag after a key, in Vim's mode letters (`n`, `v`, `o`, `i`); spell the letters out once in the section's intro | dotfiles | `` `<leader>/` <span class="shortcut-mode">n v</span> `` in the key cell |
 
+### Article reading hierarchy
+
+Article prose uses Public Sans at 17–18px with 1.65 line-height, within a
+42rem reading measure. Bricolage is reserved for page/display titles; section
+headings use the reading face at 22–28px and weight 600. Section spacing is
+48px above, with a smaller gap below. Reader sections use the same hierarchy.
+There are no decorative section counters, heading rules, metric cards, or
+separate type scales for explanations. Inline code can wrap in running text,
+including at enlarged text sizes; token columns retain their table policy.
+Navigation and footer links can wrap as their labels and controls grow.
+
+Prefer ordinary paragraphs, bold lead-ins, and native lists. Keep comparison
+values in a table, using sentence-case sans-serif headers and quiet horizontal
+rules. This hierarchy replaces the previous display-heavy case-study treatment.
+
+| Class | Structure | Rendering and accessibility |
+| --- | --- | --- |
+| `numeric-table` | A `div` around an ordinary Markdown table of numerical measurements. | Values use `--text-numeric` (1rem, normally 16px) on desktop and the existing small text scale on phones. Preserves columns so before/after comparisons remain adjacent. Labels and units stay visible, headers and values are centered, and bold carries emphasis without colour. Uses the engine's accessible table wrapper and native table roles. |
+
+The formatter benchmark is the rendering fixture. Check complete articles as
+well as table crops at phone and desktop widths, both themes, enlarged text,
+in the homepage reader, and in print.
+
 ### Exhibits and article media
 
 | Class | What it renders | Repo | Example Markdown HTML |
@@ -604,9 +626,19 @@ nothing else.
 Inline SVG retains meaningful `viewBox`, geometry, labels, and intrinsic media
 dimensions. Remove `style="max-width:720px"`, `style="--media-exhibit-width:
 840px"`, and similar layout overrides. A `diagram-exhibit` SVG scales with its
-column down to a 36rem floor; below 40rem the exhibit pans sideways instead
-of shrinking a flowchart's labels to four pixels, and ContentInteractions
-makes it a named, focusable region only while it actually overflows. Existing SVG references such as `--w5`,
+column; below 40rem, ContentInteractions derives a minimum width that keeps
+the smallest label at least 12px. The exhibit pans sideways and becomes a
+named, focusable region only while it overflows. Its engine-generated
+**Enlarge diagram** button opens a native dialog with labels initially at
+least 16px, scrolling, zoom controls, and a Fit button. Escape or Close returns
+focus to the opener. Cloned SVG marker and label IDs are namespaced so the
+original diagram remains valid. Print hides these controls and removes the
+minimum width. Authors need no extra markup or data attributes.
+
+JSON evidence files beside a case study, such as raw benchmark timings,
+are copied into its public asset directory by `sync-content.mjs`.
+
+Existing SVG references such as `--w5`,
 `--w45`, `--w88`, `--ab4`, and `--bg` are legacy tokens, not additions to this
 system: migrate their color roles to semantic tokens. SVG geometry is not a
 new page measure. Do not add page-specific selectors to preserve those aliases.
@@ -811,30 +843,31 @@ directory what is left (`stacks/aws/acme-dev…/stack.tm.hcl`, never narrower
 than its ellipsis), and only a name wider than the header on its own is cut at
 its end. The full path stays the element's text and its tooltip.
 
+Use inline code for executable names, literal commands, filenames, paths,
+flags, configuration keys, and API resource kinds. For example, write
+`prek`, `mise.toml`, `--all-files`, and `ConfigMap`. Product names
+(Terraform, Kubernetes, Argo CD, Git) remain prose, as do generic phrases
+such as “pre-commit checks.” Use `pre-commit` when naming that tool or its
+configuration. Apply this convention to card metadata and captions too;
+raw HTML captions use native `<code>` elements.
+
 Inline code uses `--font-mono`, `--code-inline-size`, `--code-inline-bg`,
 `--code-inline-text`, `--radius-sm`, and small token padding. It remains inline
 with surrounding prose and has no `width: max-content`, forced line break, or
-scroll container. **A token is one thing:** every capsule is
-`white-space: nowrap`, so `pre-commit` never splits at its hyphen and
-`terraform apply` never leaves `apply` on the next line (S22). That is safe
-only while the token fits the narrowest line the site lays out, so the build
-works out, per span, whether it would fit the 320px column less what its
-context indents (a list item's 36px per level, an admonition's or card's
-padding, a cell's) at the capsule size of the text around it (a paragraph
-holds 30 characters, a list item 26, an h3 23, an h2 19), and marks every span
-that would not with `data-long` (`src/lib/inline-code.mjs` holds the model;
-`rehype-inline-code.mjs` marks Markdown and authored HTML, `inline-markdown.ts`
-marks frontmatter strings). A marked span wraps the way a long URL in running
-text does: at its spaces, slashes and hyphens, anywhere as the last resort,
-each fragment its own closed capsule (`box-decoration-break: clone`), so a
-60-character path still cannot escape a 320px viewport. A link whose whole
+scroll container. Tokens can wrap at spaces, slashes, and hyphens, with
+`overflow-wrap: anywhere` as a fallback when a token is wider than the
+available line. This works at enlarged text sizes without relying on a
+character-count estimate made during the build. Each fragment keeps its
+capsule (`box-decoration-break: clone`). The build's `data-long` marker
+remains informational; running text no longer depends on it for reflow.
+A link whose whole
 content is one code span (plus the optional `↗` span) is a **token link**:
 `rehype-token-links.mjs` marks it `data-token-link` in Markdown, block HTML
 and split inline HTML alike, and prose.css keys the capsule treatment (solid
 accent edge, no underline) to the mark. A link that merely contains a code
 span among words keeps its underline, or its words would be told apart from
 the sentence by colour alone (WCAG 1.4.1). In a table cell a
-marked span stays atomic too — the region scrolls — until the rows stack below
+code span stays atomic — the region scrolls — until the rows stack below
 40rem. Scope the rule to non-fenced code, for example `.prose :not(pre) > code`,
 with EC descendants excluded where needed. `path-token` adds nothing beyond
 `hyphens: none`: not another font, background, or code box. Do not restore
@@ -1154,7 +1187,8 @@ family/size/weight/leading/tracking per viewport, so a content repo cannot
 track its section headings differently from the other two. S17 COMMENTS
 HEADING pins the comments heading to that same tuple, since the region sits
 outside `.prose` and inherits nothing from it. S18 TABLE HEADERS does the same
-for every `th`. S19 KEYCAPS asserts the keycap ratio to its parent equals the
+for every `th`, with alignment checked by table role: centered for
+`numeric-table`, start-aligned for ordinary tables. S19 KEYCAPS asserts the keycap ratio to its parent equals the
 inline-code ratio, mirroring S3 — the invariant is the ratio, never a pixel
 value. S20 PROSE PARAGRAPHS holds every direct `.prose > p` to one size,
 excluding only `.prose--lede`; unlike S1 it deliberately does not exclude
@@ -1186,7 +1220,7 @@ current route set from the build rather than freezing that count forever.
 | S13 | Skip link is first focusable, visible on focus, and works on every route | Unreachable main-content bypass |
 | S14–S20 | Contrast, wide tracks, and the typographic parity set; see `scripts/qa/README.md` | Token-level drift between the three content families |
 | S21 | The first child of every hub section shell, article header, article body, topic page and landing body starts on the header's text edge (1px) at every width | A region that picked up a second gutter, or an article column that drifted off the site's one left axis |
-| S22 | No inline code span paints on more than one line unless the build marked it `data-long`; samples without a fragment count fail | A token split at a hyphen, a two-word command split at its space, a capsule fragmented across lines |
+| S22 | Prose code permits wrapping with `overflow-wrap: anywhere` and clones its capsule on each fragment; table cells may keep tokens atomic inside a scroll region; missing context or fragment evidence fails | Tokens that cannot reflow with enlarged text, broken capsule decoration |
 | S23 | Every block a prose body holds (code frame, table region, admonition, quote, figure, disclosure, tab group) starts on the paragraph text edge (1px) and, unless it opted into a wider track, ends on it; inside a list item, on the item's content edges | A table region centred in its wide wrapper, a frame with padding of its own, a block that slipped off the axis |
 | S24 | The summed layout-shift score from navigation to settle is at or under 0.01 on every route, width and theme | A disclosure rendered open and closed by script after paint, an unsized image, a late font swap moving the column |
 

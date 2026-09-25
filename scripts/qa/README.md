@@ -73,7 +73,9 @@ and the wide track.
 
 S16–S20 check typographic parity within each viewport and OS preference:
 section headings (S16), comments headings against section headings (S17), table
-headers (S18), keycaps (S19), and direct prose paragraphs (S20). Samples are
+headers (S18), keycaps (S19), and direct prose paragraphs (S20). S18 also
+requires centered headers inside `.numeric-table` and start-aligned headers
+in ordinary tables; their typography must still match. Samples are
 rendered-only, excluding closed-dialog chrome that has computed styles but no
 box. S19 samples `.prose kbd`, not all `kbd` elements (global-search keycaps are
 component chrome), and compares the computed size ratio to the parent and to
@@ -90,13 +92,14 @@ left axis, hubs and articles alike. A route with no measurable shell fails.
 This is the double-gutter class: a `full-bleed` wrapper around a nested content grid was pulled into the content track on a
 phone and its section started 20px in from the hero above it.
 
-S22 (ATOMIC TOKENS) records, for every non-fenced `code` span, the number of
-lines it paints on and whether the build marked it `data-long`
-(`src/lib/inline-code.mjs`: too long for the 320px column in its context at
-its capsule size).
-A span under the threshold that paints on two lines — `pre-commit` split at
-its hyphen, `terraform apply` split at its space — fails; only marked spans
-may wrap. A sample without the fragment count is missing evidence.
+S22 (INLINE CODE REFLOW) records each non-fenced `code` span's painted line
+count, wrapping styles, capsule decoration, and table context. Prose tokens
+must permit wrapping (`white-space: normal`, `overflow-wrap: anywhere`) and
+retain the capsule on every fragment (`box-decoration-break: clone`). Table
+cells may use `nowrap` inside their named scroll region; stacked cells may
+wrap. The build's `data-long` estimate is informational, not a reflow gate.
+Missing context, styles, or fragment evidence fails. S5, S9 and S11 continue
+to enforce viewport containment, clipping and reflow at enlarged text sizes.
 
 S23 (BLOCK EDGES) records every block a prose body holds — code frame, table
 region, admonition, quote, figure, disclosure, tab group — with its left and
@@ -115,6 +118,7 @@ this exists for. A missing sum is missing evidence.
 
 The checker prints all 25 PASS/FAIL lines with actual/expected evidence for each
 failure and exits 1 if any scenario fails. The report is informational, supports
-the old baseline schema, and exits normally even when contracts are red. The
-current design is intentionally red; these assertions must not be relaxed to
-match it. No baseline values are used as expected design values.
+the old baseline schema, and exits normally even when contracts are red.
+Do not relax assertions to bless a regression. When an intentional design
+change alters a contract, update its documented rule and add positive and
+negative tests. No baseline values are used as expected design values.

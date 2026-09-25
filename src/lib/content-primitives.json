@@ -276,6 +276,11 @@
       "usedBy": ["portfolio", "blog", "dotfiles"],
       "element": "div",
       "engineGenerated": true
+    },
+    "numeric-table": {
+      "description": "A numeric comparison in an ordinary Markdown table; preserves columns on small screens, with aligned values and explicit header labels.",
+      "usedBy": ["portfolio"],
+      "element": "div"
     }
   },
   "dataAttributes": {

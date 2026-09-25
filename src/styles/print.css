@@ -32,6 +32,8 @@
     .reader,
     .global-search-dialog,
     .lightbox,
+    .diagram-viewer,
+    .diagram-enlarge,
     .context-help,
     .context-help-trigger,
     [data-context-help-mount],

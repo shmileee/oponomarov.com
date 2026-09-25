@@ -104,6 +104,7 @@
 
   .op-app-nav {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     /* The original sits the sections at the end of the bar, right beside the
        tools: this is the only auto margin on the row, so it takes all the
@@ -386,6 +387,7 @@
 
   .op-footer__links {
     display: flex;
+    flex-wrap: wrap;
     flex: none;
     align-items: center;
     gap: var(--space-2);
