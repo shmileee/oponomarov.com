@@ -299,7 +299,7 @@ if (portfolioHomeHtml.includes("Platform &amp; Site Reliability Engineer</p>")) 
 if (docsHomeHtml.includes("Personal workstation · documented publicly")) throw new Error("Dotfiles still contains the redundant hero eyebrow");
 if ((portfolioHomeHtml + portfolioHtml + blogHtml + docsHtml).includes('href="/#contact"')) throw new Error("A legacy Contact anchor still bypasses the dedicated Contact page");
 for (const destination of [
-  'href="mailto:ponomarov.aleksandr@gmail.com"',
+  'href="mailto:contact@oponomarov.com"',
   'href="https://www.linkedin.com/in/aleksandr-ponomarov"',
   'href="https://github.com/shmileee"',
 ]) {
