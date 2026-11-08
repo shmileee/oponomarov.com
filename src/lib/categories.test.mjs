@@ -19,5 +19,5 @@ test("an alias whose old slug is still a live category is skipped", () => {
 });
 
 test("the shipped aliases are read when none are passed", () => {
-  assert.deepEqual(categoryRedirects(["devex"]), [["developer-tools", "devex"]]);
+  assert.deepEqual(categoryRedirects(["devex"]), [["developer-tools", "devex"], ["vim", "devex"]]);
 });

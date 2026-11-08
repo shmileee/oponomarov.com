@@ -3,6 +3,7 @@ import { basename, dirname, extname, join, normalize, relative, resolve } from "
 import { fileURLToPath } from "node:url";
 import yaml from "js-yaml";
 import { categoryAliases, categoryRedirects, readPostCategories, uniqueCategories } from "../src/lib/categories.mjs";
+import { legacyRedirects } from "../src/lib/legacy-redirects.mjs";
 
 /* Every expectation below is derived from the content roots, never typed in:
    a new case study, note, topic or manual changes the expected counts and
@@ -172,7 +173,10 @@ for (const slug of expectedDocSlugs) {
   if (!existsSync(target)) throw new Error(`Dotfiles manual ${slug}.md did not produce ${relative(root, target)}`);
 }
 const expectedDocRoutes = expectedDocSlugs.filter((slug) => slug !== "index");
-const builtDocRoutes = routeDirectories(join(dist, "dotfiles")).sort();
+/* A retired manual's address is a redirect page under /dotfiles/
+   (legacy-redirects.mjs), checked with the other legacy redirects below. */
+const isDocRedirect = (name) => readFileSync(join(dist, "dotfiles", name, "index.html"), "utf8").includes('http-equiv="refresh"');
+const builtDocRoutes = routeDirectories(join(dist, "dotfiles")).filter((name) => !isDocRedirect(name)).sort();
 if (builtDocRoutes.join("\n") !== expectedDocRoutes.join("\n")) throw new Error(`Built Dotfiles routes diverge from ${relative(root, docsSourceDir)}.\nExpected: ${formatSet(expectedDocRoutes)}\nActual:   ${formatSet(builtDocRoutes)}`);
 
 const readRoutes = (base, names) => names.map((name) => readFileSync(join(base, name, "index.html"), "utf8")).join("\n");
@@ -363,6 +367,18 @@ for (const htmlPath of htmlFiles) {
   if (!isHub && ogTitle.includes(" - Oleksandr Ponomarov")) throw new Error(`${route} og:title still carries the document-title suffix: ${ogTitle}`);
   if (canonicalHref && !html.includes(`<meta property="og:url" content="https://oponomarov.com${canonicalHref}"`)) throw new Error(`${route} names a canonical but no matching og:url`);
 }
+/* Every legacy address (legacy-redirects.mjs) is a redirect page whose
+   refresh and canonical both name its target, and the target is a page the
+   sitemap lists. */
+for (const [from, target] of Object.entries(legacyRedirects)) {
+  const page = join(dist, from, "index.html");
+  if (!existsSync(page)) throw new Error(`Legacy redirect ${from} was not built`);
+  const html = readFileSync(page, "utf8");
+  if (!html.includes(`http-equiv="refresh" content="0; url=${target}"`)) throw new Error(`Legacy redirect ${from} does not refresh to ${target}`);
+  if (!html.includes(`<link rel="canonical" href="https://oponomarov.com${target}"`)) throw new Error(`Legacy redirect ${from} does not name ${target} as canonical`);
+  if (!sitemapPaths.includes(target)) throw new Error(`Legacy redirect ${from} points at ${target}, which the sitemap does not list`);
+}
+
 for (const name of builtCards) {
   const header = readFileSync(join(dist, "og", name)).subarray(0, 24);
   if (header.toString("latin1", 1, 4) !== "PNG") throw new Error(`og/${name} is not a PNG`);

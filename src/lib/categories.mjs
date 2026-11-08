@@ -48,6 +48,10 @@ export const readPostCategories = (dirPath) =>
  */
 export const categoryAliases = Object.freeze({
   "developer-tools": "devex",
+  /* Topics the Jekyll blog published and the conversion dropped. Crawlers
+     still ask for both, so each lands on the topic its notes now live under. */
+  git: "pre-commit",
+  vim: "devex",
 });
 
 /**

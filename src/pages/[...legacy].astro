@@ -1,0 +1,44 @@
+---
+import SiteLayout from "../components/SiteLayout.astro";
+import { legacyRedirects } from "../lib/legacy-redirects.mjs";
+import { ogCards, ogSlug, type OgCard } from "../lib/og";
+
+/* One redirect page per address in legacy-redirects.mjs, drawn like every
+   other redirect on the site (an alias, a /work/ page): noindex, a canonical
+   and a card that are the target's, and an immediate refresh. The target's
+   title and description come from the Open Graph registry, which lists every
+   canonical page, so a target that is not one fails here by name. */
+export async function getStaticPaths() {
+  const cards = await ogCards();
+  return Object.entries(legacyRedirects).map(([from, target]) => {
+    const card = cards.get(ogSlug(target));
+    if (!card) throw new Error(`legacy-redirects.mjs sends ${from} to ${target}, which is not a canonical page`);
+    return { params: { legacy: from.replace(/^\/|\/$/g, "") }, props: { target, card } };
+  });
+}
+
+interface Props {
+  target: string;
+  card: OgCard;
+}
+
+const { target, card } = Astro.props;
+---
+
+<SiteLayout
+  activeApp={card.section}
+  canonicalOrigin="https://oponomarov.com"
+  canonicalPath={target}
+  title={card.title}
+  description={card.description}
+  robots="noindex,follow"
+  indexable={false}
+>
+  <Fragment slot="head">
+    <meta http-equiv="refresh" content={`0; url=${target}`} />
+    <script is:inline define:vars={{ target }}>location.replace(target + location.search + location.hash);</script>
+  </Fragment>
+  <main id="main-content" class="content-grid" tabindex="-1">
+    <div class="prose"><p>Moved to <a href={target}>{card.title}</a>.</p></div>
+  </main>
+</SiteLayout>
