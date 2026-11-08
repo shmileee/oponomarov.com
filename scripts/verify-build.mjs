@@ -43,6 +43,7 @@ const required = [
   "dist/blog/index.html",
   "dist/blog/feed.xml",
   "dist/dotfiles/index.html",
+  "dist/favicon.ico",
 ];
 
 const missing = required.filter((path) => !existsSync(join(root, path)));
