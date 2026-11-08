@@ -43,6 +43,8 @@ const required = [
   "dist/blog/index.html",
   "dist/blog/feed.xml",
   "dist/dotfiles/index.html",
+  "dist/llms.txt",
+  "dist/llms-full.txt",
   "dist/favicon.ico",
 ];
 
@@ -378,6 +380,49 @@ for (const [from, target] of Object.entries(legacyRedirects)) {
   if (!html.includes(`http-equiv="refresh" content="0; url=${target}"`)) throw new Error(`Legacy redirect ${from} does not refresh to ${target}`);
   if (!html.includes(`<link rel="canonical" href="https://oponomarov.com${target}"`)) throw new Error(`Legacy redirect ${from} does not name ${target} as canonical`);
   if (!sitemapPaths.includes(target)) throw new Error(`Legacy redirect ${from} points at ${target}, which the sitemap does not list`);
+}
+
+/* Machine-readable copies. Every study, note and manual has a Markdown copy
+   that its page links as an alternate and /llms.txt lists; every canonical
+   page carries one JSON-LD graph naming the author; and no redirect or 404
+   claims to be an article. */
+const articlePaths = [
+  ...expectedCaseStudies.map((folder) => `/case-studies/${folder}/`),
+  ...postPages.map((slug) => `/blog/posts/${slug}/`),
+  ...expectedDocSlugs.map((slug) => (slug === "index" ? "/dotfiles/" : `/dotfiles/${slug}/`)),
+];
+const llmsIndex = readFileSync(join(dist, "llms.txt"), "utf8");
+const llmsFull = readFileSync(join(dist, "llms-full.txt"), "utf8");
+for (const path of articlePaths) {
+  const markdownPath = `${path.replace(/\/$/, "")}.md`;
+  const markdownFile = join(dist, markdownPath);
+  if (!existsSync(markdownFile)) throw new Error(`${path} has no Markdown copy at ${markdownPath}`);
+  const markdown = readFileSync(markdownFile, "utf8");
+  if (!markdown.startsWith("# ") || !markdown.includes(`Canonical: https://oponomarov.com${path}\n`)) throw new Error(`${markdownPath} does not open with its title and name its canonical page`);
+  const html = readFileSync(join(dist, path, "index.html"), "utf8");
+  if (!html.includes(`<link rel="alternate" type="text/markdown" title="This page as Markdown" href="${markdownPath}"`)) throw new Error(`${path} does not link its Markdown copy`);
+  if (!llmsIndex.includes(`(https://oponomarov.com${markdownPath})`)) throw new Error(`/llms.txt does not list ${markdownPath}`);
+  if (!llmsFull.includes(`Canonical: https://oponomarov.com${path}\n`)) throw new Error(`/llms-full.txt does not carry ${path}`);
+}
+const strayMarkdown = filesBelow(dist).filter((file) => file.endsWith(".md")).map((file) => `/${relative(dist, file)}`).filter((file) => !articlePaths.some((path) => `${path.replace(/\/$/, "")}.md` === file));
+if (strayMarkdown.length > 0) throw new Error(`Markdown copies without an article: ${formatSet(strayMarkdown)}`);
+for (const htmlPath of htmlFiles) {
+  const html = readFileSync(htmlPath, "utf8");
+  const route = relative(dist, htmlPath);
+  const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((match) => match[1]);
+  const canonicalHref = html.match(/<link rel="canonical" href="https:\/\/oponomarov\.com([^"]*)"/)?.[1];
+  const isCanonicalPage = canonicalHref !== undefined && `${canonicalHref}index.html` === `/${route}`;
+  if (!isCanonicalPage) {
+    if (blocks.length > 0) throw new Error(`${route} is not a canonical page but carries structured data`);
+    continue;
+  }
+  if (blocks.length !== 1) throw new Error(`${route} carries ${blocks.length} JSON-LD blocks, expected one`);
+  const graph = JSON.parse(blocks[0])["@graph"] ?? [];
+  const person = graph.find((node) => node["@type"] === "Person");
+  if (!person || person.name !== "Oleksandr Ponomarov" || !person.sameAs?.includes("https://github.com/shmileee")) throw new Error(`${route} structured data does not name its author`);
+  const page = graph.find((node) => typeof node["@id"] === "string" && /#(article|webpage)$/.test(node["@id"]));
+  if (!page || page.url !== `https://oponomarov.com${canonicalHref}`) throw new Error(`${route} structured data does not describe the page at its canonical address`);
+  if (articlePaths.includes(canonicalHref) && canonicalHref !== "/dotfiles/" && page["@id"] !== `https://oponomarov.com${canonicalHref}#article`) throw new Error(`${route} is an article but its structured data does not say so`);
 }
 
 for (const name of builtCards) {

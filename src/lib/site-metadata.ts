@@ -2,6 +2,23 @@ export const ownerName = "Oleksandr Ponomarov";
 
 export const siteHost = "oponomarov.com";
 
+export const siteOrigin = `https://${siteHost}`;
+
+/** The role the homepage leads with, and the Person's jobTitle in the
+    structured data every page carries. */
+export const ownerRole = "Platform & Site Reliability Engineer";
+
+/** The owner's profiles elsewhere. The structured data lists them as
+    `sameAs`, which is how a search engine or an assistant ties these pages
+    to the same person it already knows from GitHub and LinkedIn. */
+export const ownerEmail = "contact@oponomarov.com";
+
+export const ownerProfiles = [
+  "https://github.com/shmileee",
+  "https://www.linkedin.com/in/aleksandr-ponomarov",
+  "https://x.com/sqrt16bit",
+] as const;
+
 /**
  * The page background of each theme as sRGB hex, for the theme-color meta
  * (browser chrome cannot read a custom property). They mirror

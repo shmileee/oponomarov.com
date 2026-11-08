@@ -5,6 +5,7 @@ import PageToc from "../../components/PageToc.astro";
 import SiteLayout from "../../components/SiteLayout.astro";
 import { adjacentDocs, loadDocs, type DocsPage } from "../../lib/docs";
 import { inlineContexts, plainText, renderInline } from "../../lib/inline-markdown";
+import { markdownPathFor } from "../../lib/markdown-pages";
 import { readingMinutes } from "../../lib/reading-time";
 
 export async function getStaticPaths() {
@@ -29,6 +30,7 @@ const rawUrl = page.entry.data.editUrl?.replace("/edit/", "/raw/");
   description={plainText(page.entry.data.description)}
   searchType="Documentation"
   showProgress
+  markdownPath={markdownPathFor(page.href)}
 >
   <ArticleShell
     title={page.entry.data.title}

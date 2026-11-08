@@ -1,33 +1,17 @@
 ---
 import SiteLayout from "../components/SiteLayout.astro";
-import { ownerName, pageDescriptions } from "../lib/site-metadata";
+import { ownerEmail, pageDescriptions } from "../lib/site-metadata";
 
-const email = "contact@oponomarov.com";
+const email = ownerEmail;
 const github = "https://github.com/shmileee";
 const linkedin = "https://www.linkedin.com/in/aleksandr-ponomarov";
 /* Built and published by shmileee/cv, not by this engine: the LaTeX is the
    only source and the PDF is the only artefact. Linked, never mirrored. */
 const cv = "https://cv.oponomarov.com/cv.pdf";
-
-/* The one place the site says who the person behind it is in a form a
-   search engine can read: the two profiles the cards link (and mark rel="me")
-   as the same person, the address, where he is. */
-const structuredData = JSON.stringify({
-  "@context": "https://schema.org",
-  "@type": "ContactPage",
-  url: "https://oponomarov.com/contact/",
-  name: `Contact ${ownerName}`,
-  description: pageDescriptions.contact,
-  mainEntity: {
-    "@type": "Person",
-    name: ownerName,
-    url: "https://oponomarov.com/",
-    email: `mailto:${email}`,
-    jobTitle: "Platform & Site Reliability Engineer",
-    address: { "@type": "PostalAddress", addressLocality: "Wrocław", addressCountry: "PL" },
-    sameAs: [github, linkedin],
-  },
-});
+/* Who the person behind the site is, in a form a search engine can read
+   (the profiles, the address, where he is), is the Person every page's
+   structured data carries (src/lib/structured-data.ts); this page is its
+   ContactPage. */
 ---
 
 <SiteLayout
@@ -36,7 +20,6 @@ const structuredData = JSON.stringify({
   description={pageDescriptions.contact}
   searchType="Contact"
 >
-  <script slot="head" type="application/ld+json" set:html={structuredData} />
   <main id="main-content" class="content-grid" tabindex="-1">
     <div class="contact-page wide">
       <section class="contact-hero section-shell hero" aria-labelledby="contact-title">
@@ -47,7 +30,7 @@ const structuredData = JSON.stringify({
         <p class="contact-meta">
           {/* The English spelling: the self-hosted mono face is a Latin
               subset without Ł, and the uppercase meta line drew the one
-              letter in a fallback font. The structured data above keeps the
+              letter in a fallback font. The structured data keeps the
               Polish spelling, which is never rendered. */}
           <span>Wroclaw, Poland</span><span>CET</span><span>Replies within a few days</span>
         </p>
