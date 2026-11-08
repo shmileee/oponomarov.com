@@ -6,6 +6,7 @@ import SiteLayout from "../../components/SiteLayout.astro";
 import { adjacentCaseStudies, formatCaseNumber, loadCaseStudies, type CaseStudy } from "../../lib/case-studies";
 import { topicTag } from "../../lib/topic-labels";
 import { inlineContexts, plainText, renderInline } from "../../lib/inline-markdown";
+import { markdownPathFor } from "../../lib/markdown-pages";
 import { readingMinutes } from "../../lib/reading-time";
 
 export async function getStaticPaths() {
@@ -60,6 +61,7 @@ const description = plainText(data.description ?? data.summary);
   article
   searchType="Case study"
   tags={data.topics}
+  markdownPath={markdownPathFor(study.href)}
 >
   <ArticleShell
     title={data.title}

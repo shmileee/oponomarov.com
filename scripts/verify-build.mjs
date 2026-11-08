@@ -3,6 +3,7 @@ import { basename, dirname, extname, join, normalize, relative, resolve } from "
 import { fileURLToPath } from "node:url";
 import yaml from "js-yaml";
 import { categoryAliases, categoryRedirects, readPostCategories, uniqueCategories } from "../src/lib/categories.mjs";
+import { legacyRedirects } from "../src/lib/legacy-redirects.mjs";
 
 /* Every expectation below is derived from the content roots, never typed in:
    a new case study, note, topic or manual changes the expected counts and
@@ -42,6 +43,9 @@ const required = [
   "dist/blog/index.html",
   "dist/blog/feed.xml",
   "dist/dotfiles/index.html",
+  "dist/llms.txt",
+  "dist/llms-full.txt",
+  "dist/favicon.ico",
 ];
 
 const missing = required.filter((path) => !existsSync(join(root, path)));
@@ -172,7 +176,10 @@ for (const slug of expectedDocSlugs) {
   if (!existsSync(target)) throw new Error(`Dotfiles manual ${slug}.md did not produce ${relative(root, target)}`);
 }
 const expectedDocRoutes = expectedDocSlugs.filter((slug) => slug !== "index");
-const builtDocRoutes = routeDirectories(join(dist, "dotfiles")).sort();
+/* A retired manual's address is a redirect page under /dotfiles/
+   (legacy-redirects.mjs), checked with the other legacy redirects below. */
+const isDocRedirect = (name) => readFileSync(join(dist, "dotfiles", name, "index.html"), "utf8").includes('http-equiv="refresh"');
+const builtDocRoutes = routeDirectories(join(dist, "dotfiles")).filter((name) => !isDocRedirect(name)).sort();
 if (builtDocRoutes.join("\n") !== expectedDocRoutes.join("\n")) throw new Error(`Built Dotfiles routes diverge from ${relative(root, docsSourceDir)}.\nExpected: ${formatSet(expectedDocRoutes)}\nActual:   ${formatSet(builtDocRoutes)}`);
 
 const readRoutes = (base, names) => names.map((name) => readFileSync(join(base, name, "index.html"), "utf8")).join("\n");
@@ -363,6 +370,61 @@ for (const htmlPath of htmlFiles) {
   if (!isHub && ogTitle.includes(" - Oleksandr Ponomarov")) throw new Error(`${route} og:title still carries the document-title suffix: ${ogTitle}`);
   if (canonicalHref && !html.includes(`<meta property="og:url" content="https://oponomarov.com${canonicalHref}"`)) throw new Error(`${route} names a canonical but no matching og:url`);
 }
+/* Every legacy address (legacy-redirects.mjs) is a redirect page whose
+   refresh and canonical both name its target, and the target is a page the
+   sitemap lists. */
+for (const [from, target] of Object.entries(legacyRedirects)) {
+  const page = join(dist, from, "index.html");
+  if (!existsSync(page)) throw new Error(`Legacy redirect ${from} was not built`);
+  const html = readFileSync(page, "utf8");
+  if (!html.includes(`http-equiv="refresh" content="0; url=${target}"`)) throw new Error(`Legacy redirect ${from} does not refresh to ${target}`);
+  if (!html.includes(`<link rel="canonical" href="https://oponomarov.com${target}"`)) throw new Error(`Legacy redirect ${from} does not name ${target} as canonical`);
+  if (!sitemapPaths.includes(target)) throw new Error(`Legacy redirect ${from} points at ${target}, which the sitemap does not list`);
+}
+
+/* Machine-readable copies. Every study, note and manual has a Markdown copy
+   that its page links as an alternate and /llms.txt lists; every canonical
+   page carries one JSON-LD graph naming the author; and no redirect or 404
+   claims to be an article. */
+const articlePaths = [
+  ...expectedCaseStudies.map((folder) => `/case-studies/${folder}/`),
+  ...postPages.map((slug) => `/blog/posts/${slug}/`),
+  ...expectedDocSlugs.map((slug) => (slug === "index" ? "/dotfiles/" : `/dotfiles/${slug}/`)),
+];
+const llmsIndex = readFileSync(join(dist, "llms.txt"), "utf8");
+const llmsFull = readFileSync(join(dist, "llms-full.txt"), "utf8");
+for (const path of articlePaths) {
+  const markdownPath = `${path.replace(/\/$/, "")}.md`;
+  const markdownFile = join(dist, markdownPath);
+  if (!existsSync(markdownFile)) throw new Error(`${path} has no Markdown copy at ${markdownPath}`);
+  const markdown = readFileSync(markdownFile, "utf8");
+  if (!markdown.startsWith("# ") || !markdown.includes(`Canonical: https://oponomarov.com${path}\n`)) throw new Error(`${markdownPath} does not open with its title and name its canonical page`);
+  const html = readFileSync(join(dist, path, "index.html"), "utf8");
+  if (!html.includes(`<link rel="alternate" type="text/markdown" title="This page as Markdown" href="${markdownPath}"`)) throw new Error(`${path} does not link its Markdown copy`);
+  if (!llmsIndex.includes(`(https://oponomarov.com${markdownPath})`)) throw new Error(`/llms.txt does not list ${markdownPath}`);
+  if (!llmsFull.includes(`Canonical: https://oponomarov.com${path}\n`)) throw new Error(`/llms-full.txt does not carry ${path}`);
+}
+const strayMarkdown = filesBelow(dist).filter((file) => file.endsWith(".md")).map((file) => `/${relative(dist, file)}`).filter((file) => !articlePaths.some((path) => `${path.replace(/\/$/, "")}.md` === file));
+if (strayMarkdown.length > 0) throw new Error(`Markdown copies without an article: ${formatSet(strayMarkdown)}`);
+for (const htmlPath of htmlFiles) {
+  const html = readFileSync(htmlPath, "utf8");
+  const route = relative(dist, htmlPath);
+  const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((match) => match[1]);
+  const canonicalHref = html.match(/<link rel="canonical" href="https:\/\/oponomarov\.com([^"]*)"/)?.[1];
+  const isCanonicalPage = canonicalHref !== undefined && `${canonicalHref}index.html` === `/${route}`;
+  if (!isCanonicalPage) {
+    if (blocks.length > 0) throw new Error(`${route} is not a canonical page but carries structured data`);
+    continue;
+  }
+  if (blocks.length !== 1) throw new Error(`${route} carries ${blocks.length} JSON-LD blocks, expected one`);
+  const graph = JSON.parse(blocks[0])["@graph"] ?? [];
+  const person = graph.find((node) => node["@type"] === "Person");
+  if (!person || person.name !== "Oleksandr Ponomarov" || !person.sameAs?.includes("https://github.com/shmileee")) throw new Error(`${route} structured data does not name its author`);
+  const page = graph.find((node) => typeof node["@id"] === "string" && /#(article|webpage)$/.test(node["@id"]));
+  if (!page || page.url !== `https://oponomarov.com${canonicalHref}`) throw new Error(`${route} structured data does not describe the page at its canonical address`);
+  if (articlePaths.includes(canonicalHref) && canonicalHref !== "/dotfiles/" && page["@id"] !== `https://oponomarov.com${canonicalHref}#article`) throw new Error(`${route} is an article but its structured data does not say so`);
+}
+
 for (const name of builtCards) {
   const header = readFileSync(join(dist, "og", name)).subarray(0, 24);
   if (header.toString("latin1", 1, 4) !== "PNG") throw new Error(`og/${name} is not a PNG`);

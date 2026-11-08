@@ -2,6 +2,7 @@
 import { render } from "astro:content";
 import SiteLayout from "../../components/SiteLayout.astro";
 import { adjacentDocs, loadDocs } from "../../lib/docs";
+import { markdownPathFor } from "../../lib/markdown-pages";
 
 const pages = await loadDocs();
 const page = pages.find((candidate) => candidate.slug === "")!;
@@ -14,6 +15,7 @@ const { next } = adjacentDocs(pages, page);
   title={page.entry.data.title}
   description={page.entry.data.description}
   searchType="Documentation"
+  markdownPath={markdownPathFor(page.href)}
 >
   {/* A hub, not an article: no table of contents, no header block. It runs
       in the article composition (layout.css) so its column, hero and

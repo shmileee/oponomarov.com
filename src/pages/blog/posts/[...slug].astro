@@ -6,6 +6,7 @@ import SiteLayout from "../../../components/SiteLayout.astro";
 import { inlineContexts, plainText, renderInline } from "../../../lib/inline-markdown";
 import { topicTag } from "../../../lib/topic-labels";
 import { postRoutes, slugForPost, sortPosts } from "../../../lib/posts";
+import { markdownPathFor } from "../../../lib/markdown-pages";
 import { readingMinutes } from "../../../lib/reading-time";
 
 export async function getStaticPaths() {
@@ -54,6 +55,7 @@ const href = `/blog/posts/${slugForPost(post)}/`;
   publishedTime={post.data.date}
   tags={post.data.categories}
   rssHref="/blog/feed.xml"
+  markdownPath={markdownPathFor(href)}
 >
   <ArticleShell
     title={post.data.title}

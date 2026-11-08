@@ -8,6 +8,7 @@ import SiteFooter from "./SiteFooter.astro";
 import SiteHeader from "./SiteHeader.astro";
 import { ogImagePath } from "../lib/og-path";
 import { documentTitle as formatDocumentTitle, ownerName, type SiteSection } from "../lib/site-metadata";
+import { serializeStructuredData, structuredData } from "../lib/structured-data";
 
 interface Props {
   readonly activeApp: SiteSection;
@@ -25,6 +26,8 @@ interface Props {
   readonly showProgress?: boolean;
   readonly rssHref?: string;
   readonly ogImage?: string;
+  /** The page's plain-Markdown copy (src/pages/[...page].md.ts), if it has one. */
+  readonly markdownPath?: string;
 }
 
 const {
@@ -43,6 +46,7 @@ const {
   /* Every canonical page has a card of its own under /og/ (src/lib/og.ts);
      a redirect page borrows its target's through canonicalPath. */
   ogImage = ogImagePath(canonicalPath),
+  markdownPath,
 } = Astro.props;
 const roots = { portfolio: "/", blog: "/blog/", dotfiles: "/dotfiles/", contact: "/contact/" } as const;
 const products = { portfolio: "Portfolio", blog: "Notes", dotfiles: "Dotfiles", contact: "Site" } as const;
@@ -65,6 +69,11 @@ const socialTitle = isSectionRoot ? documentTitle : plainTitle;
 const namesCanonical = indexable || canonicalPath !== Astro.url.pathname;
 const canonical = new URL(canonicalPath, canonicalOrigin);
 const image = new URL(ogImage, canonicalOrigin);
+/* Only a page that is itself the canonical address describes itself: a
+   redirect or the 404 would claim an article that lives elsewhere. */
+const jsonLd = indexable
+  ? serializeStructuredData(structuredData({ section: activeApp, canonical, title: socialTitle, description, image, isSectionRoot, article, publishedTime, tags }))
+  : undefined;
 ---
 
 <!doctype html>
@@ -108,6 +117,9 @@ if (themeColor) themeColor.content = themeColor.dataset[document.documentElement
     {namesCanonical && <link rel="canonical" href={canonical} />}
     <SiteFavicons />
     {rssHref && <link rel="alternate" type="application/rss+xml" title="Engineering notes" href={rssHref} />}
+    {/* The same page as plain Markdown, for agents and assistants that
+        would otherwise strip the HTML themselves; /llms.txt lists them all. */}
+    {markdownPath && <link rel="alternate" type="text/markdown" title="This page as Markdown" href={markdownPath} />}
     <meta property="og:site_name" content={ownerName} />
     <meta property="og:locale" content="en_GB" />
     <meta property="og:title" content={socialTitle} />
@@ -127,6 +139,7 @@ if (themeColor) themeColor.content = themeColor.dataset[document.documentElement
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={image} />
     {activeApp === "blog" && <meta name="twitter:creator" content="@sqrt16bit" />}
+    {jsonLd && <script type="application/ld+json" is:inline set:html={jsonLd} />}
     <slot name="head" />
   </head>
   <body data-app={activeApp} data-pagefind-ignore={indexable ? undefined : "all"}>
