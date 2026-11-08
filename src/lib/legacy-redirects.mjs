@@ -18,6 +18,8 @@ export const legacyRedirects = Object.freeze({
   "/dotfiles/what-how-and-why/": "/dotfiles/",
   "/features/Hotkeys/": "/dotfiles/shortcuts/",
   "/features/Installation/": "/dotfiles/setup/",
+  "/features/Rationale/": "/dotfiles/",
   "/features/Tools/": "/dotfiles/",
+  "/features/Troubleshooting/": "/dotfiles/setup/",
   "/features/1-UsageGuide/": "/dotfiles/",
 });
