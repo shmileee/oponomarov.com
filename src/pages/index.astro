@@ -1,6 +1,7 @@
 ---
 import { getCollection, render } from "astro:content";
 import SiteLayout from "../components/SiteLayout.astro";
+import OpportunityStatement from "../components/OpportunityStatement.astro";
 import { collectTopics, formatCaseNumber, loadCaseStudies, requireCaseStudy } from "../lib/case-studies";
 import { inlineContexts, renderInline } from "../lib/inline-markdown";
 import { topicTag } from "../lib/topic-labels";
@@ -164,6 +165,7 @@ const readerManifest = studies.map((study) => ({
         </div>
       </div>
     </section>
+    <OpportunityStatement />
   </main>
 
   <dialog class="reader" id="case-study-reader" aria-labelledby="reader-title" data-reader>
