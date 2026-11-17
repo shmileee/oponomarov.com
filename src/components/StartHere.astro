@@ -1,0 +1,25 @@
+---
+import { loadCaseStudies } from "../lib/case-studies";
+import { inlineContexts, renderInline } from "../lib/inline-markdown";
+
+/* The portfolio owns the selection through its existing featured flag.
+   Keep titles, summaries and canonical links tied to their content entries. */
+const selected = (await loadCaseStudies()).filter(({ entry }) => entry.data.featured);
+---
+
+{selected.length > 0 && (
+  <section class="section section-shell" id="start-here" aria-labelledby="start-here-title" data-pagefind-ignore>
+    <h2 id="start-here-title">Start here</h2>
+    <div class="prose"><p>New to my work? These case studies show how I approach platform engineering: the problem, my role, the trade-offs, and the evidence.</p></div>
+    <div class="case-grid">
+      {selected.map((study) => (
+        <a class="case-card" href={study.href}>
+          <span class="case-card-number">Case study</span>
+          <span class="case-card-title">{study.entry.data.title}</span>
+          <span class="case-card-summary" set:html={renderInline(study.entry.data.summary, inlineContexts.card)} />
+          <span class="case-card-action">Read the case study →</span>
+        </a>
+      ))}
+    </div>
+  </section>
+)}
