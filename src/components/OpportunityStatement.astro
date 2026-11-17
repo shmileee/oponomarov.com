@@ -1,0 +1,18 @@
+---
+interface Props {
+  readonly contactPage?: boolean;
+}
+const { contactPage = false } = Astro.props;
+---
+
+<section class="section section-shell" aria-labelledby="opportunities-title">
+  <h2 id="opportunities-title">Let’s build a better platform</h2>
+  <div class="prose">
+    <p>I’m interested in Senior and Staff Platform Engineering or Site Reliability Engineering roles where I can make infrastructure changes safer and help teams ship independently.</p>
+    <p>My focus is AWS, Kubernetes, Terraform, GitOps, and developer self-service. If that fits the problems your team is tackling, I’d like to hear about the role.</p>
+  </div>
+  <div class="hero-actions">
+    <a class="primary-link" href={contactPage ? "#email" : "/contact/"}>Discuss an opportunity →</a>
+    <a class="secondary-link" href="https://cv.oponomarov.com/cv.pdf">Download the CV (PDF) ↓</a>
+  </div>
+</section>
