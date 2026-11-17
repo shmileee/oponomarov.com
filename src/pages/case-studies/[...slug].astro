@@ -1,6 +1,7 @@
 ---
 import { render } from "astro:content";
 import ArticleShell from "../../components/ArticleShell.astro";
+import AuthorFollow from "../../components/AuthorFollow.astro";
 import PageToc from "../../components/PageToc.astro";
 import SiteLayout from "../../components/SiteLayout.astro";
 import { adjacentCaseStudies, formatCaseNumber, loadCaseStudies, type CaseStudy } from "../../lib/case-studies";
@@ -106,6 +107,8 @@ const description = plainText(data.description ?? data.summary);
         )}
       </nav>
     )}
+    {/* Inside the article body so the homepage reading view includes it too. */}
+    <AuthorFollow />
     <Fragment slot="footer">
       {/* The published adjacent cards stack kicker, case number and title on
           three lines; the shared shell renders a single label, so the case
