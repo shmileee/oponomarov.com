@@ -1,6 +1,7 @@
 ---
 import { getCollection, render } from "astro:content";
 import ArticleShell from "../../../components/ArticleShell.astro";
+import AuthorFollow from "../../../components/AuthorFollow.astro";
 import PageToc from "../../../components/PageToc.astro";
 import SiteLayout from "../../../components/SiteLayout.astro";
 import { inlineContexts, plainText, renderInline } from "../../../lib/inline-markdown";
@@ -72,6 +73,7 @@ const href = `/blog/posts/${slugForPost(post)}/`;
     </ul>
     <PageToc slot="toc" headings={headings} />
     <Content />
+    <AuthorFollow />
     <section slot="comments" class="comments-region" aria-labelledby="comments-title" data-pagefind-ignore><h2 id="comments-title">Comments</h2><div id="comments"></div></section>
   </ArticleShell>
 

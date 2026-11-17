@@ -9,6 +9,14 @@
    Fixes: divergent metadata typography between the three content categories. */
 
 @layer components {
+  .author-follow {
+    margin-block-start: var(--space-12);
+    padding: var(--space-6);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+  }
+
   /* ------------------------------------------------------------------ */
   /* Article header.                                                      */
   /* ArticleShell renders back link, eyebrow, h1, dek, meta, then the      */
